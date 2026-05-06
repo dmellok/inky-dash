@@ -246,7 +246,13 @@ def create_app() -> Flask:
         return render_template(
             "dashboards/edit.html",
             page=None,
-            initial_page={"name": "Untitled", "layout": "single", "cells": [{"widget": ""}]},
+            initial_page={
+                "name": "Untitled",
+                "layout": "single",
+                "cells": [{"widget": ""}],
+                "cell_gap": 38,
+                "cell_radius": 20,
+            },
             catalog=_editor_catalog(),
             panel_width=config.panel_width,
             panel_height=config.panel_height,

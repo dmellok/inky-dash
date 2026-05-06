@@ -96,8 +96,10 @@ buildThemeSelect(form.elements.header_theme, "(use page theme)");
 form.elements.name.value = state.page.name || "";
 form.elements.layout.value = state.page.layout;
 setColorInput("bg_color", state.page.bg_color || "#ffffff");
-setSlider("cell_gap", state.page.cell_gap || 0);
-setSlider("cell_radius", state.page.cell_radius || 0);
+// Use ?? so an explicit 0 in initial_page is preserved; only a missing
+// field falls back to the new-dashboard defaults (38 / 20).
+setSlider("cell_gap", state.page.cell_gap ?? 38);
+setSlider("cell_radius", state.page.cell_radius ?? 20);
 form.elements.theme.value = state.page.theme || "";
 form.elements.header_theme.value = state.page.header_theme || "";
 setIcon(state.page.icon || "");

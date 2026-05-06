@@ -90,8 +90,12 @@ class Page:
     name: str
     layout: str = "single"
     cells: list[Cell] = field(default_factory=list)
-    cell_gap: int = 0
-    cell_radius: int = 0
+    # Defaults for new pages constructed via Page(...) directly. Pages
+    # loaded from JSON go through from_json() which preserves whatever was
+    # written to disk (including explicit 0), so existing dashboards are
+    # never silently restyled.
+    cell_gap: int = 38
+    cell_radius: int = 20
     bg_color: str = DEFAULT_BG
     icon: str | None = None
     header_theme: str | None = None
