@@ -81,7 +81,7 @@
   font-size: 80px;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: var(--habit-color);
+  color: var(--theme-fg, #111);
 }
 .hero-block .lbl {
   font-size: 12px;
@@ -132,7 +132,7 @@
   border-radius: 3px;
 }
 .cell.done {
-  background: var(--habit-color);
+  background: var(--theme-accent, currentColor);
 }
 .cell.future {
   /* Future cells fade out so the grid still spans the right edge. */
@@ -140,11 +140,11 @@
   border: 1px dashed var(--theme-divider, var(--rule));
 }
 .cell.today {
-  outline: 2px solid var(--habit-color);
+  outline: 2px solid var(--theme-accent, currentColor);
   outline-offset: -2px;
 }
 .cell.today.done {
-  outline-color: color-mix(in srgb, var(--habit-color) 40%, var(--theme-fg));
+  outline-color: color-mix(in srgb, var(--theme-accent, currentColor) 40%, var(--theme-fg));
 }
 
 /* size tiers */
