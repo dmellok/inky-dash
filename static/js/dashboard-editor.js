@@ -19,6 +19,8 @@ const LAYOUTS = {
   grid_2x2:               [[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]],
   hero_top_two_below:     [[0,0,1,.6],[0,.6,.5,.4],[.5,.6,.5,.4]],
   hero_bottom_two_above:  [[0,0,.5,.4],[.5,0,.5,.4],[0,.4,1,.6]],
+  hero_left_two_right:    [[0,0,.6,1],[.6,0,.4,.5],[.6,.5,.4,.5]],
+  hero_right_two_left:    [[0,0,.4,.5],[0,.5,.4,.5],[.4,0,.6,1]],
 };
 const LAYOUT_LABELS = {
   single: "Single",
@@ -28,6 +30,8 @@ const LAYOUT_LABELS = {
   grid_2x2: "Grid",
   hero_top_two_below: "Hero top",
   hero_bottom_two_above: "Hero bottom",
+  hero_left_two_right: "Hero left",
+  hero_right_two_left: "Hero right",
 };
 
 const form = document.getElementById("page-form");

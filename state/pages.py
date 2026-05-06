@@ -54,6 +54,16 @@ LAYOUTS: dict[str, list[Rect]] = {
         Rect(0.5, 0.0, 0.5, 0.4),
         Rect(0.0, 0.4, 1.0, 0.6),
     ],
+    "hero_left_two_right": [
+        Rect(0.0, 0.0, 0.6, 1.0),
+        Rect(0.6, 0.0, 0.4, 0.5),
+        Rect(0.6, 0.5, 0.4, 0.5),
+    ],
+    "hero_right_two_left": [
+        Rect(0.0, 0.0, 0.4, 0.5),
+        Rect(0.0, 0.5, 0.4, 0.5),
+        Rect(0.4, 0.0, 0.6, 1.0),
+    ],
 }
 
 
