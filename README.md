@@ -4,7 +4,7 @@ A Flask companion for [Pimoroni Inky Impression](https://shop.pimoroni.com/produ
 
 Composable widgets, themeable everything, drag-and-drop schedule priorities, push-from-anywhere over the LAN.
 
-![status](https://img.shields.io/badge/status-personal_project-blue) ![python](https://img.shields.io/badge/python-3.11+-green) ![flask](https://img.shields.io/badge/flask-3.0+-lightgrey)
+![version](https://img.shields.io/github/v/tag/dmellok/inky-dash?label=version&sort=semver) ![status](https://img.shields.io/badge/status-personal_project-blue) ![python](https://img.shields.io/badge/python-3.11+-green) ![flask](https://img.shields.io/badge/flask-3.0+-lightgrey)
 
 ---
 
