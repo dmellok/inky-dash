@@ -1,0 +1,171 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.sm {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+.sm.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+  font-size: 14px;
+}
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* ---- Sun pair: side-by-side big numbers ---- */
+.hero { display: flex; flex-direction: column; gap: 12px; }
+.sun-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.sun-pair .block {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: center;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.sun-pair .block i.ph {
+  font-size: clamp(40px, 6vw, 64px);
+  color: var(--theme-accent, currentColor);
+  line-height: 1;
+}
+.sun-pair .block .vals {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.sun-pair .block .k {
+  font-size: clamp(11px, 1.2vw, 14px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.sun-pair .block .v {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+  line-height: 1;
+}
+
+/* ---- Strip: 3-up smaller metrics in a single tonal row ---- */
+.strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.strip .metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 10px;
+}
+.strip .metric .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.strip .metric .v {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 800;
+  color: var(--theme-fg, #111);
+}
+
+/* ---- Moon row ---- */
+.moon {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.moon-vis {
+  width: clamp(64px, 10vw, 96px);
+  height: clamp(64px, 10vw, 96px);
+  flex-shrink: 0;
+}
+.moon-vis svg { width: 100%; height: 100%; display: block; }
+.moon-meta { display: flex; flex-direction: column; gap: 4px; }
+.moon-meta .phase {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg, #111);
+}
+.moon-meta .illum {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.moon-meta .illum .num {
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 900;
+  color: var(--theme-accent, currentColor);
+}
+.moon-meta .illum .lbl {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* ---- responsive ---- */
+.sm.h-xs { padding: 12px 14px; gap: 8px; }
+.sm.h-xs .widget-head { display: none; }
+.sm.h-xs .strip { display: none; }
+.sm.h-xs .moon { padding-top: 8px; gap: 10px; }
+.sm.h-xs .sun-pair .block .v { font-size: 26px; }
+
+.sm.h-sm .strip { display: none; }
+.sm.h-sm .sun-pair .block i.ph { font-size: 36px; }
