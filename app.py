@@ -436,6 +436,52 @@ def create_app() -> Flask:
             panel_height=config.panel_height,
         )
 
+    @app.get("/widget-stress")
+    def widget_stress():
+        """Standalone test page that mounts ONE widget at a specified
+        cell size — used by tools/stress_test.py to walk every widget
+        through the panel-size matrix and screenshot the results.
+
+        Mirrors the composer's mounting (shadow root, --theme-* CSS
+        variables, link to client.css) but skips the multi-cell + page
+        header logic so the harness can size each cell precisely.
+        """
+        from composer import _resolve_palette, _font_view  # dodge cycle
+        widget_id = request.args.get("widget", "")
+        try:
+            cw = max(40, int(request.args.get("w", "800")))
+            ch = max(40, int(request.args.get("h", "480")))
+        except ValueError:
+            return ("bad w/h", 400)
+        plugin = registry.plugins.get(widget_id)
+        if plugin is None or "widget" not in plugin.kinds:
+            return (f"unknown widget {widget_id!r}", 404)
+        try:
+            data = registry.fetch_widget_data(
+                widget_id, {}, panel_w=cw, panel_h=ch, preview=True,
+            )
+        except Exception as exc:
+            data = {"error": f"{type(exc).__name__}: {exc}"}
+        palette = _resolve_palette("light", registry)
+        # Inline the global font like the composer does so widgets render
+        # in the same typeface they will at push time. Use `app.config`
+        # directly — we're inside the factory closure, no app context push.
+        prefs = app.config.get("PREFERENCES")
+        font_id = prefs.get_default_font() if prefs else None
+        font = _font_view(font_id, registry)
+        return render_template(
+            "widget_stress.html",
+            widget_id=widget_id,
+            client_js_url=f"/plugins/{widget_id}/client.js" if plugin.has_client_js else None,
+            client_css_url=f"/plugins/{widget_id}/client.css" if plugin.has_client_css else None,
+            full_bleed=plugin.manifest.full_bleed,
+            cell_w=cw,
+            cell_h=ch,
+            data=data,
+            palette=palette,
+            font=font,
+        )
+
     # ---------- schedules --------------------------------------------------
 
     @app.get("/schedules")

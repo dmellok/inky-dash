@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ widget_id }} stress {{ cell_w }}x{{ cell_h }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/phosphor/style.css') }}">
+  <style>
+    /* Mirror composer.html's :root token shape so widgets that read
+       --font-family / --panel-w / --panel-h still resolve cleanly. */
+    :root {
+      --panel-w: {{ cell_w }}px;
+      --panel-h: {{ cell_h }}px;
+      --font-family: "{{ font.family }}", {{ font.fallback_stack }};
+    }
+    {% if not font.is_system %}
+    {% for face in font.embedded_faces %}
+    @font-face {
+      font-family: "{{ font.family }}";
+      src: url("{{ face.data_url }}") format("woff2");
+      font-weight: {{ face.weight }};
+      font-style: normal;
+      font-display: block;
+    }
+    {% endfor %}
+    {% endif %}
+    html, body { margin: 0; padding: 0; background: #c8c8c8; font-family: var(--font-family); }
+    /* The cell wrapper is sized exactly to the requested cell so the
+       widget receives the real dimensions in ctx.width/height — no
+       inner padding (full-bleed widgets get the same treatment as the
+       composer would give them). */
+    #cell {
+      position: absolute;
+      top: 0; left: 0;
+      width: {{ cell_w }}px;
+      height: {{ cell_h }}px;
+      background: white;
+      overflow: hidden;
+      /* Mirror composer.css: cell wrapper carries theme tokens that the
+         shadow root inherits from. */
+      {% for k, v in palette.items() %}--theme-{{ k }}: {{ v }};{% endfor %}
+      --theme-font: "{{ font.family }}", {{ font.fallback_stack }};
+    }
+  </style>
+</head>
+<body>
+  <div id="cell"></div>
+  <script type="application/json" id="widget-data">{{ data|tojson }}</script>
+  <script type="module">
+    const cell = document.getElementById("cell");
+    const data = JSON.parse(document.getElementById("widget-data").textContent);
+    const fullBleed = {{ "true" if full_bleed else "false" }};
+
+    // Same shadow-root mounting the composer uses, minus the inner
+    // padding scaling (we want the widget to see the real cell size).
+    const shadow = cell.attachShadow({ mode: "open" });
+    {% if client_css_url %}
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "{{ client_css_url }}";
+    shadow.appendChild(link);
+    {% endif %}
+    const baseStyle = document.createElement("style");
+    baseStyle.textContent = `
+      :host { display: block; width: 100%; height: 100%; }
+      .content { width: 100%; height: 100%; padding: 0; box-sizing: border-box; overflow: hidden; }
+    `;
+    shadow.appendChild(baseStyle);
+    const content = document.createElement("div");
+    content.className = "content";
+    shadow.appendChild(content);
+
+    {% if client_js_url %}
+    try {
+      const mod = await import("{{ client_js_url }}");
+      if (typeof mod.default !== "function") throw new Error("no default export");
+      await mod.default(content, {
+        data,
+        options: {},
+        theme: {{ palette|tojson }},
+        width: {{ cell_w }},
+        height: {{ cell_h }},
+        compact: false,
+        preview: true,
+        for_push: false,
+        has_page_header: false,
+        signal: new AbortController().signal,
+      });
+    } catch (err) {
+      content.innerHTML = `<pre style="margin:0;padding:8px;font:12px ui-monospace;color:#a00;white-space:pre-wrap">${String(err && err.message || err)}</pre>`;
+    }
+    {% else %}
+    content.innerHTML = '<pre style="margin:0;padding:8px;font:12px ui-monospace">no client.js</pre>';
+    {% endif %}
+
+    document.body.dataset.ready = "true";
+  </script>
+</body>
+</html>

@@ -29,6 +29,12 @@ Thumbs.db
 *.log
 /tmp/inky_dev.log
 
+# Stress-test artifacts — the harness in `tools/stress_test.py` generates
+# these locally; never commit them (the report links into renders/stress/
+# and 25 MB of PNGs has no business living in git).
+STRESS_REPORT.md
+renders/stress/
+
 # Internal design docs (excluded by repo owner)
 v3-brief.md
 v3-plugins.md
