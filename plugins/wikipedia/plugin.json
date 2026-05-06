@@ -1,0 +1,38 @@
+{
+  "id": "wikipedia",
+  "label": "Wikipedia featured",
+  "icon": "ph-book-open",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "lang",
+      "label": "Language code (e.g. en, de, fr)",
+      "type": "text",
+      "default": "en"
+    },
+    {
+      "name": "show_image",
+      "label": "Show thumbnail",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Wikipedia",
+    "fields": [
+      {
+        "key": "WIKIPEDIA_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 21600
+      }
+    ]
+  }
+}

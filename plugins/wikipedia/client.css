@@ -1,0 +1,134 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.wk {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.wk.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+  font-size: 14px;
+}
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* body — image alongside text on wide cells, stacked on narrow. */
+.body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 18px;
+  align-items: start;
+  flex: 1;
+  min-height: 0;
+}
+.wk.no-img .body { grid-template-columns: 1fr; }
+.wk.w-xs .body { grid-template-columns: 1fr; }   /* narrow → stack */
+.wk.w-xs .img {
+  height: 120px;
+  width: 100%;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 14px;
+  overflow: hidden;
+  align-self: stretch;
+}
+.img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+}
+.text .title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--theme-fg, #111);
+  /* Two-line clamp keeps the lede visible on shorter cells. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.text .extract {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  /* Multi-line clamp; tier overrides bump or shrink. */
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* size tiers */
+.wk.h-xs { padding: 12px 14px; gap: 8px; }
+.wk.h-xs .widget-head { display: none; }
+.wk.h-xs .img { display: none; }
+.wk.h-xs .body { grid-template-columns: 1fr; }
+.wk.h-xs .title { font-size: 16px; -webkit-line-clamp: 1; }
+.wk.h-xs .extract { font-size: 11px; line-height: 1.3; -webkit-line-clamp: 3; }
+
+.wk.h-sm .title { font-size: 22px; }
+.wk.h-sm .extract { font-size: 13px; -webkit-line-clamp: 4; }
+.wk.h-sm .img { width: 140px; }
+.wk.h-sm .body { grid-template-columns: 140px 1fr; }
+
+.wk.h-lg .title { font-size: 36px; }
+.wk.h-lg .extract { font-size: 17px; -webkit-line-clamp: 10; }
+
+.wk.h-xl .title { font-size: 44px; }
+.wk.h-xl .extract { font-size: 19px; -webkit-line-clamp: 14; }
