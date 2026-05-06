@@ -1,0 +1,170 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.wc {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+.wc.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.zone-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+.zone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 6px;
+  padding: 12px 14px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 12px;
+  align-items: center;
+}
+.zone .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.zone .city {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zone .sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+.zone .time-block {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-feature-settings: "tnum";
+}
+.zone .time {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--theme-fg, #111);
+  line-height: 1;
+}
+.zone .ampm {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--theme-accent, currentColor);
+}
+
+/* The 24h day/night track spans the full row width. The day band is
+   inset and tinted with the accent (faint), the cursor is a vertical
+   pip aligned to the local hour fraction, and the hour ticks are tiny
+   numeric anchors at 0/6/12/18. */
+.zone .track {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 22px;
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 999px;
+  overflow: visible;
+  border: 1px solid var(--theme-divider, var(--rule));
+}
+.zone .day-band {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  background: color-mix(in srgb, var(--theme-accent, currentColor) 28%, var(--theme-surface));
+  border-radius: 999px;
+}
+.zone .cursor {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 3px;
+  margin-left: -1.5px;
+  background: var(--theme-fg, #111);
+  border-radius: 2px;
+}
+.zone .hour-tick {
+  position: absolute;
+  bottom: -16px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  transform: translateX(-50%);
+  font-feature-settings: "tnum";
+}
+
+/* size tiers */
+.wc.h-xs { padding: 10px 12px; gap: 6px; }
+.wc.h-xs .widget-head { display: none; }
+.wc.h-xs .zone { padding: 6px 10px; row-gap: 2px; }
+.wc.h-xs .zone .city { font-size: 12px; }
+.wc.h-xs .zone .sub { display: none; }
+.wc.h-xs .zone .time { font-size: 18px; }
+.wc.h-xs .zone .ampm { font-size: 9px; }
+.wc.h-xs .zone .track { display: none; }
+
+.wc.h-sm .zone { padding: 8px 12px; }
+.wc.h-sm .zone .time { font-size: 24px; }
+.wc.h-sm .zone .city { font-size: 14px; }
+.wc.h-sm .zone .track { height: 14px; }
+.wc.h-sm .zone .hour-tick { font-size: 8px; bottom: -14px; }
+
+.wc.h-lg .zone .time { font-size: 48px; }
+.wc.h-lg .zone .city { font-size: 22px; }
+.wc.h-xl .zone .time { font-size: 64px; }
+.wc.h-xl .zone .city { font-size: 26px; }

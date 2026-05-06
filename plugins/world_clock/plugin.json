@@ -1,0 +1,31 @@
+{
+  "id": "world_clock",
+  "label": "World clock",
+  "icon": "ph-globe",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "zones",
+      "label": "Zones (comma-separated, IANA tz; optionally label@tz)",
+      "type": "text",
+      "default": "Local, New York@America/New_York, London@Europe/London, Tokyo@Asia/Tokyo"
+    },
+    {
+      "name": "format",
+      "label": "Time format",
+      "type": "select",
+      "default": "24h",
+      "choices": [
+        {"value": "24h", "label": "24-hour"},
+        {"value": "12h", "label": "12-hour"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}
