@@ -105,7 +105,16 @@ function rowHtml(r, vs, index, wantSparkline) {
 
 function currencySymbol(code) {
   const c = (code || "USD").toUpperCase();
-  return ({ USD: "$", EUR: "€", GBP: "£", AUD: "A$", JPY: "¥", CAD: "C$", CHF: "₣", NZD: "NZ$" }[c]) || "";
+  // Common fiat + a handful of crypto-as-quote tickers. Anything else
+  // falls back to the bare code with a trailing space so it still reads
+  // ("INR 1234" rather than the symbolless "1234").
+  const map = {
+    USD: "$", EUR: "€", GBP: "£", AUD: "A$", JPY: "¥",
+    CAD: "C$", CHF: "₣", NZD: "NZ$", CNY: "¥", INR: "₹",
+    KRW: "₩", BRL: "R$", MXN: "$", SGD: "S$", HKD: "HK$",
+    BTC: "₿", ETH: "Ξ", SATS: "sat ",
+  };
+  return map[c] || `${c} `;
 }
 
 function escapeHtml(s) {

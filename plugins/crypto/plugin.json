@@ -13,16 +13,9 @@
     },
     {
       "name": "vs",
-      "label": "Quote currency",
-      "type": "select",
-      "default": "usd",
-      "choices": [
-        {"value": "usd", "label": "USD"},
-        {"value": "eur", "label": "EUR"},
-        {"value": "gbp", "label": "GBP"},
-        {"value": "aud", "label": "AUD"},
-        {"value": "jpy", "label": "JPY"}
-      ]
+      "label": "Quote currency (e.g. usd, eur, aud, btc, eth)",
+      "type": "text",
+      "default": "usd"
     },
     {
       "name": "sparkline",

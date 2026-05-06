@@ -20,7 +20,12 @@ MARKETS_URL = "https://api.coingecko.com/api/v3/coins/markets"
 _lock = threading.Lock()
 _cache: dict[str, tuple[float, dict]] = {}
 
-_VALID_VS = {"usd", "eur", "gbp", "aud", "jpy", "cad", "chf", "nzd"}
+# CoinGecko accepts ~50+ vs_currencies (the full ISO fiat set plus btc /
+# eth / sats / etc). Rather than maintain a list manually, we accept any
+# 2-5 character alphabetic token — anything CoinGecko doesn't recognise
+# comes back as an empty payload and surfaces as "no rates returned".
+import re as _re
+_VS_RE = _re.compile(r"^[a-z]{2,5}$")
 
 # Common ticker → CoinGecko id shorthand. Lets the user type "btc" instead
 # of "bitcoin" without surprising anyone who already knows the canonical id.
@@ -66,7 +71,7 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
         return {"error": "set at least one coin id"}
     ids = ids[:8]
     vs = (options.get("vs") or "usd").strip().lower()
-    if vs not in _VALID_VS:
+    if not _VS_RE.match(vs):
         vs = "usd"
     sparkline = options.get("sparkline") is not False  # default true
 
