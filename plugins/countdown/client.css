@@ -1,0 +1,131 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.cd {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+.cd.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  font-size: 14px;
+  padding: 16px;
+}
+
+/* widget head — same idiom as the other widgets. */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+}
+.widget-head i.ph {
+  font-size: 20px;
+  color: var(--theme-accent, currentColor);
+}
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* body */
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  min-height: 0;
+}
+.title {
+  font-size: clamp(14px, 2vw, 22px);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.hero {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  line-height: 0.9;
+}
+.hero .num {
+  font-size: clamp(96px, 22vw, 240px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--theme-fg, #111);
+}
+.hero .unit {
+  font-size: clamp(20px, 3vw, 36px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--theme-accent, currentColor);
+}
+
+/* "verb when" line — small, but breakdown sits in the surface-2 chip
+   to test that palette key shows up even on a tight widget. */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  font-size: clamp(13px, 1.5vw, 16px);
+  font-weight: 600;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.footer .verb {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.85em;
+}
+.footer .when { color: var(--theme-fg, #111); font-weight: 800; }
+.footer .breakdown {
+  background: var(--theme-surface-2, var(--tone));
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: var(--theme-fg, #111);
+  font-feature-settings: "tnum";
+}
+
+/* Past-target variant tints the unit so it visually distinguishes "since" */
+.cd.elapsed .hero .unit { color: var(--theme-fg-soft, var(--theme-muted, #888)); }
+
+/* responsive tightening */
+.cd.h-xs { padding: 12px 14px; gap: 6px; }
+.cd.h-xs .widget-head { display: none; }
+.cd.h-xs .hero .num { font-size: clamp(56px, 16vw, 96px); }
+.cd.h-xs .hero .unit { font-size: 14px; }
+.cd.h-xs .title { font-size: 12px; }
+.cd.h-xs .footer .breakdown { display: none; }
+
+.cd.h-sm .hero .num { font-size: clamp(72px, 18vw, 140px); }

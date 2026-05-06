@@ -1,0 +1,33 @@
+{
+  "id": "countdown",
+  "label": "Countdown",
+  "icon": "ph-hourglass",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "label",
+      "label": "Label",
+      "type": "text",
+      "default": "Until"
+    },
+    {
+      "name": "target",
+      "label": "Target date (YYYY-MM-DD or YYYY-MM-DDTHH:MM)",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "name": "icon",
+      "label": "Icon (Phosphor name, e.g. ph-cake)",
+      "type": "text",
+      "default": "ph-hourglass"
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}
