@@ -1,0 +1,50 @@
+.habits-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  margin: 16px auto 0;
+}
+
+.grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.grid-form button { grid-column: 1 / -1; justify-self: start; }
+@media (max-width: 540px) {
+  .grid-form { grid-template-columns: 1fr; }
+}
+
+.habit-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.habit-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  border-left: 3px solid var(--row-color, var(--accent));
+}
+.habit-row.color-accent { --row-color: var(--accent); }
+.habit-row.color-ok     { --row-color: var(--ok); }
+.habit-row.color-warn   { --row-color: var(--warn); }
+.habit-row.color-danger { --row-color: var(--danger); }
+
+.habit-icon {
+  font-size: 22px;
+  color: var(--row-color, var(--accent));
+}
+.habit-row .meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.habit-row .meta strong { font-size: 14px; }
+.habit-row .meta .sub { font-size: 12px; color: var(--muted); }
+.habit-row .actions { display: flex; gap: 6px; }

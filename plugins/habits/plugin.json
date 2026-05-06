@@ -1,0 +1,27 @@
+{
+  "id": "habits",
+  "label": "Habits",
+  "icon": "ph-check-square",
+  "version": "1.0.0",
+  "kinds": ["widget", "admin"],
+  "cell_options": [
+    {
+      "name": "habit",
+      "label": "Habit",
+      "type": "select",
+      "choices_from": "habits"
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "choice_providers": ["habits"],
+  "admin_nav": {
+    "label": "Habits",
+    "icon": "ph-check-square",
+    "endpoint": "habits.index"
+  }
+}

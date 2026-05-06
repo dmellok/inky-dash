@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Habits{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/plugins/habits/static/admin.css">
+
+<section class="habits-admin">
+  <header class="page-head">
+    <h1>Habits</h1>
+  </header>
+
+  <section class="card form-section">
+    <header class="section-head"><h3>New habit</h3></header>
+    <form id="add-form" class="grid-form">
+      <label class="form-label">
+        Name
+        <input type="text" class="form-input" name="name" required placeholder="Daily walk">
+      </label>
+      <label class="form-label">
+        Icon (Phosphor name)
+        <input type="text" class="form-input" name="icon" value="ph-check-square">
+      </label>
+      <label class="form-label">
+        Colour
+        <select class="form-input" name="color">
+          <option value="accent">Accent</option>
+          <option value="ok">Ok / green</option>
+          <option value="warn">Warn / amber</option>
+          <option value="danger">Danger / red</option>
+        </select>
+      </label>
+      <button type="submit" class="btn primary">
+        <i class="ph ph-plus"></i> Create
+      </button>
+    </form>
+  </section>
+
+  <section class="card form-section">
+    <header class="section-head"><h3>Your habits</h3></header>
+    <ul class="habit-list" id="habit-list">
+      <li class="muted small">Loading…</li>
+    </ul>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/plugins/habits/static/admin.js"></script>
+{% endblock %}

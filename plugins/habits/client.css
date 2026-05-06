@@ -1,0 +1,165 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+  /* Per-habit colour mapped via the color-* class set by JS. Defaults
+     to theme-accent so existing data without a colour reads sensibly. */
+  --habit-color: var(--theme-accent, currentColor);
+}
+
+.hb {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+.hb.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+}
+
+.hb.color-accent  { --habit-color: var(--theme-accent, currentColor); }
+.hb.color-ok      { --habit-color: var(--theme-ok,    #2f855a); }
+.hb.color-warn    { --habit-color: var(--theme-warn,  #c4791a); }
+.hb.color-danger  { --habit-color: var(--theme-danger,#c00);    }
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--habit-color); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: var(--theme-surface-2, var(--tone));
+  color: var(--theme-fg, #111);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+/* hero */
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+.hero-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  line-height: 1;
+}
+.hero-block .num {
+  font-size: 80px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--habit-color);
+}
+.hero-block .lbl {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-top: 2px;
+}
+
+.meta-block {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.meta-block .m {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--theme-surface-2, var(--tone));
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+.meta-block .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.meta-block .v {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--theme-fg, #111);
+}
+
+/* grid — 7 rows × 26 columns by default */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(26, 1fr);
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
+}
+.cell {
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 3px;
+}
+.cell.done {
+  background: var(--habit-color);
+}
+.cell.future {
+  /* Future cells fade out so the grid still spans the right edge. */
+  background: transparent;
+  border: 1px dashed var(--theme-divider, var(--rule));
+}
+.cell.today {
+  outline: 2px solid var(--habit-color);
+  outline-offset: -2px;
+}
+.cell.today.done {
+  outline-color: color-mix(in srgb, var(--habit-color) 40%, var(--theme-fg));
+}
+
+/* size tiers */
+.hb.h-xs { padding: 12px 14px; gap: 8px; }
+.hb.h-xs .widget-head { display: none; }
+.hb.h-xs .meta-block { display: none; }
+.hb.h-xs .hero-block .num { font-size: 32px; }
+.hb.h-xs .hero-block .lbl { font-size: 10px; }
+.hb.h-xs .grid { gap: 2px; }
+
+.hb.h-sm .meta-block { display: none; }
+.hb.h-sm .hero-block .num { font-size: 56px; }
+
+.hb.h-lg .hero-block .num { font-size: 110px; }
+.hb.h-lg .meta-block .v { font-size: 22px; }
+
+.hb.h-xl .hero-block .num { font-size: 150px; }
+.hb.h-xl .meta-block .v { font-size: 28px; }
