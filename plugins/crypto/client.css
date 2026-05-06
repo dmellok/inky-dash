@@ -70,6 +70,19 @@
   background: var(--theme-surface-2, var(--tone));
   border-radius: 12px;
 }
+/* With sparklines on, expand the row to four columns: the chart sits
+   between the ticker and the price. */
+.with-spark .rate { grid-template-columns: 80px minmax(60px, 1fr) auto auto; }
+.with-spark .rate .spark {
+  display: block;
+  position: relative;
+  height: 36px;
+  min-width: 0;
+}
+.with-spark .rate .spark canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
 .rate .ticker {
   font-size: 20px;
   font-weight: 900;

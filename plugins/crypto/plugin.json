@@ -25,6 +25,12 @@
       ]
     },
     {
+      "name": "sparkline",
+      "label": "Show 7-day sparkline",
+      "type": "bool",
+      "default": true
+    },
+    {
       "name": "show_header",
       "label": "Show widget header",
       "type": "bool",
