@@ -89,8 +89,11 @@
   position: absolute;
   top: 4px;
   bottom: 4px;
-  background: color-mix(in srgb, var(--row-color, var(--accent)) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 45%, var(--surface));
+  /* Was 22% accent / 45% border — too faint against the surface-2
+     track. Pushed to 60% / 85% so the pill reads as the dominant
+     element of the row. */
+  background: color-mix(in srgb, var(--row-color, var(--accent)) 60%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 85%, var(--surface));
   border-radius: 999px;
 }
 /* One-shot indicator: same pill scheme as the interval window, just
@@ -100,8 +103,8 @@
   top: 4px;
   bottom: 4px;
   width: 14px;
-  background: color-mix(in srgb, var(--row-color, var(--accent)) 22%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 45%, var(--surface));
+  background: color-mix(in srgb, var(--row-color, var(--accent)) 60%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 85%, var(--surface));
   border-radius: 999px;
   transform: translateX(-50%);
 }
