@@ -1,0 +1,15 @@
+{
+  "id": "year_progress",
+  "label": "Year progress",
+  "icon": "ph-chart-line-up",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.yp {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  font-feature-settings: "tnum";
+}
+
+/* hero */
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+.hero .num-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  line-height: 0.9;
+}
+.hero .num {
+  font-size: 120px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--theme-fg, #111);
+}
+.hero .of {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.hero .lbl {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* progress bar */
+.bar {
+  position: relative;
+  height: 24px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--theme-accent, currentColor);
+  border-radius: 999px;
+  transition: width 200ms ease;
+}
+.bar .pct {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--theme-fg, #111);
+  mix-blend-mode: difference;
+  /* The pct sits on whichever side of the fill the cursor is — difference
+     blend keeps it readable on both lit + unlit halves. */
+}
+
+/* week ribbon — one bar per ISO week */
+.weeks {
+  display: grid;
+  grid-template-columns: repeat(52, 1fr);
+  gap: 2px;
+  height: 14px;
+}
+.weeks .wk {
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 2px;
+}
+.weeks .wk.lit { background: var(--theme-accent, currentColor); }
+
+/* stats — three tonal tiles */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--theme-surface-2, var(--tone));
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+.stats .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.stats .v {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--theme-fg, #111);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.stats .v .u {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-left: 4px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.footer {
+  margin-top: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  letter-spacing: 0.04em;
+}
+
+/* size tiers */
+.yp.h-xs { padding: 12px 14px; gap: 8px; }
+.yp.h-xs .widget-head { display: none; }
+.yp.h-xs .hero .num { font-size: 56px; }
+.yp.h-xs .hero .of { font-size: 16px; }
+.yp.h-xs .hero .lbl { font-size: 10px; }
+.yp.h-xs .bar { height: 16px; }
+.yp.h-xs .weeks { display: none; }
+.yp.h-xs .stats { display: none; }
+.yp.h-xs .footer { display: none; }
+
+.yp.h-sm .hero .num { font-size: 80px; }
+.yp.h-sm .weeks { display: none; }
+.yp.h-sm .footer { display: none; }
+.yp.h-sm .stats .v { font-size: 18px; }
+
+.yp.h-lg .hero .num { font-size: 160px; }
+.yp.h-xl .hero .num { font-size: 220px; }
+.yp.h-xl .stats .v { font-size: 28px; }
