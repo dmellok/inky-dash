@@ -1,0 +1,56 @@
+{
+  "id": "wind",
+  "label": "Wind compass",
+  "icon": "ph-wind",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "lat",
+      "label": "Latitude",
+      "type": "text",
+      "default": "-37.8136"
+    },
+    {
+      "name": "lng",
+      "label": "Longitude",
+      "type": "text",
+      "default": "144.9631"
+    },
+    {
+      "name": "place_label",
+      "label": "Location label",
+      "type": "text",
+      "default": "Melbourne"
+    },
+    {
+      "name": "units",
+      "label": "Speed units",
+      "type": "select",
+      "default": "kmh",
+      "choices": [
+        {"value": "kmh", "label": "km/h"},
+        {"value": "mph", "label": "mph"},
+        {"value": "ms",  "label": "m/s"},
+        {"value": "kn",  "label": "knots"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Wind compass",
+    "fields": [
+      {
+        "key": "WIND_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 600
+      }
+    ]
+  }
+}

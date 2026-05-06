@@ -1,0 +1,173 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.wd {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+.wd.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* dial */
+.dial-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.dial {
+  width: 280px;
+  height: 280px;
+  max-width: 100%;
+  max-height: 100%;
+}
+.dial .ring {
+  fill: var(--theme-surface-2, var(--tone));
+  stroke: var(--theme-divider, var(--rule));
+  stroke-width: 0.6;
+}
+.dial .tick {
+  stroke: var(--theme-fg-soft, var(--theme-muted, #888));
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+.dial .tick.major {
+  stroke-width: 2;
+  stroke: var(--theme-fg, #111);
+}
+.dial .label-cardinal {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  fill: var(--theme-fg, #111);
+}
+.dial .arrow line {
+  stroke: var(--theme-accent, currentColor);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+.dial .arrow polygon {
+  fill: var(--theme-accent, currentColor);
+}
+.dial .hub {
+  fill: var(--theme-accent, currentColor);
+  stroke: var(--theme-surface, #fff);
+  stroke-width: 1.5;
+}
+
+/* centre stack — sits on top of the dial. */
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+.center .speed-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--theme-surface, #fff);
+  padding: 4px 14px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px var(--theme-surface, #fff);
+}
+.center .num {
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--theme-fg, #111);
+}
+.center .unit {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.center .cardinal {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-accent, currentColor);
+  background: var(--theme-surface, #fff);
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+.center .gust {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* size tiers */
+.wd.h-xs { padding: 12px 14px; gap: 6px; }
+.wd.h-xs .widget-head { display: none; }
+.wd.h-xs .dial { width: 130px; height: 130px; }
+.wd.h-xs .dial .label-cardinal { font-size: 12px; }
+.wd.h-xs .center .num { font-size: 22px; }
+.wd.h-xs .center .unit { font-size: 10px; }
+.wd.h-xs .center .cardinal { font-size: 9px; padding: 1px 6px; }
+.wd.h-xs .center .gust { display: none; }
+
+.wd.h-sm .dial { width: 200px; height: 200px; }
+.wd.h-sm .center .num { font-size: 30px; }
+
+.wd.h-lg .dial { width: 360px; height: 360px; }
+.wd.h-lg .center .num { font-size: 64px; }
+.wd.h-lg .center .unit { font-size: 18px; }
+.wd.h-lg .center .cardinal { font-size: 14px; }
+
+.wd.h-xl .dial { width: 480px; height: 480px; }
+.wd.h-xl .center .num { font-size: 88px; }
+.wd.h-xl .center .unit { font-size: 22px; }
