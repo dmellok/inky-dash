@@ -1,0 +1,54 @@
+{
+  "id": "air_quality",
+  "label": "Air quality",
+  "icon": "ph-wind",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "lat",
+      "label": "Latitude",
+      "type": "text",
+      "default": "-37.8136"
+    },
+    {
+      "name": "lng",
+      "label": "Longitude",
+      "type": "text",
+      "default": "144.9631"
+    },
+    {
+      "name": "place_label",
+      "label": "Location label",
+      "type": "text",
+      "default": "Melbourne"
+    },
+    {
+      "name": "scale",
+      "label": "AQI scale",
+      "type": "select",
+      "default": "us",
+      "choices": [
+        {"value": "us",       "label": "US AQI (0-500)"},
+        {"value": "european", "label": "European AQI (0-100)"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Air quality",
+    "fields": [
+      {
+        "key": "AIR_QUALITY_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 1800
+      }
+    ]
+  }
+}

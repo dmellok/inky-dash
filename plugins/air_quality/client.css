@@ -1,0 +1,180 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+  /* sev-color resolves per-severity below — used for hero number, scale
+     fill, and the cursor pip. Defaults to the theme accent for the
+     unknown bucket so a missing reading doesn't read as alarming. */
+  --sev-color: var(--theme-accent, currentColor);
+}
+
+.aq {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+.aq.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+  font-size: 14px;
+}
+
+/* severity → colour used for hero + scale bar.
+   ok / accent / warn / danger / fg keep us inside the theme palette;
+   "very_unhealthy" and "hazardous" both danger-tint, distinguished by
+   intensity in the hero number rather than a separate hue. */
+.aq.sev-good           { --sev-color: var(--theme-ok,    #2f855a); }
+.aq.sev-moderate       { --sev-color: var(--theme-accent, currentColor); }
+.aq.sev-sensitive      { --sev-color: var(--theme-warn,  #c4791a); }
+.aq.sev-unhealthy      { --sev-color: var(--theme-warn,  #c4791a); }
+.aq.sev-very_unhealthy { --sev-color: var(--theme-danger, #c00); }
+.aq.sev-hazardous      { --sev-color: var(--theme-danger, #c00); }
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* hero */
+.hero { display: flex; flex-direction: column; gap: 4px; }
+.hero .num-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  line-height: 0.9;
+}
+.hero .num {
+  font-size: 120px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--sev-color);
+}
+.hero .of {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.hero .cat {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sev-color);
+}
+
+/* scale bar — positions a small cursor pip at the AQI's position on the
+   scale max so the user can see "near the top" vs "barely above zero". */
+.scale-bar {
+  position: relative;
+  height: 14px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 999px;
+  overflow: visible;
+}
+.scale-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--sev-color);
+  border-radius: 999px;
+  opacity: 0.35;
+}
+.scale-cursor {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--sev-color);
+  border: 2px solid var(--theme-surface, #fff);
+  transform: translate(-50%, -50%);
+}
+
+/* pollutant tiles */
+.pollutants {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.poll {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--theme-surface-2, var(--tone));
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.poll .k {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.poll .v {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--theme-fg, #111);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.poll .v .u {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-left: 3px;
+  letter-spacing: 0.04em;
+}
+
+/* size tiers */
+.aq.h-xs { padding: 12px 14px; gap: 8px; }
+.aq.h-xs .widget-head { display: none; }
+.aq.h-xs .hero .num { font-size: 56px; }
+.aq.h-xs .hero .of { font-size: 14px; }
+.aq.h-xs .hero .cat { font-size: 11px; }
+.aq.h-xs .scale-bar { height: 8px; }
+.aq.h-xs .pollutants { display: none; }
+
+.aq.h-sm .hero .num { font-size: 80px; }
+.aq.h-sm .hero .cat { font-size: 13px; }
+.aq.h-sm .pollutants { grid-template-columns: repeat(3, 1fr); }
+.aq.h-sm .poll .v { font-size: 15px; }
+
+.aq.h-lg .hero .num { font-size: 160px; }
+.aq.h-lg .pollutants { grid-template-columns: repeat(6, 1fr); }
+.aq.h-lg .poll .v { font-size: 22px; }
+
+.aq.h-xl .hero .num { font-size: 220px; }
+.aq.h-xl .pollutants { grid-template-columns: repeat(6, 1fr); }
+.aq.h-xl .poll .v { font-size: 26px; }
