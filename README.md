@@ -134,7 +134,7 @@ the source code only.
 |---|---|---|---|
 | Phosphor Icons (font + CSS) | MIT | [`static/vendor/phosphor/`](static/vendor/phosphor/LICENSE.txt) | [phosphoricons.com](https://phosphoricons.com/) |
 | Meteocons (weather SVGs) | MIT | [`plugins/weather/static/icons/`](plugins/weather/static/icons/LICENSE.txt) | [github.com/basmilius/weather-icons](https://github.com/basmilius/weather-icons) |
-| Chart.js v4.4.6 | MIT | `plugins/weather/static/chart.umd.min.js` | [chartjs.org](https://www.chartjs.org/) |
+| Chart.js v4.4.6 | MIT | [`static/vendor/chartjs/`](static/vendor/chartjs/) | [chartjs.org](https://www.chartjs.org/) |
 | 38 bundled fonts | SIL OFL 1.1 | [`plugins/fonts_core/`](plugins/fonts_core/LICENSE.txt) | [fontsource.org](https://fontsource.org) (Google Fonts) |
 
 ## Data sources

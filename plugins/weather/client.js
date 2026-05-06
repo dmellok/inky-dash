@@ -1,25 +1,8 @@
 // Weather widget — Material-style dashboard with a Chart.js hourly curve
-// and gradient daily bars. The host runs inside a shadow root, so Chart.js
-// is loaded once per render via a dynamic <script> injected into the host
-// document (it lives at /plugins/weather/static/chart.umd.min.js — bundled
-// in the plugin so no external CDN at push time).
-
-const CHART_URL = "/plugins/weather/static/chart.umd.min.js";
-let chartLib = null;
-
-async function loadChart() {
-  if (chartLib) return chartLib;
-  if (window.Chart) return (chartLib = window.Chart);
-  await new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = CHART_URL;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error("failed to load chart.js"));
-    document.head.appendChild(s);
-  });
-  chartLib = window.Chart;
-  return chartLib;
-}
+// and gradient daily bars. Chart.js itself lives in the shared vendor
+// bundle at /static/vendor/chartjs/, so any plugin can import the loader
+// without each plugin re-vendoring the library.
+import { loadChart } from "/static/vendor/chartjs/loader.js";
 
 export default async function render(host, ctx) {
   const d = ctx.data || {};
