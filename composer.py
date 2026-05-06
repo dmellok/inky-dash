@@ -166,6 +166,10 @@ def _page_view(
                 "enabled": (
                     is_widget and registry.is_enabled(cell.widget)
                 ),
+                # Image widgets opt into edge-to-edge rendering by setting
+                # `full_bleed: true` in their plugin.json — composer.js then
+                # drops the inner cell padding so the image fills the cell.
+                "full_bleed": bool(plugin and getattr(plugin.manifest, "full_bleed", False)),
             }
         )
 

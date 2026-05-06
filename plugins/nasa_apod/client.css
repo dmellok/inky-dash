@@ -6,7 +6,9 @@
   background: #000;
   color: #fff;
   font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
-  border-radius: 16px;
+  /* Cell wrapper owns border-radius + overflow:hidden when full_bleed
+     is on; the inner radius would round-clip a second time and shave a
+     few pixels off the image. */
   overflow: hidden;
 }
 

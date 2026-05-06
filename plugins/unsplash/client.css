@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 16px;
+  /* Cell wrapper owns the rounded clip in full-bleed mode. */
   overflow: hidden;
   font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
 }

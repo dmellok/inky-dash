@@ -3,7 +3,10 @@
   "label": "NASA APOD",
   "icon": "ph-rocket",
   "version": "1.0.0",
-  "kinds": ["widget"],
+  "kinds": [
+    "widget"
+  ],
+  "full_bleed": true,
   "cell_options": [
     {
       "name": "image_only",
@@ -23,9 +26,18 @@
       "type": "select",
       "default": "cover",
       "choices": [
-        {"value": "cover",   "label": "Fill (cover)"},
-        {"value": "contain", "label": "Fit (contain)"},
-        {"value": "blurred", "label": "Blurred"}
+        {
+          "value": "cover",
+          "label": "Fill (cover)"
+        },
+        {
+          "value": "contain",
+          "label": "Fit (contain)"
+        },
+        {
+          "value": "blurred",
+          "label": "Blurred"
+        }
       ]
     }
   ],

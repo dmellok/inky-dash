@@ -87,6 +87,10 @@ class PluginManifest:
     choice_providers: list[str]
     themes: list[ThemeEntry]
     fonts: list[FontEntry]
+    # Image-style widgets (gallery, APOD, Unsplash, webpage screenshot)
+    # set full_bleed=true so the composer skips the inner cell padding —
+    # the content fills the cell edge-to-edge inside the rounded corners.
+    full_bleed: bool = False
 
 
 @dataclass
@@ -215,6 +219,7 @@ def _parse_manifest(plugin_id: str, data: dict) -> PluginManifest:
         choice_providers=list(data.get("choice_providers") or []),
         themes=_parse_themes(plugin_id, data.get("themes") or []),
         fonts=_parse_fonts(plugin_id, data.get("fonts") or []),
+        full_bleed=bool(data.get("full_bleed", False)),
     )
 
 

@@ -3,9 +3,16 @@
   "label": "Webpage",
   "icon": "ph-browser",
   "version": "1.0.0",
-  "kinds": ["widget"],
+  "kinds": [
+    "widget"
+  ],
+  "full_bleed": true,
   "cell_options": [
-    {"name": "url", "label": "URL", "type": "text"},
+    {
+      "name": "url",
+      "label": "URL",
+      "type": "text"
+    },
     {
       "name": "extra_wait_ms",
       "label": "Extra wait (ms)",
@@ -18,8 +25,14 @@
       "type": "select",
       "default": "networkidle",
       "choices": [
-        {"value": "load",        "label": "load"},
-        {"value": "networkidle", "label": "networkidle"}
+        {
+          "value": "load",
+          "label": "load"
+        },
+        {
+          "value": "networkidle",
+          "label": "networkidle"
+        }
       ]
     }
   ],

@@ -3,7 +3,11 @@
   "label": "Gallery",
   "icon": "ph-images-square",
   "version": "1.0.0",
-  "kinds": ["widget", "admin"],
+  "kinds": [
+    "widget",
+    "admin"
+  ],
+  "full_bleed": true,
   "cell_options": [
     {
       "name": "gallery",
@@ -17,8 +21,14 @@
       "type": "select",
       "default": "random",
       "choices": [
-        {"value": "random", "label": "Random"},
-        {"value": "sequential", "label": "Sequential (A→Z)"}
+        {
+          "value": "random",
+          "label": "Random"
+        },
+        {
+          "value": "sequential",
+          "label": "Sequential (A\u2192Z)"
+        }
       ]
     },
     {
@@ -33,9 +43,18 @@
       "type": "select",
       "default": "cover",
       "choices": [
-        {"value": "cover",   "label": "Fill (cover)"},
-        {"value": "contain", "label": "Fit (contain)"},
-        {"value": "blurred", "label": "Blurred"}
+        {
+          "value": "cover",
+          "label": "Fill (cover)"
+        },
+        {
+          "value": "contain",
+          "label": "Fit (contain)"
+        },
+        {
+          "value": "blurred",
+          "label": "Blurred"
+        }
       ]
     }
   ],
@@ -50,7 +69,9 @@
       }
     ]
   },
-  "choice_providers": ["galleries"],
+  "choice_providers": [
+    "galleries"
+  ],
   "admin_nav": {
     "label": "Galleries",
     "icon": "ph-images-square",

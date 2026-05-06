@@ -138,12 +138,19 @@
       link.href = cell.client_css_url;
       shadow.appendChild(link);
     }
+    // Image-style widgets (gallery, APOD, Unsplash, webpage screenshot)
+    // opt into full-bleed via the manifest — composer skips the inner
+    // padding so the image fills the cell edge-to-edge inside the same
+    // rounded corners. The wrapper still has `overflow: hidden` so the
+    // image clips cleanly.
+    const fullBleed = !!cell.full_bleed;
+    const innerPad = fullBleed ? 0 : innerRadius;
     const baseStyle = document.createElement("style");
     baseStyle.textContent = `
       :host { display: block; width: 100%; height: 100%; }
       .content {
         width: 100%; height: 100%;
-        padding: ${innerRadius}px;
+        padding: ${innerPad}px;
         box-sizing: border-box;
         overflow: hidden;
       }
@@ -160,8 +167,8 @@
 
     // Dynamic import + render
     const renderArea = {
-      width: cellW - 2 * innerRadius,
-      height: cellH - 2 * innerRadius,
+      width: cellW - 2 * innerPad,
+      height: cellH - 2 * innerPad,
     };
     try {
       const mod = await import(cell.client_js_url);

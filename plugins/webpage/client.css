@@ -3,7 +3,8 @@
   position: relative;
   height: 100%;
   width: 100%;
-  background: var(--theme-surface, #fff);
+  /* Full-bleed: no surface tint underneath — the iframe screenshot
+     fills the cell. The cell wrapper handles rounded corners + clip. */
   font-family: var(--theme-font, system-ui, sans-serif);
   color: var(--theme-fg, #111);
 }
