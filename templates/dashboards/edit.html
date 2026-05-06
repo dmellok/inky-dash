@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{% if page %}Edit · {{ page.name }}{% else %}New dashboard{% endif %}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-editor.css') }}">
+
+<header class="editor-top-bar">
+  <a href="{{ url_for('index') }}" class="btn ghost back" title="All dashboards">
+    <i class="ph ph-arrow-left"></i><span>Back</span>
+  </a>
+</header>
+
+<div class="editor" id="editor"
+     style="--panel-w: {{ panel_width }}px; --panel-h: {{ panel_height }}px; --panel-aspect: {{ panel_width }} / {{ panel_height }};">
+  <div class="editor-pane editor-form">
+    <form id="page-form" autocomplete="off">
+      <section class="card form-section">
+        <header class="section-head"><h3>Page</h3></header>
+        <label class="form-label">
+          Name
+          <input type="text" name="name" class="form-input" required>
+        </label>
+        <label class="form-label">
+          Layout
+          <div class="layout-picker" id="layout-picker"></div>
+          <input type="hidden" name="layout">
+        </label>
+
+        <label class="form-label">
+          Theme
+          <select name="theme" class="form-input" id="theme-select"></select>
+        </label>
+
+        <label class="form-label icon-field">
+          Header icon
+          <span class="icon-row">
+            <span class="icon-dropdown" id="icon-dropdown">
+              <button type="button" class="btn icon-trigger" id="icon-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <i class="ph ph-image-square" id="icon-preview"></i>
+                <span class="icon-name" id="icon-name">none</span>
+                <span class="icon-caret" aria-hidden="true"><i class="ph ph-caret-down"></i></span>
+              </button>
+              <div class="icon-popover" id="icon-popover" hidden>
+                <div class="icon-search">
+                  <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                  <input type="search" id="icon-search" placeholder="Search icons…" autocomplete="off" spellcheck="false">
+                </div>
+                <div class="icon-grid" id="icon-grid" tabindex="-1"></div>
+                <p class="icon-empty muted small" id="icon-empty" hidden>No matches</p>
+              </div>
+            </span>
+            <button type="button" class="btn ghost" id="icon-clear" title="Clear icon">
+              <i class="ph ph-x"></i>
+            </button>
+          </span>
+          <input type="hidden" name="icon">
+        </label>
+
+        <details class="advanced-block">
+          <summary>Advanced</summary>
+          <div class="advanced-body">
+            <label class="form-label">
+              Header theme
+              <select name="header_theme" class="form-input"></select>
+              <span class="field-help">Override theme for the page header strip only.</span>
+            </label>
+
+            <label class="form-label">
+              Background
+              <span class="color-row">
+                <input type="color" name="bg_color" value="#ffffff">
+                <input type="text" class="form-input color-text" data-bind="bg_color" value="#ffffff" maxlength="7">
+              </span>
+            </label>
+
+            <div class="grid-2">
+              <label class="form-label">
+                <span class="label-row">
+                  <span>Cell gap</span>
+                  <span class="slider-readout" data-readout="cell_gap">0px</span>
+                </span>
+                <input type="range" name="cell_gap" min="0" max="48" step="1" value="0">
+              </label>
+              <label class="form-label">
+                <span class="label-row">
+                  <span>Cell radius</span>
+                  <span class="slider-readout" data-readout="cell_radius">0px</span>
+                </span>
+                <input type="range" name="cell_radius" min="0" max="48" step="1" value="0">
+              </label>
+            </div>
+          </div>
+        </details>
+      </section>
+
+      <section class="card form-section cells-card">
+        <header class="section-head"><h3>Cells</h3></header>
+        <p class="muted small" id="cells-empty" hidden>This layout has no cells.</p>
+        <ol class="cell-list" id="cell-list"></ol>
+      </section>
+    </form>
+
+    <div class="editor-action-bar">
+      <button type="button" class="btn outline-accent" data-action="push-no-save">
+        <i class="ph ph-upload-simple"></i> Push without saving
+      </button>
+      <button type="button" class="btn" data-action="save-only">
+        <i class="ph ph-floppy-disk"></i> Save
+      </button>
+      <button type="button" class="btn primary" data-action="save-push">
+        <i class="ph ph-floppy-disk"></i> Save &amp; push
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-pane editor-preview">
+    <div class="preview-frame-wrap">
+      <div class="preview-frame-canvas" id="preview-frame-wrap">
+        <iframe id="preview-iframe" class="preview-frame" title="Dashboard preview" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+    <div class="preview-meta muted small">
+      <span id="preview-status">No preview yet</span>
+      <span class="preview-dims" id="preview-dims"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Cell template (cloned per cell) -->
+<template id="cell-template">
+  <li class="cell-row">
+    <label class="form-label cell-widget-row">
+      <span class="label-row">
+        <span class="cell-label">Cell <span class="cell-index"></span></span>
+      </span>
+      <select class="cell-widget form-input"></select>
+    </label>
+    <div class="cell-options"></div>
+    <label class="form-label">
+      Theme override
+      <select class="cell-theme form-input"><option value="">(use page theme)</option></select>
+    </label>
+  </li>
+</template>
+
+<!-- Initial state: page JSON + plugin/theme/font catalogue. Editor JS reads these. -->
+<script type="application/json" id="initial-page">{{ initial_page|tojson }}</script>
+<script type="application/json" id="initial-catalog">{{ catalog|tojson }}</script>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/dashboard-editor.js') }}"></script>
+{% endblock %}

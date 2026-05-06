@@ -1,0 +1,37 @@
+{
+  "id": "the_age",
+  "label": "The Age",
+  "icon": "ph-newspaper",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "bg",
+      "label": "Background",
+      "type": "select",
+      "default": "cover",
+      "choices": [
+        {"value": "cover",   "label": "Fill (cover)"},
+        {"value": "contain", "label": "Fit (contain)"},
+        {"value": "blurred", "label": "Blurred"}
+      ]
+    }
+  ],
+  "settings": {
+    "title": "The Age",
+    "fields": [
+      {
+        "key": "THE_AGE_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 1800
+      }
+    ]
+  }
+}

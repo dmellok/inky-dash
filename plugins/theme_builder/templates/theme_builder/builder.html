@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Theme Builder{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/plugins/theme_builder/static/builder.css">
+
+<section class="theme-builder">
+  <header class="page-head">
+    <h1>Theme Builder</h1>
+    <button type="button" class="btn primary" id="new-theme-btn">
+      <i class="ph ph-plus"></i> New theme
+    </button>
+  </header>
+
+  <div class="builder-grid">
+    <aside class="theme-list-pane">
+      <div class="card form-section default-font-card">
+        <header class="section-head"><h3>Font</h3></header>
+        <select class="form-input" id="default-font-select"></select>
+        <p class="field-help">One font for the whole app — applies to every theme.</p>
+        <label class="form-label" style="margin-top: 10px;">
+          Weight
+          <select class="form-input" id="default-font-weight"></select>
+        </label>
+        <p class="field-help">Body weight applied across widgets. Headlines that set their own weight still win.</p>
+      </div>
+      <div class="card form-section">
+        <header class="section-head"><h3>Themes</h3></header>
+        <ul class="theme-list" id="theme-list">
+          <li class="muted small">Loading…</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="theme-editor-pane">
+      <div class="card form-section editor-card" id="editor-card" hidden>
+        <header class="section-head">
+          <h3 id="editor-title">Editor</h3>
+          <span id="editor-badge" class="muted small"></span>
+        </header>
+
+        <label class="form-label">
+          Name
+          <input type="text" class="form-input" id="theme-label">
+        </label>
+        <input type="hidden" id="theme-id">
+
+        <div class="palette-editor" id="palette-editor"></div>
+
+        <div class="editor-actions">
+          <button type="button" class="btn ghost danger" id="delete-btn" hidden>
+            <i class="ph ph-trash"></i> Delete
+          </button>
+          <button type="button" class="btn ghost" id="clone-btn" hidden>
+            <i class="ph ph-copy"></i> Clone
+          </button>
+          <button type="button" class="btn primary" id="save-btn">
+            <i class="ph ph-floppy-disk"></i> Save
+          </button>
+        </div>
+      </div>
+
+      <div class="card form-section preview-card" id="preview-card" hidden>
+        <header class="section-head"><h3>Preview</h3></header>
+        <div class="theme-preview" id="theme-preview"></div>
+      </div>
+    </main>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/plugins/theme_builder/static/builder.js"></script>
+{% endblock %}

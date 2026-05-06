@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Widgets{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/widgets.css') }}">
+
+<section class="widgets-page">
+  <div class="page-head">
+    <h1>Widgets &amp; plugins</h1>
+  </div>
+
+  <p class="muted small">
+    Disable a plugin to hide it from cell pickers, settings sections, theme
+    pickers, font pickers, and admin nav. Toggling is immediate — no restart.
+  </p>
+
+  <div id="widgets-list" class="widget-list">
+    <p class="muted small">Loading…</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/widgets-page.js') }}"></script>
+{% endblock %}

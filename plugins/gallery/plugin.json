@@ -1,0 +1,59 @@
+{
+  "id": "gallery",
+  "label": "Gallery",
+  "icon": "ph-images-square",
+  "version": "1.0.0",
+  "kinds": ["widget", "admin"],
+  "cell_options": [
+    {
+      "name": "gallery",
+      "label": "Gallery",
+      "type": "select",
+      "choices_from": "galleries"
+    },
+    {
+      "name": "mode",
+      "label": "Mode",
+      "type": "select",
+      "default": "random",
+      "choices": [
+        {"value": "random", "label": "Random"},
+        {"value": "sequential", "label": "Sequential (A→Z)"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "bg",
+      "label": "Background",
+      "type": "select",
+      "default": "cover",
+      "choices": [
+        {"value": "cover",   "label": "Fill (cover)"},
+        {"value": "contain", "label": "Fit (contain)"},
+        {"value": "blurred", "label": "Blurred"}
+      ]
+    }
+  ],
+  "settings": {
+    "title": "Gallery",
+    "fields": [
+      {
+        "key": "GALLERY_ALLOW_OUTSIDE_SANDBOX",
+        "label": "Allow folders outside the project root",
+        "type": "bool",
+        "default": true
+      }
+    ]
+  },
+  "choice_providers": ["galleries"],
+  "admin_nav": {
+    "label": "Galleries",
+    "icon": "ph-images-square",
+    "endpoint": "gallery.index"
+  }
+}

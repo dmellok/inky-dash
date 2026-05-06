@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page index-page">
+  <div class="page-head">
+    <h1>Dashboards</h1>
+    <a href="{{ url_for('dashboard_new') }}" class="btn primary">
+      <i class="ph ph-plus"></i> New dashboard
+    </a>
+  </div>
+
+  {% set pages = page_store.list() %}
+  {% if pages %}
+  <ul class="page-list">
+    {% for p in pages %}
+    <li data-page-id="{{ p.id }}">
+      <div class="page-meta">
+        <a class="page-name" href="{{ url_for('dashboard_edit', page_id=p.id) }}">{{ p.name }}</a>
+        <span class="muted small">{{ p.layout }} · {{ p.cells|length }} cell{{ '' if p.cells|length == 1 else 's' }}</span>
+      </div>
+      <div class="page-actions">
+        <a class="btn ghost" href="{{ url_for('composer.compose_page', page_id=p.id) }}?preview=1" target="_blank" rel="noopener" title="Preview">
+          <i class="ph ph-arrow-square-out"></i>
+        </a>
+        <a class="btn ghost" href="{{ url_for('dashboard_edit', page_id=p.id) }}" title="Edit">
+          <i class="ph ph-pencil-simple"></i>
+        </a>
+        <button class="btn ghost" data-action="duplicate" title="Duplicate">
+          <i class="ph ph-copy"></i>
+        </button>
+        <button class="btn ghost" data-action="push" title="Push to panel">
+          <i class="ph ph-upload-simple"></i>
+        </button>
+        <button class="btn ghost danger" data-action="delete" title="Delete">
+          <i class="ph ph-trash"></i>
+        </button>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty-state card">
+    <i class="ph ph-squares-four empty-icon"></i>
+    <h2>No dashboards yet</h2>
+    <p class="muted">Build your first dashboard from a layout, themed cells, and any of {{ plugin_registry.widgets()|length }} loaded widget(s).</p>
+    <a href="{{ url_for('dashboard_new') }}" class="btn primary">
+      <i class="ph ph-plus"></i> Create one
+    </a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard-list.js') }}"></script>
+{% endblock %}

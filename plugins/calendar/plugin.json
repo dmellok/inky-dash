@@ -1,0 +1,20 @@
+{
+  "id": "calendar",
+  "label": "Calendar",
+  "icon": "ph-calendar",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "feed_url",
+      "label": "iCal URL",
+      "type": "text"
+    },
+    {
+      "name": "lookahead_days",
+      "label": "Lookahead (days)",
+      "type": "int",
+      "default": 14
+    }
+  ]
+}

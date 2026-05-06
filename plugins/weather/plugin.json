@@ -1,0 +1,42 @@
+{
+  "id": "weather",
+  "label": "Weather",
+  "icon": "ph-cloud-sun",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "location",
+      "label": "Location",
+      "type": "text",
+      "default": "Melbourne, AU"
+    },
+    {
+      "name": "compact",
+      "label": "Compact mode",
+      "type": "bool",
+      "default": false
+    }
+  ],
+  "settings": {
+    "title": "Weather",
+    "fields": [
+      {
+        "key": "WEATHER_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 600
+      },
+      {
+        "key": "WEATHER_ICON_SET",
+        "label": "Icon set",
+        "type": "select",
+        "default": "phosphor",
+        "choices": [
+          {"value": "phosphor",  "label": "Phosphor (monochrome, theme color)"},
+          {"value": "meteocons", "label": "Meteocons (full-color)"}
+        ]
+      }
+    ]
+  }
+}

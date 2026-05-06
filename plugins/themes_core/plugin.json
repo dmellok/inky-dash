@@ -1,0 +1,335 @@
+{
+  "id": "themes_core",
+  "label": "Core themes",
+  "icon": "ph-palette",
+  "version": "1.0.0",
+  "kinds": [
+    "theme"
+  ],
+  "themes": [
+    {
+      "id": "light",
+      "label": "Light",
+      "palette": {
+        "bg": "#fafaf6",
+        "surface": "#ffffff",
+        "surface-2": "#e6e2d6",
+        "fg": "#1a140d",
+        "fg-soft": "#4a3826",
+        "muted": "#897a66",
+        "accent": "#1a140d",
+        "accent-soft": "#ebe2cb",
+        "divider": "#e3dcc8",
+        "danger": "#b34a3a",
+        "warn": "#c97f1d",
+        "ok": "#5a8b4d"
+      }
+    },
+    {
+      "id": "twilight",
+      "label": "Twilight",
+      "palette": {
+        "bg": "#1a140d",
+        "surface": "#241b10",
+        "surface-2": "#3a2c1f",
+        "fg": "#ede2d0",
+        "fg-soft": "#c9bba6",
+        "muted": "#8a7d6c",
+        "accent": "#b85a3f",
+        "accent-soft": "#2a1612",
+        "divider": "#3a2d1f",
+        "danger": "#d8755a",
+        "warn": "#d4a155",
+        "ok": "#74b88a"
+      }
+    },
+    {
+      "id": "ember",
+      "label": "Ember",
+      "palette": {
+        "bg": "#14110d",
+        "surface": "#1d1814",
+        "surface-2": "#322a23",
+        "fg": "#ecdfd1",
+        "fg-soft": "#c5b9ab",
+        "muted": "#847a6f",
+        "accent": "#d96b30",
+        "accent-soft": "#3a1d12",
+        "divider": "#2e251f",
+        "danger": "#e07457",
+        "warn": "#d8a455",
+        "ok": "#79b783"
+      }
+    },
+    {
+      "id": "lime",
+      "label": "Lime",
+      "palette": {
+        "bg": "#161611",
+        "surface": "#1f1f18",
+        "surface-2": "#3a3a2c",
+        "fg": "#ebe6d2",
+        "fg-soft": "#bfbaa6",
+        "muted": "#7d796a",
+        "accent": "#aac74b",
+        "accent-soft": "#2c2f15",
+        "divider": "#2f2e25",
+        "danger": "#d8755a",
+        "warn": "#d4a155",
+        "ok": "#98c168"
+      }
+    },
+    {
+      "id": "cobalt",
+      "label": "Cobalt",
+      "palette": {
+        "bg": "#14140d",
+        "surface": "#1d1d15",
+        "surface-2": "#353528",
+        "fg": "#ecead0",
+        "fg-soft": "#c0bea4",
+        "muted": "#807e6c",
+        "accent": "#4a7bd1",
+        "accent-soft": "#1a2238",
+        "divider": "#2e2d22",
+        "danger": "#d8755a",
+        "warn": "#d4a155",
+        "ok": "#76b885"
+      }
+    },
+    {
+      "id": "carmine",
+      "label": "Carmine",
+      "palette": {
+        "bg": "#16110f",
+        "surface": "#1f1916",
+        "surface-2": "#382c28",
+        "fg": "#ecddd0",
+        "fg-soft": "#c0b0a4",
+        "muted": "#807166",
+        "accent": "#c43755",
+        "accent-soft": "#391520",
+        "divider": "#2d2520",
+        "danger": "#d8755a",
+        "warn": "#d4a155",
+        "ok": "#75b87f"
+      }
+    },
+    {
+      "id": "midnight",
+      "label": "Midnight",
+      "palette": {
+        "bg": "#10131a",
+        "surface": "#181c25",
+        "surface-2": "#2e3344",
+        "fg": "#dde4f0",
+        "fg-soft": "#b6bdc8",
+        "muted": "#7d8493",
+        "accent": "#5fa9d4",
+        "accent-soft": "#15252e",
+        "divider": "#262b35",
+        "danger": "#e57b6a",
+        "warn": "#d4a155",
+        "ok": "#74b88a"
+      }
+    },
+    {
+      "id": "vapor",
+      "label": "Vapor",
+      "palette": {
+        "bg": "#15101e",
+        "surface": "#1f1830",
+        "surface-2": "#3b3056",
+        "fg": "#ece6f0",
+        "fg-soft": "#beb4cf",
+        "muted": "#7e7090",
+        "accent": "#ff5598",
+        "accent-soft": "#3a1626",
+        "divider": "#2e2640",
+        "danger": "#ff6b8a",
+        "warn": "#e8b15c",
+        "ok": "#82d4a0"
+      }
+    },
+    {
+      "id": "orchid",
+      "label": "Orchid",
+      "palette": {
+        "bg": "#15101e",
+        "surface": "#1d1828",
+        "surface-2": "#382f4f",
+        "fg": "#ece6f0",
+        "fg-soft": "#beb4cf",
+        "muted": "#7e7090",
+        "accent": "#ff7e5f",
+        "accent-soft": "#381e1a",
+        "divider": "#2e2640",
+        "danger": "#ff6b6b",
+        "warn": "#e8b15c",
+        "ok": "#82d4a0"
+      }
+    },
+    {
+      "id": "velvet",
+      "label": "Velvet",
+      "palette": {
+        "bg": "#0d0a13",
+        "surface": "#18141f",
+        "surface-2": "#312840",
+        "fg": "#ece4f0",
+        "fg-soft": "#bdb0c8",
+        "muted": "#7d7088",
+        "accent": "#d955aa",
+        "accent-soft": "#2a1424",
+        "divider": "#261e34",
+        "danger": "#ff6b8a",
+        "warn": "#e8b15c",
+        "ok": "#82d4a0"
+      }
+    },
+    {
+      "id": "neon",
+      "label": "Neon",
+      "palette": {
+        "bg": "#0a0e0d",
+        "surface": "#131818",
+        "surface-2": "#2a3534",
+        "fg": "#e2e8e0",
+        "fg-soft": "#b0b8b3",
+        "muted": "#707870",
+        "accent": "#00ff95",
+        "accent-soft": "#0d2620",
+        "divider": "#1d2522",
+        "danger": "#ff5e7c",
+        "warn": "#ffb155",
+        "ok": "#0fea99"
+      }
+    },
+    {
+      "id": "iris",
+      "label": "Iris",
+      "palette": {
+        "bg": "#11101e",
+        "surface": "#1a1828",
+        "surface-2": "#322e4f",
+        "fg": "#e6e6f0",
+        "fg-soft": "#b4b4cf",
+        "muted": "#707090",
+        "accent": "#7b69e0",
+        "accent-soft": "#1f1c38",
+        "divider": "#2a2840",
+        "danger": "#ff6b8a",
+        "warn": "#e8b15c",
+        "ok": "#82d4a0"
+      }
+    },
+    {
+      "id": "daisy",
+      "label": "Daisy",
+      "palette": {
+        "bg": "#fdecae",
+        "surface": "#f0c842",
+        "surface-2": "#fff8db",
+        "fg": "#2a1f0a",
+        "fg-soft": "#5a4520",
+        "muted": "#8a7140",
+        "accent": "#8e4d0c",
+        "accent-soft": "#fde890",
+        "divider": "#c89a18",
+        "danger": "#b3382e",
+        "warn": "#b56814",
+        "ok": "#4f8a3a"
+      }
+    },
+    {
+      "id": "sage",
+      "label": "Sage",
+      "palette": {
+        "bg": "#dde8b8",
+        "surface": "#a8c074",
+        "surface-2": "#f3f6db",
+        "fg": "#1a2010",
+        "fg-soft": "#354520",
+        "muted": "#5e7038",
+        "accent": "#2e4a0e",
+        "accent-soft": "#c4d695",
+        "divider": "#8aa454",
+        "danger": "#a83a30",
+        "warn": "#a86818",
+        "ok": "#3a7a28"
+      }
+    },
+    {
+      "id": "coral",
+      "label": "Coral",
+      "palette": {
+        "bg": "#fdd8c5",
+        "surface": "#ed9579",
+        "surface-2": "#fdf0e7",
+        "fg": "#2a170f",
+        "fg-soft": "#5a2f1c",
+        "muted": "#8a553a",
+        "accent": "#8e2818",
+        "accent-soft": "#fbcdba",
+        "divider": "#d67558",
+        "danger": "#8e2818",
+        "warn": "#b56514",
+        "ok": "#4a8830"
+      }
+    },
+    {
+      "id": "cerulean",
+      "label": "Cerulean",
+      "palette": {
+        "bg": "#d8e5f0",
+        "surface": "#82adc8",
+        "surface-2": "#ecf2f8",
+        "fg": "#0f1c2a",
+        "fg-soft": "#243a4e",
+        "muted": "#4a6480",
+        "accent": "#154068",
+        "accent-soft": "#b4cfde",
+        "divider": "#5d8eaf",
+        "danger": "#a83a30",
+        "warn": "#a86818",
+        "ok": "#3a7a28"
+      }
+    },
+    {
+      "id": "lilac",
+      "label": "Lilac",
+      "palette": {
+        "bg": "#ede0f0",
+        "surface": "#c5a4d2",
+        "surface-2": "#f5ecf8",
+        "fg": "#1f1325",
+        "fg-soft": "#3e2840",
+        "muted": "#6a4c78",
+        "accent": "#4a1c6a",
+        "accent-soft": "#dec7e8",
+        "divider": "#a586b4",
+        "danger": "#a83a30",
+        "warn": "#a86818",
+        "ok": "#3a7a28"
+      }
+    },
+    {
+      "id": "sand",
+      "label": "Sand",
+      "palette": {
+        "bg": "#f3deaf",
+        "surface": "#d4a464",
+        "surface-2": "#f8edd0",
+        "fg": "#2a1d0d",
+        "fg-soft": "#4a2f10",
+        "muted": "#8a6438",
+        "accent": "#7a3818",
+        "accent-soft": "#ecc890",
+        "divider": "#b8884a",
+        "danger": "#8e2818",
+        "warn": "#a86818",
+        "ok": "#4a8830"
+      }
+    }
+  ]
+}

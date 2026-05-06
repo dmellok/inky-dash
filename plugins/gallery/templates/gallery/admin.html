@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Galleries{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/plugins/gallery/static/admin.css">
+
+<section class="gallery-admin">
+  <header class="page-head">
+    <h1>Galleries</h1>
+  </header>
+
+  <section class="card form-section">
+    <header class="section-head"><h3>New gallery</h3></header>
+    <form id="add-form" class="grid-form">
+      <label class="form-label">
+        Name
+        <input type="text" class="form-input" name="name" required>
+      </label>
+      <label class="form-label">
+        Folder path
+        <input type="text" class="form-input" name="folder" placeholder="/path/to/images" required>
+      </label>
+      <button type="submit" class="btn primary">
+        <i class="ph ph-plus"></i> Create
+      </button>
+    </form>
+  </section>
+
+  <section class="card form-section">
+    <header class="section-head"><h3>Galleries</h3></header>
+    <ul class="gallery-list" id="gallery-list">
+      <li class="muted small">Loading…</li>
+    </ul>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/plugins/gallery/static/admin.js"></script>
+{% endblock %}

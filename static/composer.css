@@ -1,0 +1,90 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--canvas-bg);
+  font-family: var(--font-family);
+  width: var(--panel-w);
+  height: var(--panel-h);
+  overflow: hidden;
+}
+
+#panel {
+  position: relative;
+  width: var(--panel-w);
+  height: var(--panel-h);
+  background: var(--canvas-bg);
+}
+
+/* Page-level panel header — same Material chrome as the widget tops:
+   accent-coloured icon + uppercase eyebrow title with strong tracking,
+   timestamp on the far right in muted ink. */
+.panel-header {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  color: var(--theme-fg, #000);
+  border-bottom: 1px solid var(--theme-divider, color-mix(in srgb, var(--theme-fg, #888) 8%, transparent));
+}
+.panel-header .icon {
+  font-size: 28px;
+  line-height: 1;
+  color: var(--theme-accent, currentColor);
+}
+.panel-header h1 {
+  font-size: 20px;
+  margin: 0;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--theme-accent, currentColor);
+}
+.panel-header time {
+  margin-left: auto;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--theme-muted, currentColor);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.cell {
+  position: absolute;
+  overflow: hidden;
+  background: var(--theme-surface, transparent);
+  color: var(--theme-fg, currentColor);
+}
+
+.cell.placeholder::after {
+  content: attr(data-message);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px dashed rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.cell.error::after {
+  content: attr(data-message);
+  position: absolute;
+  inset: 0;
+  padding: 12px;
+  display: block;
+  white-space: pre-wrap;
+  background: #fff5f5;
+  color: #6b1a1a;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow: auto;
+}

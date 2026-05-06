@@ -1,0 +1,19 @@
+{
+  "id": "xkcd",
+  "label": "xkcd",
+  "icon": "ph-image-square",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "mode",
+      "label": "Strip",
+      "type": "select",
+      "default": "current",
+      "choices": [
+        {"value": "current", "label": "Current"},
+        {"value": "random",  "label": "Random"}
+      ]
+    }
+  ]
+}

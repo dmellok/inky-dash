@@ -1,0 +1,377 @@
+/* Phosphor + theme variables. The host inherits the theme palette from the
+   composer (`--theme-*` set by applyTheme on the cell wrapper) and the
+   global font family (`--font-family`) from `<html>`. */
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --tone-strong: color-mix(in srgb, var(--theme-fg, #111) 10%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.wx {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+/* The hourly section grows to fill remaining space when present so the
+   chart curve has room. Other sections take their natural height. */
+.wx > .hourly { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+/* ---- Top bar: small icon + WEATHER label + location chip + clock ---- */
+.top {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 14px;
+}
+.top .lead { display: inline-flex; align-items: center; gap: 12px; }
+.top .lead .small-ic {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+}
+.top .lead .small-ic svg { width: 100%; height: 100%; display: block; }
+.top .lead .small-ic i.ph {
+  font-size: 32px;
+  color: var(--theme-accent, currentColor);
+}
+.top .lead .label {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--theme-fg, #111);
+}
+.top .loc {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-accent, currentColor);
+}
+.top .clock {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  font-feature-settings: "tnum";
+}
+
+/* ---- Hero: huge icon + display temperature ---- */
+.hero {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 18px;
+}
+.hero .big-ic {
+  width: clamp(160px, 18vw, 240px);
+  height: clamp(160px, 18vw, 240px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--theme-accent, currentColor);
+}
+.hero .big-ic i.ph {
+  font-size: clamp(160px, 18vw, 240px);
+  line-height: 1;
+}
+.hero .big-ic svg { width: 100%; height: 100%; }
+.hero .temp {
+  font-size: clamp(100px, 12vw, 150px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--theme-fg, #111);
+}
+.hero .temp .u {
+  font-size: 0.32em;
+  font-weight: 700;
+  vertical-align: 0.84em;
+  margin-left: 0.08em;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+}
+
+/* ---- Condition + feels-like ---- */
+.cond .label {
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--theme-fg, #111);
+}
+.cond .feels {
+  margin-top: 4px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* ---- Metrics grid: 2 columns x 3 rows ---- */
+/* Metrics — 3-col grid of tonal cards. Icon on the left, label + value
+   stacked on the right. Strong tonal background gives each stat its own
+   "tile" so the eye groups them at a glance. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.metric {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 14px;
+  row-gap: 2px;
+  align-items: center;
+  padding: 16px 18px;
+  background: var(--tone);
+  border-radius: 16px;
+}
+.metric .m-ic {
+  display: inline-flex;
+  width: 72px;
+  height: 72px;
+  align-items: center;
+  justify-content: center;
+  grid-row: 1 / span 2;
+  align-self: center;
+  flex-shrink: 0;
+}
+.metric .m-ic svg { width: 100%; height: 100%; display: block; }
+.metric .m-ic i.ph {
+  font-size: 60px;
+  line-height: 1;
+  color: var(--theme-accent, currentColor);
+}
+.metric .k {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  align-self: end;
+  line-height: 1;
+}
+.metric .v {
+  font-size: clamp(32px, 3vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg, #111);
+  line-height: 1;
+  align-self: start;
+}
+.metric .v .u {
+  font-size: 0.5em;
+  font-weight: 700;
+  margin-left: 3px;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  letter-spacing: 0;
+}
+
+/* All Phosphor weather glyphs inherit the theme accent — keeps the
+   widget chromatically aligned with the rest of the dashboard regardless
+   of which condition / metric is being rendered. */
+.wx i.ph { color: var(--theme-accent, currentColor); }
+
+/* ---- Hourly chart container ---- */
+.hourly {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+.hourly .chart-box {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+}
+.hourly canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hourly .axis {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+}
+.hourly .tick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.hourly .tick > svg,
+.hourly .tick .m-ic { width: 64px; height: 64px; }
+.hourly .tick svg { width: 64px; height: 64px; display: block; }
+.hourly .tick i.ph {
+  font-size: 48px;
+  line-height: 1;
+  color: var(--theme-accent, currentColor);
+}
+.hourly .tick .h {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  font-feature-settings: "tnum";
+}
+
+/* ---- Daily list ---- */
+.daily {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.daily .row {
+  display: grid;
+  grid-template-columns: 48px 80px 1fr auto auto;
+  align-items: center;
+  column-gap: 14px;
+}
+.daily .row > svg { width: 48px; height: 48px; display: block; }
+.daily .row i.ph {
+  font-size: 38px;
+  color: var(--theme-accent, currentColor);
+}
+.daily .row .day {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.daily .row .bar {
+  position: relative;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--tone);
+  overflow: hidden;
+}
+.daily .row .bar .fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    #6aa3c8 0%,
+    #6dba8a 45%,
+    #d6a020 75%,
+    #c97f1d 100%
+  );
+}
+.daily .row .hi {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+  margin-left: 8px;
+  font-feature-settings: "tnum";
+}
+.daily .row .lo {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-left: 8px;
+  font-feature-settings: "tnum";
+}
+
+/* ==========================================================================
+   Responsive tiers. The widget collapses lowest-priority blocks first as the
+   cell shrinks. Priority order: hero > top bar > stats > hourly > daily.
+   The .h-* class is set from ctx.height in client.js; .w-* from ctx.width.
+   ========================================================================== */
+
+/* Width tier — stat grid density. */
+.wx.w-md .metrics { grid-template-columns: repeat(3, 1fr); }
+.wx.w-sm .metrics { grid-template-columns: repeat(2, 1fr); }
+.wx.w-xs .metrics { grid-template-columns: 1fr; }
+
+/* h-xs (~ < 240px) — only hero, ultra-compact. */
+.wx.h-xs {
+  grid-template-rows: auto;
+  padding: 10px 14px;
+  gap: 6px;
+}
+.wx.h-xs .top, .wx.h-xs .cond, .wx.h-xs .metrics,
+.wx.h-xs .hourly, .wx.h-xs .daily { display: none; }
+.wx.h-xs .hero { gap: 12px; }
+.wx.h-xs .hero .big-ic { width: 64px; height: 64px; }
+.wx.h-xs .hero .big-ic i.ph { font-size: 64px; }
+.wx.h-xs .hero .temp { font-size: clamp(56px, 9vw, 88px); line-height: 1; }
+
+/* h-sm (~ 240–480px) — hero + condition only. */
+.wx.h-sm {
+  grid-template-rows: auto auto;
+  padding: 14px;
+  gap: 10px;
+}
+.wx.h-sm .top, .wx.h-sm .metrics,
+.wx.h-sm .hourly, .wx.h-sm .daily { display: none; }
+.wx.h-sm .hero .big-ic { width: 96px; height: 96px; }
+.wx.h-sm .hero .big-ic i.ph { font-size: 96px; }
+.wx.h-sm .hero .temp { font-size: clamp(80px, 11vw, 120px); }
+.wx.h-sm .cond .label { font-size: clamp(24px, 3vw, 36px); }
+.wx.h-sm .cond .feels { font-size: 14px; }
+
+/* h-md (~ 480–800px) — hero + top + stats; chart hidden. */
+.wx.h-md {
+  grid-template-rows: auto auto auto auto;
+  padding: 16px 20px;
+}
+.wx.h-md .hourly, .wx.h-md .daily { display: none; }
+.wx.h-md .hero .big-ic { width: 130px; height: 130px; }
+.wx.h-md .hero .big-ic i.ph { font-size: 130px; }
+.wx.h-md .hero .temp { font-size: clamp(96px, 12vw, 130px); }
+.wx.h-md .metric { padding: 12px 14px; }
+.wx.h-md .metric .m-ic { width: 56px; height: 56px; }
+
+/* h-lg (~ 800–1200px) — hero + top + stats + chart; daily hidden. */
+.wx.h-lg .daily { display: none; }
+.wx.h-lg .hero .big-ic { width: clamp(140px, 13vw, 180px); height: clamp(140px, 13vw, 180px); }
+.wx.h-lg .hero .big-ic i.ph { font-size: clamp(140px, 13vw, 180px); }
+
+/* h-xl (~ ≥1200px) — full layout (default rules already do this). */
+
+/* Legacy .compact escape hatch — explicit cell option. */
+.wx.compact {
+  grid-template-rows: auto auto;
+  gap: 10px;
+  padding: 14px;
+}
+.wx.compact .top, .wx.compact .cond,
+.wx.compact .metrics, .wx.compact .hourly,
+.wx.compact .daily { display: none; }
+.wx.compact .hero { grid-template-columns: auto 1fr; }
+.wx.compact .hero .big-ic { width: 64px; height: 64px; }
+.wx.compact .hero .big-ic i.ph { font-size: 64px; }
+.wx.compact .hero .temp { font-size: clamp(60px, 9vw, 96px); }
+
+.wx-error {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  color: var(--theme-danger, #c00);
+  font-size: 11px;
+}

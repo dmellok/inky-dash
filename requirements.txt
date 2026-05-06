@@ -1,0 +1,8 @@
+Flask>=3.0
+paho-mqtt>=2.0
+playwright>=1.50  # headless Chromium — also run: playwright install chromium
+
+# Bundled-plugin deps (only loaded when those plugins are enabled).
+icalendar>=5.0            # plugins/calendar
+recurring-ical-events>=2.2  # plugins/calendar
+feedparser>=6.0           # plugins/news

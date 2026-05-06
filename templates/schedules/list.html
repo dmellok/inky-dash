@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Schedules{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/schedules.css') }}">
+
+<section class="schedules-page">
+  <div class="page-head">
+    <h1>Schedules</h1>
+    <a href="{{ url_for('schedule_new') }}" class="btn primary">
+      <i class="ph ph-plus"></i> New schedule
+    </a>
+  </div>
+
+  <section class="card timeline-card">
+    <header class="panel-head">
+      <h2 class="panel-title">Today</h2>
+      <span class="muted small" id="timeline-now">—</span>
+    </header>
+    <div class="timeline" id="timeline">
+      <div class="timeline-axis" id="timeline-axis"></div>
+      <div class="timeline-rows" id="timeline-rows"></div>
+    </div>
+    <p class="field-help" id="timeline-empty" hidden>No enabled schedules to plot.</p>
+  </section>
+
+  <section class="card schedules-card">
+    <h2 class="panel-title">All schedules</h2>
+    <p class="field-help">
+      <i class="ph ph-arrows-down-up" aria-hidden="true"></i>
+      Drag rows to reorder. When several schedules fire at the same time, the topmost wins.
+    </p>
+    <ul class="schedule-list" id="schedule-list">
+      <li class="muted small">Loading…</li>
+    </ul>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/schedules-list.js') }}"></script>
+{% endblock %}

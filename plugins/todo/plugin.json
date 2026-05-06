@@ -1,0 +1,41 @@
+{
+  "id": "todo",
+  "label": "Todo",
+  "icon": "ph-list-checks",
+  "version": "1.0.0",
+  "kinds": ["widget", "admin"],
+  "cell_options": [
+    {
+      "name": "style",
+      "label": "Layout",
+      "type": "select",
+      "default": "stacked",
+      "choices": [
+        {"value": "stacked", "label": "Stacked"},
+        {"value": "columns", "label": "Columns"}
+      ]
+    },
+    {
+      "name": "show_completed",
+      "label": "Show completed",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Todo",
+    "fields": [
+      {
+        "key": "TODO_PRUNE_HOURS",
+        "label": "Prune completed after (hours)",
+        "type": "int",
+        "default": 24
+      }
+    ]
+  },
+  "admin_nav": {
+    "label": "Todo",
+    "icon": "ph-list-checks",
+    "endpoint": "todo.index"
+  }
+}

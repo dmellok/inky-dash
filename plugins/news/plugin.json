@@ -1,0 +1,26 @@
+{
+  "id": "news",
+  "label": "News",
+  "icon": "ph-newspaper-clipping",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "feed_url",
+      "label": "Feed URL (RSS or Atom)",
+      "type": "text"
+    },
+    {
+      "name": "max_items",
+      "label": "Max items",
+      "type": "int",
+      "default": 5
+    },
+    {
+      "name": "cycle",
+      "label": "Cycle highlighted item across pushes",
+      "type": "bool",
+      "default": false
+    }
+  ]
+}

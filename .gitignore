@@ -1,0 +1,34 @@
+# Environment / secrets
+.env
+.env.local
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Local user state — committed via .env.example + the bundled plugin
+# manifests. Per-user dashboards, schedules, todos, gallery folder paths,
+# render PNG cache, upload sandbox, push history.
+data/
+!data/.gitkeep
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / temp
+*.log
+/tmp/inky_dev.log
+
+# Internal design docs (excluded by repo owner)
+v3-brief.md
+v3-plugins.md

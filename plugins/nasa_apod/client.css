@@ -1,0 +1,124 @@
+@import url('/static/vendor/phosphor/style.css');
+:host { display: block; height: 100%; }
+.apod {
+  height: 100%;
+  position: relative;
+  background: #000;
+  color: #fff;
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Floating icon+label pill anchored top-left over the image. */
+.widget-head {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  z-index: 2;
+}
+.widget-head i.ph { font-size: 18px; color: #fff; }
+.widget-head .label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+.apod .img {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 1;
+}
+.apod .img img,
+.apod.image-only .apod-fg {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.apod.bg-contain .img img,
+.apod.bg-blurred .img img,
+.apod.image-only.bg-contain .apod-fg,
+.apod.image-only.bg-blurred .apod-fg {
+  object-fit: contain;
+}
+
+/* Blurred mode: upscaled blurred copy of the same image as the backdrop. */
+.apod-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: blur(32px) saturate(1.1);
+  transform: scale(1.18);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+/* Material caption: gradient overlay + display headline anchored to the
+   bottom of the frame. */
+.apod .caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28px 20px 18px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.55) 60%, rgba(0,0,0,0) 100%);
+  z-index: 2;
+}
+.apod .caption h3 {
+  margin: 0;
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: #fff;
+}
+.apod .caption .cred {
+  margin: 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.92);
+}
+.apod.image-only .caption { display: none; }
+
+.apod-error {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px;
+  color: var(--theme-danger, #c00);
+  font-size: 11px;
+}

@@ -1,0 +1,340 @@
+{
+  "id": "fonts_core",
+  "label": "Core fonts",
+  "icon": "ph-text-aa",
+  "version": "1.1.0",
+  "kinds": ["font"],
+  "fonts": [
+    {
+      "id": "inter",
+      "family": "Inter",
+      "fallback_stack": "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      "weights": {
+        "400": "static/fonts/inter-400.woff2",
+        "700": "static/fonts/inter-700.woff2"
+      }
+    },
+    {
+      "id": "dm_sans",
+      "family": "DM Sans",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/dm-sans-400.woff2",
+        "700": "static/fonts/dm-sans-700.woff2"
+      }
+    },
+    {
+      "id": "ibm_plex_sans",
+      "family": "IBM Plex Sans",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/ibm-plex-sans-400.woff2",
+        "700": "static/fonts/ibm-plex-sans-700.woff2"
+      }
+    },
+    {
+      "id": "jost",
+      "family": "Jost",
+      "fallback_stack": "Futura, system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/jost-400.woff2",
+        "700": "static/fonts/jost-700.woff2"
+      }
+    },
+    {
+      "id": "outfit",
+      "family": "Outfit",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/outfit-400.woff2",
+        "700": "static/fonts/outfit-700.woff2"
+      }
+    },
+    {
+      "id": "manrope",
+      "family": "Manrope",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/manrope-400.woff2",
+        "700": "static/fonts/manrope-700.woff2"
+      }
+    },
+    {
+      "id": "space_grotesk",
+      "family": "Space Grotesk",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/space-grotesk-400.woff2",
+        "700": "static/fonts/space-grotesk-700.woff2"
+      }
+    },
+    {
+      "id": "archivo",
+      "family": "Archivo",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/archivo-400.woff2",
+        "700": "static/fonts/archivo-700.woff2"
+      }
+    },
+    {
+      "id": "bricolage_grotesque",
+      "family": "Bricolage Grotesque",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/bricolage-grotesque-400.woff2",
+        "700": "static/fonts/bricolage-grotesque-700.woff2"
+      }
+    },
+    {
+      "id": "plus_jakarta_sans",
+      "family": "Plus Jakarta Sans",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "300": "static/fonts/plus-jakarta-sans-300.woff2",
+        "400": "static/fonts/plus-jakarta-sans-400.woff2",
+        "700": "static/fonts/plus-jakarta-sans-700.woff2"
+      }
+    },
+    {
+      "id": "onest",
+      "family": "Onest",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/onest-400.woff2",
+        "700": "static/fonts/onest-700.woff2"
+      }
+    },
+    {
+      "id": "geist",
+      "family": "Geist",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/geist-400.woff2",
+        "700": "static/fonts/geist-700.woff2"
+      }
+    },
+    {
+      "id": "hanken_grotesk",
+      "family": "Hanken Grotesk",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/hanken-grotesk-400.woff2",
+        "700": "static/fonts/hanken-grotesk-700.woff2"
+      }
+    },
+    {
+      "id": "public_sans",
+      "family": "Public Sans",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/public-sans-400.woff2",
+        "700": "static/fonts/public-sans-700.woff2"
+      }
+    },
+    {
+      "id": "lexend",
+      "family": "Lexend",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/lexend-400.woff2",
+        "700": "static/fonts/lexend-700.woff2"
+      }
+    },
+    {
+      "id": "work_sans",
+      "family": "Work Sans",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/work-sans-400.woff2",
+        "700": "static/fonts/work-sans-700.woff2"
+      }
+    },
+    {
+      "id": "nunito",
+      "family": "Nunito",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/nunito-400.woff2",
+        "700": "static/fonts/nunito-700.woff2"
+      }
+    },
+    {
+      "id": "lato",
+      "family": "Lato",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/lato-400.woff2",
+        "700": "static/fonts/lato-700.woff2"
+      }
+    },
+    {
+      "id": "sen",
+      "family": "Sen",
+      "fallback_stack": "Futura, system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/sen-400.woff2",
+        "700": "static/fonts/sen-700.woff2"
+      }
+    },
+    {
+      "id": "dosis",
+      "family": "Dosis",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "300": "static/fonts/dosis-300.woff2",
+        "400": "static/fonts/dosis-400.woff2",
+        "700": "static/fonts/dosis-700.woff2"
+      }
+    },
+    {
+      "id": "sora",
+      "family": "Sora",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/sora-400.woff2",
+        "700": "static/fonts/sora-700.woff2"
+      }
+    },
+    {
+      "id": "karla",
+      "family": "Karla",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/karla-400.woff2",
+        "700": "static/fonts/karla-700.woff2"
+      }
+    },
+    {
+      "id": "questrial",
+      "family": "Questrial",
+      "fallback_stack": "Futura, system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/questrial-400.woff2"
+      }
+    },
+    {
+      "id": "comfortaa",
+      "family": "Comfortaa",
+      "fallback_stack": "system-ui, sans-serif",
+      "weights": {
+        "400": "static/fonts/comfortaa-400.woff2",
+        "700": "static/fonts/comfortaa-700.woff2"
+      }
+    },
+    {
+      "id": "anton",
+      "family": "Anton",
+      "fallback_stack": "Impact, Haettenschweiler, sans-serif",
+      "weights": {
+        "400": "static/fonts/anton-400.woff2"
+      }
+    },
+    {
+      "id": "oswald",
+      "family": "Oswald",
+      "fallback_stack": "Impact, Haettenschweiler, sans-serif",
+      "weights": {
+        "400": "static/fonts/oswald-400.woff2",
+        "700": "static/fonts/oswald-700.woff2"
+      }
+    },
+    {
+      "id": "alfa_slab_one",
+      "family": "Alfa Slab One",
+      "fallback_stack": "Impact, serif",
+      "weights": {
+        "400": "static/fonts/alfa-slab-one-400.woff2"
+      }
+    },
+    {
+      "id": "russo_one",
+      "family": "Russo One",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/russo-one-400.woff2"
+      }
+    },
+    {
+      "id": "big_shoulders_display",
+      "family": "Big Shoulders Display",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/big-shoulders-display-400.woff2",
+        "700": "static/fonts/big-shoulders-display-700.woff2"
+      }
+    },
+    {
+      "id": "black_ops_one",
+      "family": "Black Ops One",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/black-ops-one-400.woff2"
+      }
+    },
+    {
+      "id": "titan_one",
+      "family": "Titan One",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/titan-one-400.woff2"
+      }
+    },
+    {
+      "id": "ultra",
+      "family": "Ultra",
+      "fallback_stack": "Georgia, serif",
+      "weights": {
+        "400": "static/fonts/ultra-400.woff2"
+      }
+    },
+    {
+      "id": "bowlby_one",
+      "family": "Bowlby One",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/bowlby-one-400.woff2"
+      }
+    },
+    {
+      "id": "bebas_neue",
+      "family": "Bebas Neue",
+      "fallback_stack": "Impact, Haettenschweiler, sans-serif",
+      "weights": {
+        "400": "static/fonts/bebas-neue-400.woff2"
+      }
+    },
+    {
+      "id": "abril_fatface",
+      "family": "Abril Fatface",
+      "fallback_stack": "Georgia, serif",
+      "weights": {
+        "400": "static/fonts/abril-fatface-400.woff2"
+      }
+    },
+    {
+      "id": "bungee",
+      "family": "Bungee",
+      "fallback_stack": "Impact, Haettenschweiler, sans-serif",
+      "weights": {
+        "400": "static/fonts/bungee-400.woff2"
+      }
+    },
+    {
+      "id": "krona_one",
+      "family": "Krona One",
+      "fallback_stack": "Futura, Trebuchet MS, sans-serif",
+      "weights": {
+        "400": "static/fonts/krona-one-400.woff2"
+      }
+    },
+    {
+      "id": "bagel_fat_one",
+      "family": "Bagel Fat One",
+      "fallback_stack": "Impact, sans-serif",
+      "weights": {
+        "400": "static/fonts/bagel-fat-one-400.woff2"
+      }
+    }
+  ]
+}

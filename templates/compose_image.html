@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Image · {{ view.image_id }}</title>
+  <style>
+    /* Image-source compose route. Same render path as the dashboard composer:
+       Playwright loads this URL, waits for window.__inkyReady, screenshots at
+       panel dimensions. CSS does the heavy lifting — filter:blur on the
+       backdrop layer + object-fit on the foreground = no Pillow needed. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: {{ view.panel[0] }}px;
+      height: {{ view.panel[1] }}px;
+      overflow: hidden;
+    }
+    body {
+      position: relative;
+      background: {% if view.bg == 'blurred' %}#ffffff{% else %}{{ view.bg }}{% endif %};
+    }
+    .blur-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .blur-layer img {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 110%;
+      height: 110%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      filter: blur(36px) saturate(1.1);
+    }
+    .fg-layer {
+      position: absolute;
+      inset: 0;
+    }
+    .fg-layer img {
+      width: 100%;
+      height: 100%;
+      object-fit: {{ object_fit }};
+      object-position: center;
+    }
+  </style>
+</head>
+<body>
+  {% if view.bg == 'blurred' %}
+  <div class="blur-layer"><img src="{{ view.image_url }}" alt=""></div>
+  {% endif %}
+  <div class="fg-layer"><img id="fg" src="{{ view.image_url }}" alt=""></div>
+  <script>
+    (async () => {
+      // Wait for both layer images to load + decode, then double-rAF before
+      // signalling readiness so Playwright doesn't capture a half-painted frame.
+      const imgs = [...document.images];
+      await Promise.all(imgs.map((img) =>
+        img.complete && img.naturalWidth > 0
+          ? Promise.resolve()
+          : new Promise((r) => {
+              img.addEventListener("load", r, { once: true });
+              img.addEventListener("error", r, { once: true });
+            })
+      ));
+      try { await Promise.all(imgs.map((i) => i.decode().catch(() => null))); } catch (_) {}
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      window.__inkyReady = true;
+    })();
+  </script>
+</body>
+</html>

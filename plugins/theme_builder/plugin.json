@@ -1,0 +1,12 @@
+{
+  "id": "theme_builder",
+  "label": "Theme Builder",
+  "icon": "ph-palette",
+  "version": "1.0.0",
+  "kinds": ["admin"],
+  "admin_nav": {
+    "label": "Themes",
+    "icon": "ph-palette",
+    "endpoint": "theme_builder.index"
+  }
+}

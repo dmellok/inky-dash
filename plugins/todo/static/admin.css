@@ -1,0 +1,69 @@
+.todo-admin {
+  max-width: 720px;
+  margin: 16px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.add-form {
+  display: flex;
+  gap: 8px;
+}
+.add-form input { flex: 1; }
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.item-row.completed { opacity: 0.55; }
+.item-row.completed .text { text-decoration: line-through; color: var(--muted); }
+.item-row.fresh {
+  background: color-mix(in srgb, var(--ok) 12%, var(--surface-2));
+}
+
+.item-row .text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--fg);
+}
+.item-row .actions { display: flex; gap: 4px; }
+
+.item-row .check {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--divider);
+  background: var(--surface);
+  color: transparent;
+  transition: background-color 80ms, border-color 80ms;
+}
+.item-row.completed .check {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+}
+.item-row .check i { font-size: 12px; }
+
+/* Status now flows through the global app-footer flash (status.js). */

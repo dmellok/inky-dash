@@ -1,0 +1,43 @@
+{
+  "id": "nasa_apod",
+  "label": "NASA APOD",
+  "icon": "ph-rocket",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "image_only",
+      "label": "Image only (no caption strip)",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "bg",
+      "label": "Background",
+      "type": "select",
+      "default": "cover",
+      "choices": [
+        {"value": "cover",   "label": "Fill (cover)"},
+        {"value": "contain", "label": "Fit (contain)"},
+        {"value": "blurred", "label": "Blurred"}
+      ]
+    }
+  ],
+  "settings": {
+    "title": "NASA APOD",
+    "fields": [
+      {
+        "key": "NASA_API_KEY",
+        "label": "NASA API key",
+        "type": "secret",
+        "help": "Get one at https://api.nasa.gov/. Falls back to DEMO_KEY (low rate limit) if blank."
+      }
+    ]
+  }
+}

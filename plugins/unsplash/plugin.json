@@ -1,0 +1,41 @@
+{
+  "id": "unsplash",
+  "label": "Unsplash",
+  "icon": "ph-image",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {"name": "query", "label": "Search query", "type": "text"},
+    {"name": "collection_id", "label": "Collection ID", "type": "text"},
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "bg",
+      "label": "Background",
+      "type": "select",
+      "default": "cover",
+      "choices": [
+        {"value": "cover",   "label": "Fill (cover)"},
+        {"value": "contain", "label": "Fit (contain)"},
+        {"value": "blurred", "label": "Blurred"},
+        {"value": "white",   "label": "White letterbox"},
+        {"value": "black",   "label": "Black letterbox"}
+      ]
+    }
+  ],
+  "settings": {
+    "title": "Unsplash",
+    "fields": [
+      {
+        "key": "UNSPLASH_ACCESS_KEY",
+        "label": "Access key",
+        "type": "secret",
+        "help": "Required. Create one at https://unsplash.com/developers."
+      }
+    ]
+  }
+}

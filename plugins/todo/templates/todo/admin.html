@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Todo{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/plugins/todo/static/admin.css">
+
+<section class="todo-admin">
+  <header class="page-head">
+    <h1>Todo</h1>
+  </header>
+
+  <section class="card form-section">
+    <header class="section-head"><h3>Add</h3></header>
+    <form id="add-form" class="add-form">
+      <input type="text" class="form-input" id="new-item" placeholder="New item…" autocomplete="off" required>
+      <button type="submit" class="btn primary">
+        <i class="ph ph-plus"></i> Add
+      </button>
+    </form>
+  </section>
+
+  <section class="card form-section">
+    <header class="section-head">
+      <h3>Items</h3>
+      <button type="button" class="btn ghost" id="prune-btn" title="Drop completed items older than the configured prune window">
+        <i class="ph ph-broom"></i> Prune now
+      </button>
+    </header>
+    <ul class="item-list" id="item-list">
+      <li class="muted small">Loading…</li>
+    </ul>
+  </section>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/plugins/todo/static/admin.js"></script>
+{% endblock %}

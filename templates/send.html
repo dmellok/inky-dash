@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Send to panel{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/send-page.css') }}">
+
+<section class="send-page"
+         data-panel-width="{{ panel_width }}"
+         data-panel-height="{{ panel_height }}"
+         style="--panel-w: {{ panel_width }}px; --panel-h: {{ panel_height }}px; --panel-aspect: {{ panel_width }} / {{ panel_height }};">
+
+  <div class="tab-bar primary-tabs send-primary-tabs" role="tablist" aria-label="Source category">
+    <button type="button" class="tab active" role="tab" data-tab="image">
+      <i class="ph ph-image" aria-hidden="true"></i><span>Image</span>
+    </button>
+    <button type="button" class="tab" role="tab" data-tab="dash">
+      <i class="ph ph-frame-corners" aria-hidden="true"></i><span>Dash</span>
+    </button>
+    <button type="button" class="tab" role="tab" data-tab="history">
+      <i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i><span>History</span>
+    </button>
+  </div>
+
+  <div class="send-form-pane">
+
+    {# ====================================================================
+       IMAGE TAB — three sources (file / URL / webpage), shared options.
+       ==================================================================== #}
+    <section class="card panel-card" data-panel="image">
+      <div class="tab-bar source-tabs" role="tablist" aria-label="Image source">
+        <button type="button" class="tab active" role="tab" data-source="file">
+          <i class="ph ph-file-arrow-up" aria-hidden="true"></i><span>From file</span>
+        </button>
+        <button type="button" class="tab" role="tab" data-source="url">
+          <i class="ph ph-link" aria-hidden="true"></i><span>From URL</span>
+        </button>
+        <button type="button" class="tab" role="tab" data-source="webpage">
+          <i class="ph ph-monitor" aria-hidden="true"></i><span>From webpage</span>
+        </button>
+      </div>
+
+      <div class="source-pane" data-source="file">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.gif,.webp" hidden>
+          <i class="ph ph-image-square dropzone-icon" aria-hidden="true"></i>
+          <p class="dropzone-prompt">Drop an image here</p>
+          <button type="button" class="btn outline-accent dropzone-browse" id="file-pick">
+            <i class="ph ph-folder-open"></i> Browse
+          </button>
+          <p id="file-meta" class="field-help" hidden></p>
+        </div>
+      </div>
+
+      <div class="source-pane" data-source="url" hidden>
+        <label class="form-label">
+          Image URL
+          <input type="url" class="form-input" id="url-input"
+                 placeholder="https://example.com/image.png">
+        </label>
+        <p class="field-help">
+          Pasted URL is downloaded by the companion and treated as a regular upload.
+        </p>
+        <div class="source-actions">
+          <button type="button" class="btn" id="url-fetch">
+            <i class="ph ph-download-simple"></i> Fetch
+          </button>
+          <span id="url-status" class="field-help"></span>
+        </div>
+      </div>
+
+      <div class="source-pane" data-source="webpage" hidden>
+        <label class="form-label">
+          Webpage URL
+          <input type="url" class="form-input" id="webpage-url-input"
+                 placeholder="https://example.com">
+        </label>
+        <p class="field-help">
+          This machine renders the page in headless Chromium and pushes the screenshot — useful for live dashboards.
+        </p>
+
+        <label class="form-label">
+          Extra wait (ms)
+          <input type="number" class="form-input" id="extra-wait"
+                 value="0" min="0" max="60000" step="100">
+        </label>
+        <p class="field-help">
+          Adds delay after the page loads — let JS-driven content settle before the screenshot.
+        </p>
+      </div>
+
+      {# Shared options for all three image sources. #}
+      <div class="form-grid">
+        <label class="form-label">
+          Rotate
+          <select class="form-input" name="rotate">
+            <option value="0" selected>0°</option>
+            <option value="90">90°</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+          </select>
+        </label>
+        <label class="form-label">
+          Scale
+          <select class="form-input" name="scale">
+            <option value="fit">fit</option>
+            <option value="fill">fill</option>
+            <option value="stretch">stretch</option>
+            <option value="center">center</option>
+          </select>
+        </label>
+        <label class="form-label">
+          Background
+          <select class="form-input" name="bg">
+            {% for b in ['white','black','red','green','blue','yellow','orange','blurred'] %}
+              <option value="{{ b }}">{{ b }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label class="form-label">
+          <span class="label-row">
+            <span>Saturation</span>
+            <span class="slider-readout" data-readout="saturation">0.50</span>
+          </span>
+          <input type="range" name="saturation" min="0" max="1" step="0.05" value="0.5">
+        </label>
+      </div>
+
+      <button type="button" class="btn primary full-width" id="send-btn" disabled>
+        <i class="ph ph-upload-simple"></i> Push to panel
+      </button>
+    </section>
+
+    {# ====================================================================
+       DASH TAB — push a saved dashboard.
+       ==================================================================== #}
+    <section class="card panel-card" data-panel="dash" hidden>
+      <h2 class="panel-title">Saved dashboards</h2>
+
+      <ul class="dash-list" id="dash-list">
+        <li class="muted small">Loading…</li>
+      </ul>
+
+      <button type="button" class="btn primary full-width" id="dash-push-btn" disabled>
+        <i class="ph ph-upload-simple"></i> Push selected dashboard
+      </button>
+    </section>
+
+    {# ====================================================================
+       HISTORY TAB
+       ==================================================================== #}
+    <section class="card panel-card" data-panel="history" hidden>
+      <header class="panel-head">
+        <h2 class="panel-title">History</h2>
+        <span class="history-actions-bar">
+          <button type="button" class="btn ghost" id="history-refresh">
+            <i class="ph ph-arrows-clockwise"></i> Refresh
+          </button>
+          <button type="button" class="btn ghost danger" id="history-clear" disabled>
+            <i class="ph ph-trash"></i> Clear all
+          </button>
+        </span>
+      </header>
+      <ul class="history-list" id="history-list">
+        <li class="muted small">Loading…</li>
+      </ul>
+    </section>
+  </div>
+
+  {# ====================================================================
+     PREVIEW CARD — sticky, side-by-side with the form on wide screens.
+     Mirrors the dashboard editor's preview pattern: iframe sized at native
+     panel pixel resolution, then `transform: scale(...)` shrinks it to fit
+     the available column. That way Quad Pulse and friends see the actual
+     viewport they'll get at push time.
+     ==================================================================== #}
+  <aside class="send-preview-pane" data-active-tab="image">
+    <section class="card panel-card preview-card">
+      <header class="panel-head">
+        <h2 class="panel-title">Preview</h2>
+        <span class="preview-dims muted small">{{ panel_width }}×{{ panel_height }}</span>
+      </header>
+
+      {# Image preview: file/url use <img>, webpage uses an iframe (live). #}
+      <div class="send-preview" id="image-preview" data-empty="true">
+        <div class="preview-frame-canvas" id="image-preview-canvas">
+          <div class="send-preview-empty">
+            <i class="ph ph-image" aria-hidden="true"></i>
+            <span>Pick an image, paste a URL, or enter a webpage to preview</span>
+          </div>
+          <img class="send-preview-bg" alt="" aria-hidden="true" hidden>
+          <img class="send-preview-img" alt="" hidden>
+          <iframe class="send-preview-iframe scaled-frame" title="Webpage preview" hidden></iframe>
+        </div>
+        <p class="field-help">Rotate, scale, background and saturation are simulated.</p>
+      </div>
+
+      {# Dash preview: same renderer the push uses (/compose/<id>) — WYSIWYG. #}
+      <div class="send-preview" id="dash-preview" data-empty="true" hidden>
+        <div class="preview-frame-canvas" id="dash-preview-canvas">
+          <div class="send-preview-empty">
+            <i class="ph ph-frame-corners" aria-hidden="true"></i>
+            <span>Select a dashboard below to preview</span>
+          </div>
+          <iframe class="send-preview-iframe scaled-frame" title="Dashboard preview" hidden></iframe>
+        </div>
+      </div>
+
+      {# History preview: clicking a thumbnail in the list shows the full PNG here. #}
+      <div class="send-preview" id="history-preview" data-empty="true" hidden>
+        <div class="preview-frame-canvas" id="history-preview-canvas">
+          <div class="send-preview-empty">
+            <i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i>
+            <span>Pick a history item to preview</span>
+          </div>
+          <img class="send-preview-img history-preview-img" alt="" hidden>
+        </div>
+        <p class="field-help" id="history-preview-meta"></p>
+      </div>
+    </section>
+  </aside>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/send-page.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ view.name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='composer.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/phosphor/style.css') }}">
+  <style>
+    :root {
+      --panel-w: {{ view.panel[0] }}px;
+      --panel-h: {{ view.panel[1] }}px;
+      --cell-gap: {{ view.cell_gap }}px;
+      --cell-radius: {{ view.cell_radius }}px;
+      --canvas-bg: {{ view.bg_color }};
+      --header-h: {{ view.header_height }}px;
+      --font-family: "{{ font.family }}", {{ font.fallback_stack }};
+    }
+    {% if not font.is_system %}
+    {% for face in font.embedded_faces %}
+    @font-face {
+      font-family: "{{ font.family }}";
+      src: url("{{ face.data_url }}") format("woff2");
+      font-weight: {{ face.weight }};
+      font-style: normal;
+      font-display: block;
+    }
+    {% endfor %}
+    {% endif %}
+    {% if font_weight and font_weight != 400 %}
+    /* Page-wide font-weight override (theme builder sidebar). Widgets that
+       hardcode their own font-weight still win; this only affects elements
+       that inherit from body. */
+    body { font-weight: {{ font_weight }}; }
+    {% endif %}
+  </style>
+</head>
+<body>
+  <script type="application/json" id="page-config">{{ view|tojson }}</script>
+  <div id="panel" data-page-id="{{ view.id }}"></div>
+  <script type="module" src="{{ url_for('static', filename='composer.js') }}"></script>
+</body>
+</html>

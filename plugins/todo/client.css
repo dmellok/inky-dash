@@ -1,0 +1,285 @@
+@import url('/static/vendor/phosphor/style.css');
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 6%, transparent);
+  --tone-strong: color-mix(in srgb, var(--theme-fg, #111) 10%, transparent);
+}
+.todo {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ---- Stats header: big remaining count + thin progress bar ---- */
+.todo-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+.todo-head .head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.todo-head .lead {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.todo-head .lead i.ph {
+  font-size: 22px;
+  color: var(--theme-accent, currentColor);
+}
+.todo-head .eyebrow {
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--theme-fg, #111);
+}
+.todo-head .ratio {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  color: var(--theme-fg, #111);
+  font-feature-settings: "tnum";
+}
+.todo-head .ratio .big {
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: var(--theme-accent, currentColor);
+}
+.todo-head .ratio .of {
+  font-size: 0.42em;
+  font-weight: 700;
+  color: var(--theme-muted, #888);
+  letter-spacing: -0.02em;
+}
+.todo-head .progress {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--tone-strong);
+  overflow: hidden;
+}
+.todo.few .todo-head .progress { height: 16px; }
+.todo.few .todo-head .ratio .big { font-size: clamp(56px, 8vw, 96px); }
+.todo-head .progress .fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--theme-accent, currentColor) 0%,
+    color-mix(in srgb, var(--theme-accent, currentColor) 80%, white) 100%
+  );
+  transition: width 240ms ease;
+}
+
+/* ---- Items list ---- */
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.todo-columns .todo-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-flow: column;
+  gap: 10px 12px;
+}
+
+/* Material list-row: tonal pill + check disc + label. */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: clamp(15px, 1.7vw, 20px);
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--tone);
+  letter-spacing: -0.01em;
+  position: relative;
+}
+.todo-item .dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2.5px solid var(--theme-fg-soft, var(--theme-muted, #888));
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background-color 120ms;
+}
+.todo-item.completed .dot {
+  background: var(--theme-accent, var(--theme-fg, #111));
+  border-color: var(--theme-accent, var(--theme-fg, #111));
+}
+.todo-item.completed .dot::after {
+  content: "";
+  width: 11px;
+  height: 6px;
+  margin-top: -2px;
+  border-left: 2.5px solid var(--theme-bg, #fff);
+  border-bottom: 2.5px solid var(--theme-bg, #fff);
+  transform: rotate(-45deg);
+}
+.todo-item.completed .text {
+  text-decoration: line-through;
+  color: var(--theme-muted, #888);
+  font-weight: 500;
+}
+.todo-item.fresh .dot {
+  /* Items completed in the last hour pulse so glancing at the panel makes
+     freshly-done ones obvious — per the brief. */
+  animation: todo-fresh-pulse 1.4s ease-in-out infinite alternate;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--theme-accent, #888) 30%, transparent);
+}
+@keyframes todo-fresh-pulse {
+  from { opacity: 0.78; }
+  to   { opacity: 1; }
+}
+.todo-item .text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.todo-item .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-accent, #888) 18%, transparent);
+  color: var(--theme-accent, currentColor);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  flex-shrink: 0;
+}
+
+.todo .overflow {
+  margin: 0;
+  padding: 4px 12px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--theme-muted, #888);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---- Empty state ---- */
+.todo-empty {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+.todo-empty .lead {
+  font-size: clamp(28px, 4vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+  margin: 0;
+}
+.todo-empty .sub {
+  font-size: 14px;
+  color: var(--theme-muted, #888);
+  margin: 0;
+}
+
+/* ---- Few-items mode: items grow to share the available height so the
+   cell never feels empty. The first pending item also gets a "NEXT UP"
+   eyebrow for visual focus. ---- */
+.todo.few .todo-list { gap: 18px; justify-content: stretch; }
+.todo.few .todo-item {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  font-size: clamp(34px, 4.2vw, 56px);
+  font-weight: 700;
+  padding: 28px 36px;
+  border-radius: 24px;
+  gap: 28px;
+  letter-spacing: -0.02em;
+  min-height: 0;
+}
+.todo.few .todo-item .dot {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
+.todo.few .todo-item.completed .dot::after {
+  width: 22px;
+  height: 12px;
+  margin-top: -3px;
+  border-left-width: 4px;
+  border-bottom-width: 4px;
+}
+.todo.few .todo-item .badge {
+  font-size: 14px;
+  padding: 6px 14px;
+  letter-spacing: 0.16em;
+}
+/* Spotlight the first pending item — accent leading bar makes it the visual
+   anchor in the cell. */
+.todo.few .todo-item:not(.completed):first-child {
+  border-left: 6px solid var(--theme-accent, currentColor);
+  padding-left: 30px;
+}
+
+/* ---- Responsive tiers ---- */
+.todo.h-xs { padding: 10px; gap: 6px; }
+.todo.h-xs .todo-item {
+  font-size: 13px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+.todo.h-xs .todo-item .dot { width: 16px; height: 16px; border-width: 2px; }
+.todo.h-xs .todo-item.completed .dot::after { width: 8px; height: 4px; border-width: 2px; }
+.todo.h-xs .todo-item .badge { display: none; }
+.todo.h-xs .todo-empty .lead { font-size: 18px; }
+.todo.h-xs .todo-empty .sub  { font-size: 11px; }
+
+.todo.h-sm { padding: 14px; gap: 10px; }
+.todo.h-sm .todo-head { gap: 8px; padding-bottom: 0; }
+.todo.h-sm .todo-head .ratio .big { font-size: 32px; }
+.todo.h-sm .todo-head .progress { height: 6px; }
+.todo.h-sm .todo-item { font-size: 15px; padding: 10px 14px; }
+.todo.h-sm .todo-item .dot { width: 18px; height: 18px; }
+
+.todo.h-md .todo-item { font-size: 16px; }
+
+/* Legacy compact escape hatch. */
+.todo.compact .todo-head { display: none; }
+.todo.compact .todo-item { font-size: 13px; gap: 10px; padding: 6px 10px; }
+.todo.compact .todo-item .dot { width: 14px; height: 14px; }
+.todo.compact .todo-item.completed .dot::after { width: 7px; height: 4px; }

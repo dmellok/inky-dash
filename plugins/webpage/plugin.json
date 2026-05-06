@@ -1,0 +1,37 @@
+{
+  "id": "webpage",
+  "label": "Webpage",
+  "icon": "ph-browser",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {"name": "url", "label": "URL", "type": "text"},
+    {
+      "name": "extra_wait_ms",
+      "label": "Extra wait (ms)",
+      "type": "int",
+      "default": 0
+    },
+    {
+      "name": "wait_until",
+      "label": "Wait until",
+      "type": "select",
+      "default": "networkidle",
+      "choices": [
+        {"value": "load",        "label": "load"},
+        {"value": "networkidle", "label": "networkidle"}
+      ]
+    }
+  ],
+  "settings": {
+    "title": "Webpage",
+    "fields": [
+      {
+        "key": "WEBPAGE_DEFAULT_TIMEOUT_MS",
+        "label": "Navigation timeout (ms)",
+        "type": "int",
+        "default": 30000
+      }
+    ]
+  }
+}

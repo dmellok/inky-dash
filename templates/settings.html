@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+
+<section class="settings-page">
+  <div class="page-head">
+    <h1>Settings</h1>
+    <div class="head-actions">
+      <button type="button" class="btn primary" id="save-btn">
+        <i class="ph ph-floppy-disk"></i> Save &amp; restart
+      </button>
+    </div>
+  </div>
+
+  <p class="muted small env-hint" id="env-hint"></p>
+
+  <div class="settings-body">
+    <aside id="sections-nav" class="settings-nav" aria-label="Settings sections"></aside>
+    <div id="sections" class="settings-sections">
+      <p class="muted">Loading…</p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/settings-page.js') }}"></script>
+{% endblock %}

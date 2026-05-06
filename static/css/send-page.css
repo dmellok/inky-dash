@@ -1,0 +1,369 @@
+.send-page {
+  display: grid;
+  grid-template-columns: minmax(380px, 1fr) minmax(420px, 1.2fr);
+  gap: 20px;
+  align-items: start;
+  margin: 16px auto 0;
+  max-width: 1280px;
+}
+/* Primary tabs span both columns so the form card and preview card align
+   at their tops in the row below. */
+.send-primary-tabs { grid-column: 1 / -1; align-self: start; }
+
+.send-form-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.send-preview-pane {
+  position: sticky;
+  top: calc(var(--header-h) + 16px);
+  min-width: 0;
+}
+.preview-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.preview-card .panel-title { font-size: 16px; }
+.preview-dims {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+/* The .tab-bar component itself comes from base.css; here we just align it. */
+.primary-tabs { align-self: flex-start; }
+.source-tabs  { align-self: flex-start; margin-bottom: 4px; }
+
+.panel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  margin: 0;
+}
+/* `display: flex` above wins over the [hidden] attribute's UA `display: none`,
+   so we explicitly hide flex containers when their tab/source is inactive. */
+.panel-card[hidden],
+.source-pane[hidden],
+.send-preview[hidden] { display: none; }
+
+.panel-title { margin: 0; font-size: 18px; font-weight: 700; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ---- shared form layout -------------------------------------------------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-label .label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.slider-readout {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 13px;
+}
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+/* Status now flows through the global app-footer flash (status.js). */
+
+/* ---- source panes -------------------------------------------------------- */
+
+.source-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface-2);
+  border: 2px dashed var(--divider);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: background-color 80ms, border-color 80ms;
+}
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+}
+.dropzone-icon {
+  font-size: 40px;
+  color: color-mix(in srgb, var(--accent) 70%, var(--muted));
+  line-height: 1;
+}
+.dropzone-prompt {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.dropzone-browse {
+  margin-top: 4px;
+}
+
+#file-meta {
+  margin-top: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.source-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---- Live preview window ------------------------------------------------- */
+
+.send-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Mirrors the dashboard editor preview: outer canvas keeps the panel aspect
+   ratio, the inner img/iframe is sized at native panel pixels and then
+   `transform: scale(--preview-scale)` shrinks it to fit. JS sets the canvas
+   width/height + scale on resize. */
+.preview-frame-canvas {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--panel-aspect, 800 / 480);
+  background: var(--surface-2);
+  border: 1px solid var(--divider);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.send-preview-empty {
+  position: absolute; inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 24px;
+  text-align: center;
+}
+.send-preview-empty i.ph { font-size: 36px; color: color-mix(in srgb, var(--muted) 70%, transparent); }
+.send-preview[data-empty="false"] .send-preview-empty { display: none; }
+
+/* The image preview keeps using object-fit since rotate/scale/saturation are
+   pure CSS — no need for the transform-scale dance. */
+.send-preview-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: 0;
+  display: block;
+  object-fit: contain;
+  transition: filter 80ms, transform 120ms, background-color 80ms;
+  background: var(--bg, #ffffff);
+}
+.send-preview-img[hidden],
+.scaled-frame[hidden] { display: none; }
+.send-preview[data-bg="white"]   .send-preview-img { background: #ffffff; }
+.send-preview[data-bg="black"]   .send-preview-img { background: #000000; }
+.send-preview[data-bg="red"]     .send-preview-img { background: #c63b3b; }
+.send-preview[data-bg="green"]   .send-preview-img { background: #2f855a; }
+.send-preview[data-bg="blue"]    .send-preview-img { background: #2b6cb0; }
+.send-preview[data-bg="yellow"]  .send-preview-img { background: #eccb1a; }
+.send-preview[data-bg="orange"]  .send-preview-img { background: #d97706; }
+/* "blurred" — the runtime composes a zoomed, blurred copy of the source
+   behind the foreground image. We replicate it with a sibling <img> sized
+   to cover the canvas with a strong blur + slight scale-up to hide edges.
+   Only shown via the data-bg="blurred" rule below. */
+.send-preview-bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: blur(24px) saturate(1.1);
+  transform: scale(1.15);
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+}
+.send-preview-bg[hidden] { display: none; }
+/* Foreground image sits on top of the blurred backdrop. */
+.send-preview-img { z-index: 1; }
+.send-preview[data-bg="blurred"] .send-preview-img {
+  background: transparent;
+}
+
+/* Iframes (webpage source + dashboard preview) render at native panel pixel
+   resolution — same approach as the dashboard editor — then a CSS transform
+   shrinks them to fit. This is the only way Quad Pulse and other layouts
+   that depend on the panel aspect render correctly: inside the iframe they
+   see exactly the viewport they will see at push time. */
+.scaled-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  display: block;
+  width: var(--panel-w, 800px);
+  height: var(--panel-h, 480px);
+  background: white;
+  transform-origin: top left;
+  transform: scale(var(--preview-scale, 1));
+}
+
+/* ---- Dash list ----------------------------------------------------------- */
+
+.dash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-list .row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 80ms, background-color 80ms;
+}
+.dash-list .row:hover { border-color: color-mix(in srgb, var(--accent) 30%, var(--divider)); }
+.dash-list .row.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+}
+/* meta takes the leftover space so the radio sits at the far right and the
+   text is left-aligned right next to the icon. */
+.dash-list .row .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.dash-list .row .meta strong { font-size: 14px; }
+.dash-list .row .meta .muted { font-size: 12px; color: var(--muted); }
+.dash-list .row .row-icon { font-size: 22px; color: var(--accent); flex-shrink: 0; }
+.dash-list .row .row-check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--divider);
+  flex-shrink: 0;
+}
+.dash-list .row.selected .row-check {
+  border-color: var(--accent);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface);
+}
+
+/* ---- History list -------------------------------------------------------- */
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.history-list .history-row {
+  display: grid;
+  grid-template-columns: 96px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.history-list .history-row.error {
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-2));
+}
+
+.thumb-btn {
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  padding: 0;
+  width: 96px;
+  aspect-ratio: 800 / 480;
+  cursor: pointer;
+  overflow: hidden;
+}
+.thumb-btn:hover { border-color: var(--fg); }
+.thumb-btn:disabled { cursor: default; opacity: 0.5; }
+.thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-fallback {
+  display: flex; height: 100%; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--muted);
+}
+
+.history-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.history-meta .row-1 { display: flex; align-items: baseline; gap: 8px; }
+.history-meta strong { font-size: 13px; text-transform: capitalize; }
+.history-meta .row-2 { font-size: 11px; color: var(--muted); }
+
+.history-actions { display: flex; gap: 4px; }
+.history-actions-bar { display: flex; gap: 4px; align-items: center; }
+.history-actions-bar .btn.danger {
+  color: var(--danger);
+}
+.history-actions-bar .btn.danger:not(:disabled):hover {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+}
+.history-actions-bar .btn.danger:disabled { opacity: 0.4; }
+
+.history-list .history-row { cursor: pointer; }
+.history-list .history-row.error { cursor: default; }
+/* Hover applies only to non-selected, non-error rows so it can't shrink an
+   already-selected row's outline (which used to flash bold on mouse-out). */
+.history-list .history-row:not(.error):not(.selected):hover {
+  outline: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: -1px;
+}
+.history-list .history-row.selected {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.history-list .history-row .row-delete {
+  color: var(--muted);
+}
+.history-list .history-row .row-delete:hover {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.history-preview-img { background: white; }
+
+/* ---- Responsive ---------------------------------------------------------- */
+
+@media (max-width: 1100px) {
+  .send-page { grid-template-columns: 1fr; }
+  .send-preview-pane { position: static; }
+}
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .send-page { padding: 0 4px; }
+  .panel-card { padding: 16px; }
+}

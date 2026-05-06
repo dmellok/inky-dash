@@ -1,0 +1,14 @@
+Bundled fonts are distributed under the SIL Open Font License, Version 1.1.
+Full license text: https://openfontlicense.org/
+
+  Inter                — Copyright (c) 2016-2020, Rasmus Andersson
+  DM Sans              — Copyright (c) 2014-2017, Indian Type Foundry
+  IBM Plex Sans        — Copyright (c) 2017, IBM Corp.
+  Jost                 — Copyright (c) 2018, Owen Earl
+  Outfit               — Copyright (c) 2021, The Outfit Project Authors
+  Manrope              — Copyright (c) 2018, The Manrope Project Authors
+  Space Grotesk        — Copyright (c) 2018, The Space Grotesk Project Authors
+  Archivo              — Copyright (c) 2018, Omnibus-Type
+  Bricolage Grotesque  — Copyright (c) 2022, Mathieu Triay
+
+Source: Google Fonts via fontsource.org. Latin subset only (woff2).

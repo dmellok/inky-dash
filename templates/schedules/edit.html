@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}{% if schedule %}Edit · {{ schedule.name }}{% else %}New schedule{% endif %}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/schedules.css') }}">
+
+<section class="schedules-page schedule-edit">
+  <header class="schedule-edit-head">
+    <a href="{{ url_for('schedules_page') }}" class="btn ghost back">
+      <i class="ph ph-arrow-left"></i><span>All schedules</span>
+    </a>
+  </header>
+
+  <form id="schedule-form" autocomplete="off">
+    <section class="card form-section">
+      <header class="section-head"><h3>Basics</h3></header>
+
+      <label class="form-label">
+        Name
+        <input type="text" class="form-input" id="schedule-name" required>
+      </label>
+
+      <label class="form-label">
+        Type
+        <div class="tab-bar kind-tabs" role="tablist">
+          <button type="button" class="tab" role="tab" data-kind="one_shot">
+            <i class="ph ph-target"></i><span>One-shot</span>
+          </button>
+          <button type="button" class="tab" role="tab" data-kind="interval">
+            <i class="ph ph-arrows-clockwise"></i><span>Interval</span>
+          </button>
+        </div>
+      </label>
+
+      {# One-shot fields — fires once per day at the chosen time. #}
+      <div class="kind-pane" data-kind="one_shot" hidden>
+        <label class="form-label">
+          Time of day
+          <input type="time" class="form-input narrow-time" id="one-shot-at">
+        </label>
+        <p class="field-help">Fires once per day at this time, on the days selected below.</p>
+      </div>
+
+      {# Interval fields — fires every N minutes within a window. #}
+      <div class="kind-pane" data-kind="interval" hidden>
+        <label class="form-label">
+          <span class="label-row">
+            <span>Every</span>
+            <span class="muted small">minutes</span>
+          </span>
+          <input type="number" class="form-input narrow" id="every-minutes" min="1" max="1440" step="1" value="15">
+        </label>
+        <div class="grid-2">
+          <label class="form-label">
+            Start time
+            <input type="time" class="form-input" id="start-time" value="08:00">
+          </label>
+          <label class="form-label">
+            End time
+            <input type="time" class="form-input" id="end-time" value="20:00">
+          </label>
+        </div>
+      </div>
+
+      {# Days-of-week selector with shortcuts. Used by both kinds. #}
+      <div class="form-label">
+        <span class="label-row">
+          <span>Days of week</span>
+          <span class="dow-shortcuts">
+            <button type="button" data-dow-set="all">All</button>
+            <button type="button" data-dow-set="weekdays">Weekdays</button>
+            <button type="button" data-dow-set="weekends">Weekends</button>
+            <button type="button" data-dow-set="none">Clear</button>
+          </span>
+        </span>
+        <div class="dow-row">
+          {% for short, label, idx in [('Mon','Monday',0),('Tue','Tuesday',1),('Wed','Wednesday',2),('Thu','Thursday',3),('Fri','Friday',4),('Sat','Saturday',5),('Sun','Sunday',6)] %}
+          <label class="dow-toggle" title="{{ label }}">
+            <input type="checkbox" class="dow-cb" value="{{ idx }}">
+            <span>{{ short }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="field-help">No days selected = every day.</p>
+      </div>
+    </section>
+
+    <section class="card form-section">
+      <header class="section-head"><h3>Target</h3></header>
+
+      <label class="form-label">
+        Dashboard
+        <select class="form-input" id="target-page" required>
+          <option value="">— select a saved dashboard —</option>
+          {% for p in pages %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label class="form-label">
+        Color
+        <span class="color-row">
+          <input type="color" id="schedule-color" value="#b85a3f">
+          <input type="text" class="form-input color-text" id="schedule-color-text" value="#b85a3f" maxlength="7">
+        </span>
+        <span class="field-help">Used for the timeline marker and the row indicator.</span>
+      </label>
+
+      <details class="advanced">
+        <summary>Push options (advanced)</summary>
+        <div class="form-grid">
+          <label class="form-label">
+            Rotate
+            <select class="form-input" name="rotate">
+              <option value="">use default (0)</option>
+              <option value="0">0°</option>
+              <option value="90">90°</option>
+              <option value="180">180°</option>
+              <option value="270">270°</option>
+            </select>
+          </label>
+          <label class="form-label">
+            Scale
+            <select class="form-input" name="scale">
+              <option value="">use default (fit)</option>
+              <option value="fit">fit</option>
+              <option value="fill">fill</option>
+              <option value="stretch">stretch</option>
+              <option value="center">center</option>
+            </select>
+          </label>
+          <label class="form-label">
+            Background
+            <select class="form-input" name="bg">
+              <option value="">use default (white)</option>
+              {% for b in ['white','black','red','green','blue','yellow','orange','blurred'] %}
+                <option value="{{ b }}">{{ b }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label class="form-label">
+            <span class="label-row">
+              <span>Saturation</span>
+              <span class="slider-readout" data-readout="saturation">use default (0.50)</span>
+            </span>
+            <input type="range" name="saturation" min="0" max="1" step="0.05" value="">
+          </label>
+        </div>
+      </details>
+    </section>
+
+    <section class="card form-section">
+      <header class="section-head"><h3>State</h3></header>
+      <label class="switch-row">
+        <span>Enabled</span>
+        <span class="switch">
+          <input type="checkbox" id="schedule-enabled" checked>
+          <span class="track"></span>
+          <span class="thumb"></span>
+        </span>
+      </label>
+      {% if schedule and schedule.last_fired_at %}
+      <p class="field-help last-fire">
+        Last fired {{ schedule.last_fired_at }} · {{ schedule.last_result or '?' }}{% if schedule.last_error %} · {{ schedule.last_error }}{% endif %}
+      </p>
+      {% elif schedule %}
+      <p class="field-help last-fire">Hasn't fired yet.</p>
+      {% endif %}
+    </section>
+  </form>
+
+  <div class="schedule-action-bar">
+    {% if schedule %}
+    <button type="button" class="btn ghost danger" id="delete-btn">
+      <i class="ph ph-trash"></i> Delete
+    </button>
+    {% endif %}
+    <button type="button" class="btn primary" id="save-btn">
+      <i class="ph ph-floppy-disk"></i> Save
+    </button>
+  </div>
+</section>
+
+<script id="initial-schedule" type="application/json">{{ initial|tojson if initial else "null" }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/schedules-edit.js') }}"></script>
+{% endblock %}

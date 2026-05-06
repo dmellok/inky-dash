@@ -1,0 +1,332 @@
+.theme-builder {
+  max-width: 1120px;
+  margin: 16px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(420px, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.theme-list-pane,
+.theme-editor-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.theme-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.theme-group-head {
+  padding: 12px 4px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--divider);
+  margin-bottom: 2px;
+}
+.theme-group-head:first-child { padding-top: 4px; }
+.theme-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.theme-row:hover { background: color-mix(in srgb, var(--fg) 6%, var(--surface-2)); }
+.theme-row.active { border-color: var(--fg); }
+.theme-row .meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.theme-row .meta strong { font-size: 13px; }
+.theme-row .meta .kind {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.theme-row .swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 12px);
+  gap: 2px;
+}
+.theme-row .swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--divider);
+}
+
+.kind-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--divider);
+}
+
+.editor-card { gap: 14px; }
+.default-font-card { gap: 8px; padding: 16px; }
+.default-font-card .section-head { padding-bottom: 6px; }
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.palette-editor {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.palette-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.palette-field .swatch-input {
+  width: 36px;
+  height: 32px;
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--divider);
+  background: var(--surface);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.palette-field .text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.palette-field label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.palette-field input[type="text"] {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+
+.preview-card { gap: 12px; }
+.theme-preview {
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--p-bg, #fff);
+  color: var(--p-fg, #000);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.theme-preview .preview-header {
+  grid-column: 1 / -1;
+  background: var(--p-surface, #fff);
+  color: var(--p-fg);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--p-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.theme-preview .preview-header strong { color: var(--p-fg); flex: 1; }
+.theme-preview .preview-header time { color: var(--p-muted); font-size: 12px; }
+.theme-preview .preview-header .preview-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--p-accent);
+  flex-shrink: 0;
+}
+.theme-preview .preview-header { gap: 10px; }
+.theme-preview .preview-cell {
+  background: var(--p-surface);
+  border: 1px solid var(--p-divider);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--p-fg);
+}
+
+/* Hero card mirrors the weather widget: big temperature + accent icon at
+   top, condition line, then a 3-col strip of tonal tiles for metrics. The
+   tiles use surface-2 — which is the whole point of having two surface
+   tokens — so the preview shows the user how that key reads. */
+.theme-preview .preview-cell.hero { gap: 8px; }
+.theme-preview .preview-cell .hero-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.theme-preview .preview-cell .hero-icon {
+  font-size: 36px;
+  line-height: 1;
+  color: var(--p-accent);
+  flex-shrink: 0;
+}
+.theme-preview .preview-cell .hero-temp {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--p-fg);
+}
+.theme-preview .preview-cell .hero-unit {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--p-muted);
+  margin-left: 2px;
+}
+.theme-preview .preview-cell .hero-cond {
+  font-size: 12px;
+  color: var(--p-fg-soft);
+}
+
+/* Metrics — tonal tiles using surface-2 so this palette key is visible. */
+.theme-preview .metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+.theme-preview .metric {
+  background: var(--p-surface-2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.theme-preview .metric .m-k {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+.theme-preview .metric .m-v {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--p-fg);
+  letter-spacing: -0.01em;
+}
+.theme-preview .metric .m-u {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--p-muted);
+  margin-left: 2px;
+}
+
+/* Todo card mirrors the todo widget: count + progress bar in accent +
+   list of items, completed in muted strikethrough. */
+.theme-preview .preview-cell.todo { gap: 8px; }
+.theme-preview .todo-head {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.theme-preview .todo-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--p-accent);
+  line-height: 1;
+}
+.theme-preview .todo-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-muted);
+}
+.theme-preview .todo-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--p-surface-2);
+  overflow: hidden;
+}
+.theme-preview .todo-bar-fill {
+  height: 100%;
+  background: var(--p-accent);
+  border-radius: 999px;
+}
+.theme-preview .todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+.theme-preview .todo-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--p-fg);
+}
+.theme-preview .todo-item i.ph { color: var(--p-accent); font-size: 14px; }
+.theme-preview .todo-item.done { color: var(--p-muted); }
+.theme-preview .todo-item.done i.ph { color: var(--p-ok); }
+
+/* Status row stays simple — semantic pills test danger/warn/ok keys. */
+.theme-preview .preview-cell .m { font-size: 10px; color: var(--p-muted); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.theme-preview .preview-cell .sem {
+  display: flex; gap: 6px; flex-wrap: wrap; font-size: 10px;
+}
+.theme-preview .preview-cell .pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--p-surface-2);
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+.theme-preview .preview-cell .pill.danger { color: var(--p-danger); }
+.theme-preview .preview-cell .pill.warn   { color: var(--p-warn); }
+.theme-preview .preview-cell .pill.ok     { color: var(--p-ok); }
+
+.empty-editor {
+  padding: 32px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* Status pill is the shared .footer-status component (no chin). */
+
+@media (max-width: 720px) {
+  .builder-grid { grid-template-columns: 1fr; }
+  .palette-editor { grid-template-columns: repeat(2, 1fr); }
+}

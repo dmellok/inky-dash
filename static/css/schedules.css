@@ -1,0 +1,369 @@
+.schedules-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 920px;
+  margin: 16px auto 0;
+}
+
+.panel-card { display: flex; flex-direction: column; gap: 16px; padding: 24px; margin: 0; }
+.panel-title { margin: 0; font-size: 18px; font-weight: 700; }
+.panel-subtitle { margin: 0; font-size: 14px; font-weight: 600; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* ============== Daily timeline ============== */
+
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.timeline-axis {
+  position: relative;
+  height: 18px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 10px;
+  color: var(--muted);
+}
+.timeline-axis .hour {
+  position: absolute;
+  bottom: 2px;
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+}
+.timeline-axis .tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--divider);
+}
+.timeline-axis .now-line {
+  position: absolute;
+  top: 0;
+  bottom: -8px;
+  width: 1px;
+  background: var(--fg);
+  opacity: 0.45;
+}
+
+.timeline-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Pill-shaped track that holds the schedule's window + fire-slot dots.
+   The track itself is a soft surface-2 pill so empty rows still read as
+   "this schedule exists, just nothing today". */
+.timeline-row {
+  position: relative;
+  height: 26px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.timeline-row .label {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  padding: 1px 8px;
+  border-radius: 999px;
+  z-index: 3;
+  pointer-events: none;
+}
+/* Interval window: a tinted pill in the row's color, sitting inside the
+   track with a faint border so it reads cleanly on light + dark themes. */
+.timeline-row .window {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  background: color-mix(in srgb, var(--row-color, var(--accent)) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 45%, var(--surface));
+  border-radius: 999px;
+}
+/* One-shot indicator: same pill scheme as the interval window, just
+   narrow — a tiny capsule centered on the fire time. */
+.timeline-row .one-shot {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 14px;
+  background: color-mix(in srgb, var(--row-color, var(--accent)) 22%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--row-color, var(--accent)) 45%, var(--surface));
+  border-radius: 999px;
+  transform: translateX(-50%);
+}
+
+/* ============== Schedule list ============== */
+
+.schedule-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.schedule-row {
+  /* Indicator is position:absolute so it opts out of grid placement.
+     Three grid columns now: drag handle / meta / actions. */
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px 14px 22px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 80ms, box-shadow 80ms, opacity 80ms;
+}
+.schedule-row.dragging {
+  opacity: 0.55;
+  box-shadow: var(--shadow-lg);
+}
+.schedule-row .drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 28px;
+  margin-left: -8px;
+  color: var(--muted);
+  cursor: grab;
+  border-radius: 4px;
+  user-select: none;
+  font-size: 18px;
+}
+.schedule-row .drag-handle:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 6%, transparent); }
+.schedule-row .drag-handle:active { cursor: grabbing; }
+.schedule-row.dragging .drag-handle { cursor: grabbing; }
+.schedule-row .indicator {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--row-color, var(--accent));
+}
+.schedule-row .meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.schedule-row .meta .row-1 { display: flex; align-items: baseline; gap: 8px; }
+.schedule-row .meta strong { font-size: 14px; }
+.schedule-row .meta .row-2 { font-size: 12px; color: var(--muted); }
+.schedule-row .actions { display: flex; gap: 4px; }
+.schedule-row.disabled { opacity: 0.55; }
+.schedule-row.fired strong::after {
+  content: " · fired";
+  color: var(--ok);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--surface);
+  color: var(--muted);
+  border: 1px solid var(--divider);
+}
+.badge-pill.kind-one_shot { color: var(--accent); }
+.badge-pill.kind-interval { color: var(--ok); }
+.badge-pill.error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 30%, var(--divider)); }
+
+/* ============== Edit form ============== */
+
+.schedule-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.schedule-edit-head .back { font-size: 13px; }
+
+#schedule-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#schedule-form .form-input,
+#schedule-form input[type="text"],
+#schedule-form input[type="number"],
+#schedule-form input[type="time"],
+#schedule-form select {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  border-radius: 8px;
+}
+#schedule-form select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238b7e70' stroke-width='1.5' stroke-linecap='round'><polyline points='4 6 8 10 12 6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+#schedule-form input:focus,
+#schedule-form select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--fg) 40%, var(--divider));
+}
+#schedule-form .form-input.narrow,
+#schedule-form .form-input.narrow-time { width: 140px; }
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.form-label .label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Kind toggle (one-shot / interval) — clean inline pane, no nested card. */
+.kind-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.kind-pane[hidden] { display: none; }
+
+/* Day-of-week selector */
+.dow-shortcuts { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.dow-shortcuts button {
+  background: transparent;
+  border: 1px solid var(--divider);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-soft);
+  cursor: pointer;
+}
+.dow-shortcuts button:hover {
+  background: var(--surface-2);
+  color: var(--fg);
+}
+.dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(40px, 1fr));
+  gap: 4px;
+}
+.dow-toggle { position: relative; cursor: pointer; }
+.dow-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.dow-toggle span {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--divider);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-soft);
+  transition: background-color 80ms, color 80ms, border-color 80ms;
+}
+.dow-toggle input:checked + span {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* Color picker row */
+.color-row { display: flex; align-items: stretch; gap: 8px; }
+.color-row input[type="color"] {
+  width: 40px;
+  height: 36px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--divider);
+  background: var(--surface);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.color-row .color-text {
+  width: 140px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+}
+
+/* Advanced section */
+.advanced summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg-soft);
+  padding: 4px 0;
+  list-style: none;
+}
+.advanced summary::-webkit-details-marker { display: none; }
+.advanced summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 80ms ease;
+  width: 1em;
+}
+.advanced[open] summary::before { content: "▾ "; }
+.advanced[open] { padding-bottom: 8px; }
+.advanced[open] summary { margin-bottom: 12px; }
+
+.last-fire {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+/* Sticky action bar at the bottom of the form */
+.schedule-action-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding: 12px 0 8px;
+  background: linear-gradient(to top, var(--bg) 70%, transparent);
+  z-index: 5;
+}
+
+/* Status pill is the shared .footer-status component (no chin). */
+
+@media (max-width: 640px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .dow-row { grid-template-columns: repeat(4, 1fr); }
+}

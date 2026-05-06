@@ -1,0 +1,153 @@
+@import url('/static/vendor/phosphor/style.css');
+:host {
+  display: block;
+  height: 100%;
+  --tone: color-mix(in srgb, var(--theme-fg, #111) 6%, transparent);
+}
+.xkcd {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  /* No surface chrome — comic sits directly on the page/theme background.
+     The cell wrapper already paints the theme surface when one is selected. */
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* Shared widget-head: small accent icon + uppercase eyebrow label, with
+   optional metadata chip on the right. Same pattern across every widget. */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-fg, #888) 8%, transparent);
+  flex-shrink: 0;
+}
+.widget-head i.ph {
+  font-size: 22px;
+  color: var(--theme-accent, currentColor);
+}
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--theme-fg, #111);
+}
+.widget-head .num,
+.widget-head .meta {
+  margin-left: auto;
+}
+
+.xkcd .num {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--theme-accent, #888) 14%, transparent);
+  color: var(--theme-accent, currentColor);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Title row — display-weight comic title (separate from widget-head so the
+   eyebrow stays compact). */
+.xkcd .title-row {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.xkcd .title {
+  margin: 0;
+  font-size: clamp(22px, 3.2vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+/* Comic + caption are wrapped in a flex column that fills the remaining
+   cell height. The inner `.comic-stack` caps width so the image scales up
+   to a readable size on big cells, and the alt caption inherits that same
+   width — keeping its line breaks aligned to the comic instead of running
+   the full cell width. */
+.comic-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.comic-stack {
+  width: 100%;
+  max-width: min(900px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.xkcd figure {
+  margin: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.xkcd figure img {
+  /* Width 100% scales the comic up to fill the stack column, object-fit
+     keeps aspect ratio without distortion when max-height clamps. */
+  width: 100%;
+  max-height: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Alt text — display-weight caption directly below the comic. Width is
+   capped by `.comic-stack` so the line wrap matches the image width. */
+.xkcd .alt {
+  margin: 0;
+  padding: 16px 0 0;
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg, #111);
+  text-align: center;
+  flex-shrink: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- Responsive tiers ---- */
+.xkcd.h-xs { padding: 8px; gap: 6px; }
+.xkcd.h-xs .title { font-size: 16px; }
+.xkcd.h-xs .num { padding: 3px 8px; font-size: 11px; }
+
+.xkcd.h-sm { padding: 12px; gap: 10px; }
+.xkcd.h-sm .title { font-size: clamp(18px, 2.4vw, 22px); }
+.xkcd.h-sm .alt { font-size: 14px; -webkit-line-clamp: 2; }
+
+.xkcd.h-md .alt { font-size: 16px; -webkit-line-clamp: 3; }
+
+.xkcd.error {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  font-size: 12px;
+}
