@@ -79,7 +79,7 @@
   font-size: 120px;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: var(--sev-color);
+  color: var(--theme-fg, #111);
 }
 .hero .of {
   font-size: 22px;
@@ -91,7 +91,7 @@
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--sev-color);
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
 
 /* scale bar — positions a small cursor pip at the AQI's position on the
