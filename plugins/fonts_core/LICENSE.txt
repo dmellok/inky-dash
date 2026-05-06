@@ -1,14 +1,55 @@
-Bundled fonts are distributed under the SIL Open Font License, Version 1.1.
-Full license text: https://openfontlicense.org/
+Bundled fonts are distributed under the SIL Open Font License, Version 1.1
+(except where noted). Full license text: https://openfontlicense.org/
 
-  Inter                — Copyright (c) 2016-2020, Rasmus Andersson
-  DM Sans              — Copyright (c) 2014-2017, Indian Type Foundry
-  IBM Plex Sans        — Copyright (c) 2017, IBM Corp.
-  Jost                 — Copyright (c) 2018, Owen Earl
-  Outfit               — Copyright (c) 2021, The Outfit Project Authors
-  Manrope              — Copyright (c) 2018, The Manrope Project Authors
-  Space Grotesk        — Copyright (c) 2018, The Space Grotesk Project Authors
-  Archivo              — Copyright (c) 2018, Omnibus-Type
-  Bricolage Grotesque  — Copyright (c) 2022, Mathieu Triay
+Source: Google Fonts via fontsource.org (https://fontsource.org). Latin subset
+only (woff2). Each typeface retains its own copyright; the OFL governs use,
+modification, and redistribution.
 
-Source: Google Fonts via fontsource.org. Latin subset only (woff2).
+  Inter                  — Copyright (c) 2016-2020, Rasmus Andersson
+  DM Sans                — Copyright (c) 2014-2017, Indian Type Foundry
+  IBM Plex Sans          — Copyright (c) 2017, IBM Corp.
+  Jost                   — Copyright (c) 2018, Owen Earl
+  Outfit                 — Copyright (c) 2021, The Outfit Project Authors
+  Manrope                — Copyright (c) 2018, The Manrope Project Authors
+  Space Grotesk          — Copyright (c) 2018, The Space Grotesk Project Authors
+  Archivo                — Copyright (c) 2018, Omnibus-Type
+  Bricolage Grotesque    — Copyright (c) 2022, Mathieu Triay
+
+Modern (clean contemporary sans):
+  Plus Jakarta Sans      — Copyright (c) 2020, Tokotype (https://github.com/tokotype/PlusJakartaSans)
+  Onest                  — Copyright (c) 2023, The Onest Project Authors
+  Geist                  — Copyright (c) 2024, Vercel
+  Hanken Grotesk         — Copyright (c) 2020, Alfredo Marco Pradil (Hanken Design Co)
+  Public Sans            — Copyright (c) U.S. Web Design System contributors
+  Lexend                 — Copyright (c) 2018, Bonnie Shaver-Troup, Thomas Jockin
+  Work Sans              — Copyright (c) 2014, Wei Huang
+  Nunito                 — Copyright (c) 2014, Vernon Adams
+  Lato                   — Copyright (c) 2010-2015, Łukasz Dziedzic (Latin font versions)
+
+Mid-century modern / geometric:
+  Sen                    — Copyright (c) 2020, Phantom Foundry
+  Dosis                  — Copyright (c) 2011, Edgar Tolentino, Pablo Impallari, Igino Marini
+  Sora                   — Copyright (c) 2020, Pixel Surplus
+  Karla                  — Copyright (c) 2012, Jonny Pinhorn
+  Questrial              — Copyright (c) 2010-2013, Joe Prince
+  Comfortaa              — Copyright (c) 2010, Johan Aakerlund
+
+Thick / bold / display:
+  Anton                  — Copyright (c) 2011, Vernon Adams
+  Oswald                 — Copyright (c) 2016, The Oswald Project Authors
+  Alfa Slab One          — Copyright (c) 2012, Joana Correia
+  Russo One              — Copyright (c) 2012, Jovanny Lemonad
+  Big Shoulders Display  — Copyright (c) 2019, Patric King
+  Black Ops One          — Copyright (c) 2011, Sorkin Type
+  Titan One              — Copyright (c) 2014, Riccardo De Franceschi
+  Ultra                  — Copyright (c) 2010, The Font Bureau, Inc.
+  Bowlby One             — Copyright (c) 2011, Vernon Adams
+  Bebas Neue             — Copyright (c) 2014, Dharma Type
+  Abril Fatface          — Copyright (c) 2011, TypeTogether
+  Bungee                 — Copyright (c) 2017, David Jonathan Ross
+  Krona One              — Copyright (c) 2011, Yvonne Schüttler
+  Bagel Fat One          — Copyright (c) 2022, Hyperslate, JIKJI Soft
+
+All bundled fonts are licensed under the SIL OFL 1.1 unless their upstream
+project specifies otherwise. Where a font has been redistributed via
+fontsource.org, the latin-subset woff2 produced there is shipped here as-is.

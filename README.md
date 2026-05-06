@@ -125,12 +125,30 @@ plugins/<id>/             Bundled plugins (see table above)
 data/                     Per-user state (gitignored — generated at runtime)
 ```
 
+## Third-party assets
+
+Each bundled asset retains its upstream license; this project's MIT covers
+the source code only.
+
+| Asset | License | Path | Source |
+|---|---|---|---|
+| Phosphor Icons (font + CSS) | MIT | [`static/vendor/phosphor/`](static/vendor/phosphor/LICENSE.txt) | [phosphoricons.com](https://phosphoricons.com/) |
+| Meteocons (weather SVGs) | MIT | [`plugins/weather/static/icons/`](plugins/weather/static/icons/LICENSE.txt) | [github.com/basmilius/weather-icons](https://github.com/basmilius/weather-icons) |
+| Chart.js v4.4.6 | MIT | `plugins/weather/static/chart.umd.min.js` | [chartjs.org](https://www.chartjs.org/) |
+| 38 bundled fonts | SIL OFL 1.1 | [`plugins/fonts_core/`](plugins/fonts_core/LICENSE.txt) | [fontsource.org](https://fontsource.org) (Google Fonts) |
+
+## Data sources
+
+- [Open-Meteo](https://open-meteo.com) — weather (no key required)
+- [NASA APOD](https://api.nasa.gov) — astronomy picture of the day (`NASA_API_KEY`)
+- [Unsplash](https://unsplash.com/developers) — curated photos (`UNSPLASH_ACCESS_KEY`)
+- [xkcd JSON API](https://xkcd.com/json.html), The Age homepage scrape, generic RSS/Atom
+
 ## Acknowledgements
 
 - [Pimoroni](https://shop.pimoroni.com) for the Inky Impression hardware.
-- [Phosphor Icons](https://phosphoricons.com/), [Meteocons](https://bas.dev/work/meteocons), and the [@fontsource](https://fontsource.org) project for shipping woff2s straight from CDN.
-- [Open-Meteo](https://open-meteo.com), [NASA APOD](https://api.nasa.gov), [Unsplash](https://unsplash.com/developers) for the data feeds.
+- The folks behind every dependency above for shipping things permissively.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Third-party assets keep their own licenses (table above).
