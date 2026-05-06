@@ -48,7 +48,12 @@ def _parse_zones(raw: str) -> list[tuple[str, str]]:
 
 
 def fetch(options, settings, *, panel_w, panel_h, preview=False):
-    pairs = _parse_zones(options.get("zones") or "Local")
+    # Mirror the manifest's default so an unedited cell renders a useful
+    # multi-zone strip out of the box. cell_options defaults aren't auto-
+    # merged into the options dict at fetch time (same issue sun_moon /
+    # air_quality each handle inline).
+    default_zones = "Local, New York@America/New_York, London@Europe/London, Tokyo@Asia/Tokyo"
+    pairs = _parse_zones(options.get("zones") or default_zones)
     if not pairs:
         return {"error": "set at least one IANA timezone"}
     fmt = (options.get("format") or "24h").strip()

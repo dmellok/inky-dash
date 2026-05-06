@@ -99,77 +99,79 @@
   stroke-width: 1.5;
 }
 
-/* Centre stack — sits on top of the dial. The chips must stay clear of
-   the cardinal labels (N/E/S/W) on the rim, so the .center box is
-   inset 18% on each side and the inner chips can't grow beyond it. */
-.center {
-  position: absolute;
-  inset: 18%;
+/* Speed/cardinal/gust readout — sits BELOW the dial so it can never
+   collide with the cardinal labels at any size class. The dial-wrap
+   above gets `flex: 1` so it absorbs the leftover vertical space and
+   the readout stays anchored to the bottom. */
+.readout {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  gap: 6px;
+  flex-shrink: 0;
   text-align: center;
-  gap: 4px;
 }
-.center .speed-row {
+.readout .speed-row {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  background: var(--theme-surface, #fff);
-  padding: 2px 10px;
-  border-radius: 999px;
-  max-width: 100%;
+  gap: 6px;
 }
-.center .num {
-  font-size: 32px;
+.readout .num {
+  font-size: 44px;
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--theme-fg, #111);
 }
-.center .unit {
-  font-size: 11px;
+.readout .unit {
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.06em;
   color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
-.center .cardinal {
-  font-size: 10px;
+.readout .meta-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.readout .cardinal {
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--theme-accent, currentColor);
-  background: var(--theme-surface, #fff);
-  padding: 1px 8px;
+  background: var(--theme-surface-2, var(--tone));
+  padding: 2px 10px;
   border-radius: 999px;
 }
-.center .gust {
-  font-size: 10px;
+.readout .gust {
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
 
 /* size tiers */
-.wd.h-xs { padding: 12px 14px; gap: 6px; }
+.wd.h-xs { padding: 12px 14px; gap: 4px; }
 .wd.h-xs .widget-head { display: none; }
-.wd.h-xs .dial { width: 130px; height: 130px; }
-.wd.h-xs .dial .label-cardinal { font-size: 12px; }
-.wd.h-xs .center .num { font-size: 18px; }
-.wd.h-xs .center .unit { font-size: 9px; }
-.wd.h-xs .center .cardinal { font-size: 8px; padding: 1px 5px; }
-.wd.h-xs .center .gust { display: none; }
+.wd.h-xs .dial { width: 100px; height: 100px; }
+.wd.h-xs .dial .label-cardinal { font-size: 11px; }
+.wd.h-xs .readout .num { font-size: 22px; }
+.wd.h-xs .readout .unit { font-size: 10px; }
+.wd.h-xs .readout .cardinal { font-size: 9px; padding: 1px 6px; }
+.wd.h-xs .readout .gust { display: none; }
 
-.wd.h-sm .dial { width: 200px; height: 200px; }
-.wd.h-sm .center .num { font-size: 24px; }
+.wd.h-sm .dial { width: 150px; height: 150px; }
+.wd.h-sm .readout .num { font-size: 28px; }
 
-.wd.h-lg .dial { width: 360px; height: 360px; }
-.wd.h-lg .center .num { font-size: 48px; }
-.wd.h-lg .center .unit { font-size: 14px; }
-.wd.h-lg .center .cardinal { font-size: 12px; }
+.wd.h-lg .dial { width: 320px; height: 320px; }
+.wd.h-lg .readout .num { font-size: 64px; }
+.wd.h-lg .readout .unit { font-size: 18px; }
+.wd.h-lg .readout .cardinal { font-size: 13px; }
 
-.wd.h-xl .dial { width: 480px; height: 480px; }
-.wd.h-xl .center .num { font-size: 64px; }
+.wd.h-xl .dial { width: 420px; height: 420px; }
+.wd.h-xl .readout .num { font-size: 88px; }
+.wd.h-xl .readout .unit { font-size: 22px; }
 .wd.h-xl .center .unit { font-size: 18px; }

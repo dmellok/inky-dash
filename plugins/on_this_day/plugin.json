@@ -1,0 +1,51 @@
+{
+  "id": "on_this_day",
+  "label": "On this day",
+  "icon": "ph-clock-counter-clockwise",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "feed",
+      "label": "Feed",
+      "type": "select",
+      "default": "selected",
+      "choices": [
+        {"value": "selected", "label": "Selected (curated)"},
+        {"value": "events",   "label": "Events"},
+        {"value": "births",   "label": "Notable births"},
+        {"value": "deaths",   "label": "Notable deaths"},
+        {"value": "holidays", "label": "Holidays"}
+      ]
+    },
+    {
+      "name": "lang",
+      "label": "Language code",
+      "type": "text",
+      "default": "en"
+    },
+    {
+      "name": "show_image",
+      "label": "Show hero image",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "On this day",
+    "fields": [
+      {
+        "key": "OTD_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 21600
+      }
+    ]
+  }
+}

@@ -40,32 +40,32 @@ export default function render(host, ctx) {
 
       <div class="dial-wrap">
         <svg class="dial" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <!-- outer ring -->
           <circle cx="100" cy="100" r="92" class="ring"/>
-          <!-- 16 minor + 4 major tick marks every 22.5° -->
           ${ticks()}
-          <!-- cardinal labels -->
           <text x="100" y="22"  class="label-cardinal" text-anchor="middle">N</text>
           <text x="180" y="105" class="label-cardinal" text-anchor="middle">E</text>
           <text x="100" y="188" class="label-cardinal" text-anchor="middle">S</text>
           <text x="20"  y="105" class="label-cardinal" text-anchor="middle">W</text>
-          <!-- arrow rotated to wind direction. The arrow points FROM
-               the centre OUT TO the bearing the wind is coming from
-               (i.e. compass arrow head points at "where it's blowing
-               from" so a NW wind has the head in the NW corner). -->
+          <!-- Arrow head at the rim of the bearing the wind is coming
+               from (meteorological convention). NW wind → head in NW. -->
           <g class="arrow" transform="rotate(${dir} 100 100)">
             <line x1="100" y1="100" x2="100" y2="42" />
             <polygon points="100,30 92,48 108,48" />
           </g>
           <circle cx="100" cy="100" r="6" class="hub"/>
         </svg>
-        <div class="center">
-          <div class="speed-row">
-            <span class="num">${speed}</span>
-            <span class="unit">${escapeHtml(d.unit_label || "")}</span>
-          </div>
-          <div class="cardinal">${escapeHtml(d.cardinal || "")} · ${Math.round(dir)}°</div>
-          ${gust != null ? `<div class="gust">gust ${gust} ${escapeHtml(d.unit_label || "")}</div>` : ""}
+      </div>
+
+      <!-- Speed / cardinal / gust block sits below the dial so it can't
+           collide with the cardinal labels at any size class. -->
+      <div class="readout">
+        <div class="speed-row">
+          <span class="num">${speed}</span>
+          <span class="unit">${escapeHtml(d.unit_label || "")}</span>
+        </div>
+        <div class="meta-row">
+          <span class="cardinal">${escapeHtml(d.cardinal || "")} · ${Math.round(dir)}°</span>
+          ${gust != null ? `<span class="gust">gust ${gust} ${escapeHtml(d.unit_label || "")}</span>` : ""}
         </div>
       </div>
     </article>
