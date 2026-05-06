@@ -1,0 +1,38 @@
+{
+  "id": "fx",
+  "label": "FX rates",
+  "icon": "ph-currency-circle-dollar",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "base",
+      "label": "Base currency",
+      "type": "text",
+      "default": "USD"
+    },
+    {
+      "name": "symbols",
+      "label": "Watchlist (comma-separated, e.g. EUR,GBP,AUD,JPY)",
+      "type": "text",
+      "default": "EUR,GBP,AUD,JPY"
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "FX rates",
+    "fields": [
+      {
+        "key": "FX_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 1800
+      }
+    ]
+  }
+}
