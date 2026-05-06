@@ -34,6 +34,12 @@
       ]
     },
     {
+      "name": "show_chart",
+      "label": "Show 24-hour AQI chart",
+      "type": "bool",
+      "default": true
+    },
+    {
       "name": "show_header",
       "label": "Show widget header",
       "type": "bool",

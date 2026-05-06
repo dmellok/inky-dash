@@ -121,6 +121,29 @@
   transform: translate(-50%, -50%);
 }
 
+/* 24-hour chart */
+.chart-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 100px;
+}
+.chart-wrap .chart-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.chart-wrap canvas {
+  flex: 1;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0;
+}
+
 /* pollutant tiles */
 .pollutants {
   display: grid;

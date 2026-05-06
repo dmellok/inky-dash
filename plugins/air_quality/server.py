@@ -61,9 +61,10 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
     scale = (options.get("scale") or "us").strip()
     if scale not in ("us", "european"):
         scale = "us"
+    show_chart = options.get("show_chart") is not False  # default true
 
     ttl = int(settings.get("AIR_QUALITY_CACHE_S") or 1800)
-    cache_key = f"{lat:.4f},{lng:.4f}:{scale}"
+    cache_key = f"{lat:.4f},{lng:.4f}:{scale}:{int(show_chart)}"
     now = time.time()
     with _lock:
         hit = _cache.get(cache_key)
@@ -71,7 +72,7 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
             return dict(hit[1])
 
     aqi_field = "us_aqi" if scale == "us" else "european_aqi"
-    params = urllib.parse.urlencode({
+    qs_params = {
         "latitude": lat,
         "longitude": lng,
         "current": ",".join([
@@ -79,7 +80,14 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
             "sulphur_dioxide", "carbon_monoxide",
         ]),
         "timezone": "auto",
-    })
+    }
+    if show_chart:
+        # 24 hourly samples — past_days=1 + forecast_days=1 covers the rolling
+        # 24h window centered on "now"; we slice to 24 below.
+        qs_params["hourly"] = aqi_field
+        qs_params["past_days"] = 1
+        qs_params["forecast_days"] = 1
+    params = urllib.parse.urlencode(qs_params)
     try:
         body = _http_json(f"{API_URL}?{params}")
     except Exception as exc:
@@ -103,6 +111,27 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
         except (TypeError, ValueError):
             return None
 
+    # Slice the hourly array to the last 24 hours of past data + the current
+    # hour. open-meteo returns ISO-local timestamps; "current.time" sits
+    # somewhere in the middle of the past+forecast window we asked for.
+    chart_series: list[dict] | None = None
+    if show_chart:
+        hourly = body.get("hourly") or {}
+        times = hourly.get("time") or []
+        values = hourly.get(aqi_field) or []
+        cur_time = (body.get("current") or {}).get("time")
+        if times and values and cur_time in times:
+            cur_idx = times.index(cur_time)
+            start = max(0, cur_idx - 23)
+            chart_series = []
+            for t, v in zip(times[start:cur_idx + 1], values[start:cur_idx + 1]):
+                if v is None:
+                    continue
+                try:
+                    chart_series.append({"t": t, "v": round(float(v))})
+                except (TypeError, ValueError):
+                    pass
+
     out: dict[str, Any] = {
         "place": place,
         "scale": scale,
@@ -118,6 +147,7 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
             {"k": "SO₂",   "v": _val("sulphur_dioxide"), "u": "µg/m³"},
             {"k": "CO",    "v": _val("carbon_monoxide"), "u": "µg/m³"},
         ],
+        "chart": chart_series,
     }
     with _lock:
         _cache[cache_key] = (now, out)
