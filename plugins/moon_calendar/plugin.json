@@ -1,0 +1,15 @@
+{
+  "id": "moon_calendar",
+  "label": "Moon calendar",
+  "icon": "ph-moon",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}
