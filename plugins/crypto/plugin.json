@@ -1,0 +1,45 @@
+{
+  "id": "crypto",
+  "label": "Crypto prices",
+  "icon": "ph-currency-btc",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "ids",
+      "label": "CoinGecko IDs (comma-separated)",
+      "type": "text",
+      "default": "bitcoin,ethereum,solana"
+    },
+    {
+      "name": "vs",
+      "label": "Quote currency",
+      "type": "select",
+      "default": "usd",
+      "choices": [
+        {"value": "usd", "label": "USD"},
+        {"value": "eur", "label": "EUR"},
+        {"value": "gbp", "label": "GBP"},
+        {"value": "aud", "label": "AUD"},
+        {"value": "jpy", "label": "JPY"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Crypto prices",
+    "fields": [
+      {
+        "key": "CRYPTO_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 300
+      }
+    ]
+  }
+}

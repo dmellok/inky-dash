@@ -1,0 +1,129 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.crypto {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+.crypto.error .msg, .crypto .empty {
+  margin: auto;
+  text-align: center;
+  padding: 16px;
+}
+.crypto.error .msg { color: var(--theme-danger, #c00); }
+.crypto .empty { color: var(--theme-fg-soft, var(--theme-muted, #888)); font-size: 14px; }
+
+/* widget head */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+.rate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+.rate {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 12px;
+}
+.rate .ticker {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: var(--theme-accent, currentColor);
+}
+.rate .value {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+  font-feature-settings: "tnum";
+  text-align: right;
+}
+.rate .value .ccy {
+  font-size: 0.6em;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-right: 2px;
+  letter-spacing: 0;
+}
+.rate .delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  font-feature-settings: "tnum";
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--theme-surface, #fff);
+}
+.rate .delta i.ph { font-size: 14px; }
+
+.rate.dir-up    .delta { color: var(--theme-ok,    #2f855a); }
+.rate.dir-down  .delta { color: var(--theme-danger,#c00);    }
+.rate.dir-flat  .delta { color: var(--theme-fg-soft, var(--theme-muted, #888)); }
+
+/* size tiers */
+.crypto.h-xs { padding: 12px 14px; gap: 6px; }
+.crypto.h-xs .widget-head { display: none; }
+.crypto.h-xs .rate { padding: 6px 10px; gap: 8px; }
+.crypto.h-xs .rate .ticker { font-size: 14px; }
+.crypto.h-xs .rate .value { font-size: 16px; }
+.crypto.h-xs .rate .delta { font-size: 11px; padding: 2px 6px; }
+
+.crypto.h-sm .rate { padding: 8px 12px; }
+.crypto.h-sm .rate .value { font-size: 20px; }
+.crypto.h-sm .rate .ticker { font-size: 16px; }
+
+.crypto.h-lg .rate .value { font-size: 36px; }
+.crypto.h-lg .rate .ticker { font-size: 24px; }
+.crypto.h-lg .rate .delta { font-size: 16px; }
+
+.crypto.h-xl .rate .value { font-size: 44px; }
+.crypto.h-xl .rate .ticker { font-size: 28px; }
+.crypto.h-xl .rate .delta { font-size: 18px; }
