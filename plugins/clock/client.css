@@ -20,6 +20,7 @@
   border-radius: 18px;
   box-sizing: border-box;
   font-feature-settings: "tnum";
+  overflow: hidden;       /* never let a hero number escape the cell */
 }
 
 /* ---- shared widget head ---- */
@@ -29,6 +30,7 @@
   gap: 10px;
   border-bottom: 1px solid var(--rule);
   padding-bottom: 10px;
+  flex-shrink: 0;
 }
 .widget-head i.ph {
   font-size: 20px;
@@ -48,7 +50,7 @@
   color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
 
-/* ---- body / layout ---- */
+/* ---- body ---- */
 .body {
   flex: 1;
   display: flex;
@@ -56,57 +58,58 @@
   justify-content: center;
   gap: 24px;
   min-height: 0;
-}
-.style-both .body {
-  justify-content: space-between;
+  min-width: 0;
 }
 
 /* ---- digital ---- */
 .digital {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1;
+  gap: 6px;
   min-width: 0;
+  max-width: 100%;
+  text-align: center;
 }
 .digital .time {
-  display: flex;
+  display: inline-flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 10px;
+  justify-content: center;
+  white-space: nowrap;     /* never wrap the time onto two lines */
+  /* Hero font sized in tiers below — vw is unsafe here because the cell
+     iframe runs at panel native pixels (e.g. 1200×1600), so 1vw = 12px on
+     a 200-px-tall mini-view cell, which exploded earlier. */
 }
 .digital .time .t {
-  font-size: clamp(80px, 18vw, 200px);
+  font-size: 80px;       /* h-md / default */
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 0.9;
   color: var(--theme-fg, #111);
 }
 .digital .time .ampm {
-  font-size: clamp(20px, 3vw, 32px);
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--theme-accent, currentColor);
 }
 .digital .date {
-  font-size: clamp(16px, 2vw, 22px);
+  font-size: 16px;
   font-weight: 700;
   color: var(--theme-fg-soft, var(--theme-muted, #888));
   letter-spacing: 0.02em;
-}
-
-/* When the analog face is alongside, give the digital block its share. */
-.style-both .digital { text-align: left; }
-.style-both .digital .time .t {
-  font-size: clamp(60px, 10vw, 120px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---- analog ---- */
 .analog {
-  width: clamp(140px, 30vw, 320px);
-  height: clamp(140px, 30vw, 320px);
   flex-shrink: 0;
   display: block;
+  width: 200px;
+  height: 200px;
 }
 .analog .face {
   fill: var(--tone);
@@ -118,36 +121,73 @@
   stroke-width: 1.2;
   stroke-linecap: round;
 }
-.analog .hand {
-  stroke-linecap: round;
-}
-.analog .hand.hour {
-  stroke: var(--theme-fg, #111);
-  stroke-width: 4;
-}
-.analog .hand.minute {
-  stroke: var(--theme-fg, #111);
-  stroke-width: 2.5;
-}
-.analog .hand.second {
-  stroke: var(--theme-accent, currentColor);
-  stroke-width: 1.4;
-}
-.analog .pin {
-  fill: var(--theme-accent, currentColor);
-}
+.analog .hand { stroke-linecap: round; }
+.analog .hand.hour   { stroke: var(--theme-fg, #111); stroke-width: 4; }
+.analog .hand.minute { stroke: var(--theme-fg, #111); stroke-width: 2.5; }
+.analog .hand.second { stroke: var(--theme-accent, currentColor); stroke-width: 1.4; }
+.analog .pin { fill: var(--theme-accent, currentColor); }
 
-/* Analog-only mode — let the face fill more of the cell. */
+/* ---- single-style overrides ---- */
 .style-analog .body { justify-content: center; }
-.style-analog .analog {
-  width: clamp(180px, 50vmin, 460px);
-  height: clamp(180px, 50vmin, 460px);
+.style-analog .analog { width: 320px; height: 320px; }
+
+/* ---- dual mode (digital + analog side-by-side) ----
+   The earlier `flex: 1` on .digital fought with nowrap and a giant font,
+   which pushed the analog face off the right edge. We split the row 50/50
+   instead: digital gets a min-width:0 column on the left, analog a fixed
+   column on the right, both anchored to the body's center axis. */
+.style-both .body {
+  flex-direction: row;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
 }
+.style-both .digital { flex: 1 1 50%; min-width: 0; text-align: left; }
+.style-both .digital .time { justify-content: flex-start; }
+.style-both .digital .time .t { font-size: 64px; }
+.style-both .analog { width: 180px; height: 180px; }
 
-/* ---- responsive tightening ---- */
-.clk.h-xs { padding: 12px 14px; gap: 6px; }
+/* ---- size tiers (driven by JS-set .h-xs / .h-sm / ...) ----
+   Each tier locks the hero font to a fixed pixel size so the time can't
+   spill out of small cells. Larger tiers scale up generously. */
+.clk.h-xs { padding: 10px 12px; gap: 4px; }
 .clk.h-xs .widget-head { display: none; }
-.clk.h-xs .digital .time .t { font-size: clamp(48px, 14vw, 96px); }
-.clk.h-xs .digital .date { font-size: 14px; }
+.clk.h-xs .digital .time { gap: 4px; }
+.clk.h-xs .digital .time .t   { font-size: 44px; }
+.clk.h-xs .digital .time .ampm { font-size: 12px; }
+.clk.h-xs .digital .date { display: none; }
+.clk.h-xs .analog { width: 80px; height: 80px; }
+.clk.h-xs.style-both .digital .time .t { font-size: 30px; }
+.clk.h-xs.style-both .analog { width: 60px; height: 60px; }
+.clk.h-xs.style-analog .analog { width: 120px; height: 120px; }
 
-.clk.h-sm .digital .time .t { font-size: clamp(64px, 16vw, 140px); }
+.clk.h-sm .digital .time .t   { font-size: 64px; }
+.clk.h-sm .digital .time .ampm { font-size: 16px; }
+.clk.h-sm .analog { width: 140px; height: 140px; }
+.clk.h-sm.style-both .digital .time .t { font-size: 44px; }
+.clk.h-sm.style-both .analog { width: 100px; height: 100px; }
+.clk.h-sm.style-analog .analog { width: 220px; height: 220px; }
+
+.clk.h-md .digital .time .t   { font-size: 110px; }
+.clk.h-md .digital .time .ampm { font-size: 26px; }
+.clk.h-md .digital .date { font-size: 18px; }
+.clk.h-md .analog { width: 240px; height: 240px; }
+.clk.h-md.style-both .digital .time .t { font-size: 80px; }
+.clk.h-md.style-both .analog { width: 200px; height: 200px; }
+.clk.h-md.style-analog .analog { width: 360px; height: 360px; }
+
+.clk.h-lg .digital .time .t   { font-size: 160px; }
+.clk.h-lg .digital .time .ampm { font-size: 32px; }
+.clk.h-lg .digital .date { font-size: 22px; }
+.clk.h-lg .analog { width: 320px; height: 320px; }
+.clk.h-lg.style-both .digital .time .t { font-size: 120px; }
+.clk.h-lg.style-both .analog { width: 280px; height: 280px; }
+.clk.h-lg.style-analog .analog { width: 460px; height: 460px; }
+
+.clk.h-xl .digital .time .t   { font-size: 220px; }
+.clk.h-xl .digital .time .ampm { font-size: 40px; }
+.clk.h-xl .digital .date { font-size: 26px; }
+.clk.h-xl .analog { width: 420px; height: 420px; }
+.clk.h-xl.style-both .digital .time .t { font-size: 160px; }
+.clk.h-xl.style-both .analog { width: 360px; height: 360px; }
+.clk.h-xl.style-analog .analog { width: 560px; height: 560px; }

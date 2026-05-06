@@ -7,13 +7,27 @@ dates client-side.
 """
 from __future__ import annotations
 
+import re
 from datetime import datetime, timedelta
+
+
+_TODAY_RE = re.compile(r"^today(?:([+-])(\d+)d)?$", re.IGNORECASE)
 
 
 def _parse_target(raw: str) -> datetime | None:
     s = (raw or "").strip()
     if not s:
         return None
+    # "today" / "today+7d" / "today-3d" sentinel — resolved against the
+    # host's local clock at fetch time. Lets the manifest provide a
+    # sensible relative default that doesn't go stale.
+    m = _TODAY_RE.match(s)
+    if m:
+        sign, days = m.group(1), m.group(2)
+        offset = (1 if sign == "+" else -1) * int(days) if (sign and days) else 0
+        return (datetime.now() + timedelta(days=offset)).astimezone().replace(
+            hour=0, minute=0, second=0, microsecond=0,
+        )
     # Accept YYYY-MM-DD (treat as midnight local) and full ISO datetimes
     # with optional timezone. fromisoformat handles both since 3.11.
     try:
@@ -22,8 +36,6 @@ def _parse_target(raw: str) -> datetime | None:
         dt = datetime.fromisoformat(s)
     except ValueError:
         return None
-    # Naive datetimes get the local timezone so the math against
-    # datetime.now().astimezone() is apples-to-apples.
     if dt.tzinfo is None:
         dt = dt.astimezone()
     return dt
@@ -31,9 +43,11 @@ def _parse_target(raw: str) -> datetime | None:
 
 def fetch(options, settings, *, panel_w, panel_h, preview=False):
     label = (options.get("label") or "Until").strip()
-    target = _parse_target(options.get("target") or "")
+    # Falls back to "today+7d" if the cell hasn't been configured — keeps
+    # newly-added cells from showing an error before the user picks a date.
+    target = _parse_target(options.get("target") or "today+7d")
     if target is None:
-        return {"error": "set a target date in the cell options (YYYY-MM-DD)"}
+        return {"error": "could not parse target date"}
 
     now = datetime.now().astimezone()
     delta = target - now

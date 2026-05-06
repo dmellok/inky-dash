@@ -13,9 +13,9 @@
     },
     {
       "name": "target",
-      "label": "Target date (YYYY-MM-DD or YYYY-MM-DDTHH:MM)",
-      "type": "text",
-      "default": ""
+      "label": "Target date",
+      "type": "date",
+      "default": "today+7d"
     },
     {
       "name": "icon",

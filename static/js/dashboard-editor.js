@@ -373,6 +373,22 @@ async function buildOptionField(opt, value, onChange) {
       bind(input, "input", () => onChange(input.value));
       break;
     }
+    case "date": {
+      // HTML5 date input. Pre-populates from the current value if it parses
+      // as YYYY-MM-DD; falls back to the option's default (which can be
+      // either a literal date string OR the sentinel "today+Nd" — server-
+      // side resolves that, but the editor still needs to render *some*
+      // value, so we expand the sentinel here too).
+      input = document.createElement("input");
+      input.type = "date";
+      let dv = (typeof initial === "string" ? initial : "").trim();
+      if (dv.startsWith("today")) dv = expandTodaySentinel(dv);
+      // Trim any time portion so the date input accepts it.
+      if (dv.includes("T")) dv = dv.slice(0, 10);
+      input.value = dv;
+      bind(input, "input", () => onChange(input.value));
+      break;
+    }
     case "image":
     case "text":
     case "secret":
@@ -393,6 +409,18 @@ function bind(el, event, handler) {
   // Per rule 9: text/range get debounced input + immediate change to keep
   // sliders smooth and selects snappy.
   if (event === "input") el.addEventListener("change", handler);
+}
+
+// Expand a "today+Nd" sentinel into a YYYY-MM-DD string so the date
+// picker can render it. Plugin servers also accept this sentinel and
+// resolve it on their side, but the picker UI needs a literal date.
+function expandTodaySentinel(s) {
+  const m = /^today(?:([+-])(\d+)d)?$/i.exec(s.trim());
+  if (!m) return "";
+  const offset = m[1] && m[2] ? (m[1] === "-" ? -1 : 1) * parseInt(m[2], 10) : 0;
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
 }
 
 async function fetchChoices(name) {

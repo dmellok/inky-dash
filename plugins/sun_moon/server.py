@@ -77,15 +77,19 @@ def _parse_iso_utc(s: str) -> datetime | None:
 
 
 def fetch(options, settings, *, panel_w, panel_h, preview=False):
+    # cell_options defaults from plugin.json aren't auto-merged into the
+    # options dict at fetch time — the dashboard editor only writes a
+    # field's value to the cell when the user actually edits it. So a
+    # freshly-added cell ships {} as options. Fall through to the same
+    # defaults the manifest exposes so the widget renders out-of-the-box
+    # instead of failing with "set lat / lng".
     try:
-        lat = float(options.get("lat") or settings.get("SUN_MOON_LAT") or 0)
-        lng = float(options.get("lng") or settings.get("SUN_MOON_LNG") or 0)
+        lat = float(options.get("lat") or "-37.8136")
+        lng = float(options.get("lng") or "144.9631")
     except (TypeError, ValueError):
         return {"error": "lat/lng must be numbers"}
-    if lat == 0 and lng == 0:
-        return {"error": "set latitude / longitude in the cell options"}
 
-    place = (options.get("place_label") or "").strip()
+    place = (options.get("place_label") or "Melbourne").strip()
     cache_key = f"{lat:.4f},{lng:.4f}:{date.today().isoformat()}"
     ttl = int(settings.get("SUN_MOON_CACHE_S") or 1800)
 

@@ -67,7 +67,7 @@
   padding: 14px 16px;
 }
 .sun-pair .block i.ph {
-  font-size: clamp(40px, 6vw, 64px);
+  font-size: 40px;
   color: var(--theme-accent, currentColor);
   line-height: 1;
 }
@@ -76,21 +76,36 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  overflow: hidden;
 }
 .sun-pair .block .k {
-  font-size: clamp(11px, 1.2vw, 14px);
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
 .sun-pair .block .v {
-  font-size: clamp(32px, 5vw, 56px);
+  font-size: 32px;
   font-weight: 900;
   letter-spacing: -0.02em;
   color: var(--theme-fg, #111);
   line-height: 1;
+  /* Numbers must never push the icon out of the row — clip if the cell
+     gets unusually narrow rather than expanding the block. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
+/* Larger cells get bigger numbers; small cells stay tight. Tiers are
+   driven by the size class set in JS from ctx.height. */
+.sm.h-md .sun-pair .block i.ph { font-size: 48px; }
+.sm.h-md .sun-pair .block .v { font-size: 40px; }
+.sm.h-lg .sun-pair .block i.ph { font-size: 56px; }
+.sm.h-lg .sun-pair .block .v { font-size: 48px; }
+.sm.h-xl .sun-pair .block i.ph { font-size: 64px; }
+.sm.h-xl .sun-pair .block .v { font-size: 56px; }
 
 /* ---- Strip: 3-up smaller metrics in a single tonal row ---- */
 .strip {
@@ -114,10 +129,12 @@
   color: var(--theme-fg-soft, var(--theme-muted, #888));
 }
 .strip .metric .v {
-  font-size: clamp(16px, 2vw, 22px);
+  font-size: 16px;
   font-weight: 800;
   color: var(--theme-fg, #111);
 }
+.sm.h-lg .strip .metric .v,
+.sm.h-xl .strip .metric .v { font-size: 20px; }
 
 /* ---- Moon row ---- */
 .moon {
@@ -129,18 +146,22 @@
   padding-top: 12px;
 }
 .moon-vis {
-  width: clamp(64px, 10vw, 96px);
-  height: clamp(64px, 10vw, 96px);
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
 }
+.sm.h-lg .moon-vis,
+.sm.h-xl .moon-vis { width: 96px; height: 96px; }
 .moon-vis svg { width: 100%; height: 100%; display: block; }
 .moon-meta { display: flex; flex-direction: column; gap: 4px; }
 .moon-meta .phase {
-  font-size: clamp(20px, 3vw, 28px);
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--theme-fg, #111);
 }
+.sm.h-lg .moon-meta .phase,
+.sm.h-xl .moon-meta .phase { font-size: 26px; }
 .moon-meta .illum {
   display: flex;
   align-items: baseline;
@@ -148,10 +169,12 @@
   flex-wrap: wrap;
 }
 .moon-meta .illum .num {
-  font-size: clamp(22px, 3vw, 32px);
+  font-size: 22px;
   font-weight: 900;
   color: var(--theme-accent, currentColor);
 }
+.sm.h-lg .moon-meta .illum .num,
+.sm.h-xl .moon-meta .illum .num { font-size: 28px; }
 .moon-meta .illum .lbl {
   font-size: 12px;
   font-weight: 600;
