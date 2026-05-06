@@ -6,6 +6,16 @@
   "kinds": ["widget"],
   "cell_options": [
     {
+      "name": "style",
+      "label": "Style",
+      "type": "select",
+      "default": "linear",
+      "choices": [
+        {"value": "linear", "label": "Linear bar"},
+        {"value": "radial", "label": "Radial ring"}
+      ]
+    },
+    {
       "name": "show_header",
       "label": "Show widget header",
       "type": "bool",

@@ -167,6 +167,59 @@
   letter-spacing: 0.04em;
 }
 
+/* radial style — ring with the day-of-year centred. */
+.ring-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.ring-wrap canvas.ring {
+  max-width: 100%;
+  max-height: 100%;
+  width: 280px !important;
+  height: 280px !important;
+}
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+  gap: 2px;
+}
+.ring-center .num {
+  font-size: 80px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  color: var(--theme-fg, #111);
+}
+.ring-center .lbl {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.ring-center .sub {
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--theme-accent, currentColor);
+  font-feature-settings: "tnum";
+}
+.style-radial.h-md .ring-wrap canvas.ring { width: 220px !important; height: 220px !important; }
+.style-radial.h-md .ring-center .num { font-size: 56px; }
+.style-radial.h-lg .ring-wrap canvas.ring { width: 320px !important; height: 320px !important; }
+.style-radial.h-lg .ring-center .num { font-size: 96px; }
+.style-radial.h-xl .ring-wrap canvas.ring { width: 420px !important; height: 420px !important; }
+.style-radial.h-xl .ring-center .num { font-size: 130px; }
+
 /* size tiers */
 .yp.h-xs { padding: 12px 14px; gap: 8px; }
 .yp.h-xs .widget-head { display: none; }
