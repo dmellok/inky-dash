@@ -1,0 +1,147 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.td {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+  overflow: hidden;
+}
+.td.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.now-block {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--theme-surface-2, var(--tone));
+  padding: 10px 16px;
+  border-radius: 14px;
+}
+.now-block .num {
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--theme-fg, #111);
+}
+.now-block .unit {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+.next-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+}
+.next {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 10px;
+}
+.next i.ph {
+  font-size: 18px;
+}
+.next-high i.ph { color: var(--theme-accent, currentColor); }
+.next-low  i.ph { color: var(--theme-fg-soft, var(--theme-muted, #888)); }
+.next .np { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.next .k {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+.next .v {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--theme-fg, #111);
+}
+.next .v em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-left: 4px;
+}
+
+/* Chart fills the rest of the cell. The dataset itself is area-filled
+   accent at 22% alpha; the "now" cursor is a dot on the line. */
+.chart-wrap {
+  position: relative;
+  flex: 1;
+  min-height: 100px;
+}
+.chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* size tiers */
+.td.h-xs { padding: 12px 14px; gap: 6px; }
+.td.h-xs .widget-head { display: none; }
+.td.h-xs .hero { grid-template-columns: auto auto; gap: 10px; }
+.td.h-xs .next-block { display: none; }
+.td.h-xs .now-block { padding: 6px 10px; }
+.td.h-xs .now-block .num { font-size: 22px; }
+.td.h-xs .now-block .unit { font-size: 10px; }
+
+.td.h-sm .now-block .num { font-size: 32px; }
+.td.h-sm .next-block { grid-template-columns: 1fr; }
+
+.td.h-lg .now-block .num { font-size: 64px; }
+.td.h-xl .now-block .num { font-size: 88px; }
