@@ -1,0 +1,52 @@
+{
+  "id": "earthquakes",
+  "label": "Earthquakes",
+  "icon": "ph-wave-sine",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "feed",
+      "label": "Feed",
+      "type": "select",
+      "default": "4.5_day",
+      "choices": [
+        {"value": "significant_day",   "label": "Significant — past day"},
+        {"value": "significant_week",  "label": "Significant — past week"},
+        {"value": "4.5_day",           "label": "M4.5+ — past day"},
+        {"value": "4.5_week",          "label": "M4.5+ — past week"},
+        {"value": "2.5_day",           "label": "M2.5+ — past day"},
+        {"value": "all_hour",          "label": "All — past hour"}
+      ]
+    },
+    {
+      "name": "count",
+      "label": "Number of quakes",
+      "type": "select",
+      "default": "5",
+      "choices": [
+        {"value": "3",  "label": "3"},
+        {"value": "5",  "label": "5"},
+        {"value": "8",  "label": "8"},
+        {"value": "10", "label": "10"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Earthquakes",
+    "fields": [
+      {
+        "key": "EARTHQUAKES_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 600
+      }
+    ]
+  }
+}
