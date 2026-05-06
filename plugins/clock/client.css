@@ -1,0 +1,153 @@
+/* Phosphor + theme variables — same scaffold the other widgets use. */
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.clk {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+
+/* ---- shared widget head ---- */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+}
+.widget-head i.ph {
+  font-size: 20px;
+  color: var(--theme-accent, currentColor);
+}
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--theme-fg, #111);
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* ---- body / layout ---- */
+.body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  min-height: 0;
+}
+.style-both .body {
+  justify-content: space-between;
+}
+
+/* ---- digital ---- */
+.digital {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.digital .time {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.digital .time .t {
+  font-size: clamp(80px, 18vw, 200px);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 0.9;
+  color: var(--theme-fg, #111);
+}
+.digital .time .ampm {
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--theme-accent, currentColor);
+}
+.digital .date {
+  font-size: clamp(16px, 2vw, 22px);
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  letter-spacing: 0.02em;
+}
+
+/* When the analog face is alongside, give the digital block its share. */
+.style-both .digital { text-align: left; }
+.style-both .digital .time .t {
+  font-size: clamp(60px, 10vw, 120px);
+}
+
+/* ---- analog ---- */
+.analog {
+  width: clamp(140px, 30vw, 320px);
+  height: clamp(140px, 30vw, 320px);
+  flex-shrink: 0;
+  display: block;
+}
+.analog .face {
+  fill: var(--tone);
+  stroke: var(--theme-divider, var(--rule));
+  stroke-width: 0.6;
+}
+.analog .tick {
+  stroke: var(--theme-fg-soft, var(--theme-muted, #888));
+  stroke-width: 1.2;
+  stroke-linecap: round;
+}
+.analog .hand {
+  stroke-linecap: round;
+}
+.analog .hand.hour {
+  stroke: var(--theme-fg, #111);
+  stroke-width: 4;
+}
+.analog .hand.minute {
+  stroke: var(--theme-fg, #111);
+  stroke-width: 2.5;
+}
+.analog .hand.second {
+  stroke: var(--theme-accent, currentColor);
+  stroke-width: 1.4;
+}
+.analog .pin {
+  fill: var(--theme-accent, currentColor);
+}
+
+/* Analog-only mode — let the face fill more of the cell. */
+.style-analog .body { justify-content: center; }
+.style-analog .analog {
+  width: clamp(180px, 50vmin, 460px);
+  height: clamp(180px, 50vmin, 460px);
+}
+
+/* ---- responsive tightening ---- */
+.clk.h-xs { padding: 12px 14px; gap: 6px; }
+.clk.h-xs .widget-head { display: none; }
+.clk.h-xs .digital .time .t { font-size: clamp(48px, 14vw, 96px); }
+.clk.h-xs .digital .date { font-size: 14px; }
+
+.clk.h-sm .digital .time .t { font-size: clamp(64px, 16vw, 140px); }

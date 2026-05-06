@@ -1,0 +1,48 @@
+{
+  "id": "clock",
+  "label": "Clock",
+  "icon": "ph-clock",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "style",
+      "label": "Style",
+      "type": "select",
+      "default": "digital",
+      "choices": [
+        {"value": "digital", "label": "Digital"},
+        {"value": "analog",  "label": "Analog"},
+        {"value": "both",    "label": "Both"}
+      ]
+    },
+    {
+      "name": "format",
+      "label": "Time format",
+      "type": "select",
+      "default": "24h",
+      "choices": [
+        {"value": "24h", "label": "24-hour"},
+        {"value": "12h", "label": "12-hour"}
+      ]
+    },
+    {
+      "name": "show_seconds",
+      "label": "Show seconds",
+      "type": "bool",
+      "default": false
+    },
+    {
+      "name": "show_date",
+      "label": "Show date",
+      "type": "bool",
+      "default": true
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ]
+}
