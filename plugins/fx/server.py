@@ -51,11 +51,11 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
     symbols = _normalize_codes(options.get("symbols") or "EUR,GBP,AUD,JPY")
     if not symbols:
         return {"error": "set at least one watchlist currency"}
-    # Defensive cap so a runaway list doesn't hammer the API.
     symbols = symbols[:8]
+    sparkline = options.get("sparkline") is not False  # default true
 
     ttl = int(settings.get("FX_CACHE_S") or 1800)
-    cache_key = f"{base}:{','.join(symbols)}"
+    cache_key = f"{base}:{int(sparkline)}:{','.join(symbols)}"
     now = time.time()
     with _lock:
         hit = _cache.get(cache_key)
@@ -68,14 +68,33 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
     except Exception as exc:
         return {"error": f"FX feed failed: {type(exc).__name__}: {exc}"}
 
-    today = latest.get("date") or date.today().isoformat()
-    # Day-before for the delta. frankfurter rolls weekends to prior Friday
-    # automatically, so a literal subtraction works without weekday math.
-    prev_date = (date.fromisoformat(today) - timedelta(days=1)).isoformat()
+    today_iso = latest.get("date") or date.today().isoformat()
+    prev_date = (date.fromisoformat(today_iso) - timedelta(days=1)).isoformat()
     try:
         prev = _http_json(f"{API_URL}/{prev_date}?{qs}")
     except Exception:
         prev = {"rates": {}}
+
+    # Optional 30-day timeseries — frankfurter returns weekday-only data
+    # in chronological order, perfect for a sparkline.
+    series_by_code: dict[str, list[float]] = {}
+    if sparkline:
+        start = (date.fromisoformat(today_iso) - timedelta(days=30)).isoformat()
+        try:
+            ts = _http_json(f"{API_URL}/{start}..{today_iso}?{qs}")
+            rates_per_day = ts.get("rates") or {}
+            for d_iso in sorted(rates_per_day.keys()):
+                day_rates = rates_per_day[d_iso] or {}
+                for code in symbols:
+                    v = day_rates.get(code)
+                    if v is None:
+                        continue
+                    try:
+                        series_by_code.setdefault(code, []).append(round(float(v), 6))
+                    except (TypeError, ValueError):
+                        pass
+        except Exception:
+            series_by_code = {}
 
     rows = []
     latest_rates = latest.get("rates") or {}
@@ -103,13 +122,15 @@ def fetch(options, settings, *, panel_w, panel_h, preview=False):
             "raw": v,
             "delta_pct": delta_pct,
             "direction": "up" if (delta_pct or 0) > 0 else ("down" if (delta_pct or 0) < 0 else "flat"),
+            "spark": series_by_code.get(code) or None,
         })
 
     out: dict[str, Any] = {
         "base": base,
-        "as_of": today,
+        "as_of": today_iso,
         "as_of_prev": prev.get("date") or prev_date,
         "rows": rows,
+        "sparkline": sparkline,
     }
     with _lock:
         _cache[cache_key] = (now, out)

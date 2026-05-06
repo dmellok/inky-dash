@@ -18,6 +18,12 @@
       "default": "EUR,GBP,AUD,JPY"
     },
     {
+      "name": "sparkline",
+      "label": "Show 30-day sparkline",
+      "type": "bool",
+      "default": true
+    },
+    {
       "name": "show_header",
       "label": "Show widget header",
       "type": "bool",
