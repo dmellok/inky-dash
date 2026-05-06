@@ -1,0 +1,166 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.sc {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  font-feature-settings: "tnum";
+}
+.sc.error .msg {
+  margin: auto;
+  text-align: center;
+  color: var(--theme-danger, #c00);
+  padding: 16px;
+}
+
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.widget-head .meta {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+.dial-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.dial-wrap canvas.dial {
+  max-width: 100%;
+  max-height: 100%;
+  width: 280px !important;
+  height: 280px !important;
+}
+.dial-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+.dial-center .num {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg, #111);
+}
+.dial-center .lbl {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  margin-top: 2px;
+}
+
+/* "now" cursor — a thin line emanating from the centre to the dial's
+   outer rim, rotated to the current hour. Drawn as an absolutely
+   positioned div with transform-origin at its bottom centre. */
+.cursor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 50%;
+  background: var(--theme-fg, #111);
+  border-radius: 2px;
+  transform-origin: 50% 100%;
+  transform: translate(-50%, -100%) rotate(var(--ang, 0deg));
+  z-index: 2;
+  box-shadow: 0 0 0 1px var(--theme-surface, #fff);
+}
+
+/* Hour anchor labels — north / south / east / west of the dial. */
+.hour-label {
+  position: absolute;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+  font-feature-settings: "tnum";
+}
+.hr-0  { top: 4px;    left: 50%; transform: translateX(-50%); }
+.hr-6  { right: 4px;  top: 50%;  transform: translateY(-50%); }
+.hr-12 { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.hr-18 { left: 4px;   top: 50%;  transform: translateY(-50%); }
+
+.legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.leg {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--theme-surface-2, var(--tone));
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.leg .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.leg .dot-rise { background: var(--theme-accent, currentColor); }
+.leg .dot-set  { background: color-mix(in srgb, var(--theme-accent, currentColor) 50%, var(--theme-muted, #888)); }
+.leg .v {
+  color: var(--theme-fg, #111);
+  font-feature-settings: "tnum";
+}
+
+/* size tiers */
+.sc.h-xs { padding: 12px 14px; gap: 6px; }
+.sc.h-xs .widget-head, .sc.h-xs .legend { display: none; }
+.sc.h-xs .dial-wrap canvas.dial { width: 120px !important; height: 120px !important; }
+.sc.h-xs .dial-center .num { font-size: 14px; }
+.sc.h-xs .dial-center .lbl { font-size: 9px; }
+.sc.h-xs .hour-label { display: none; }
+
+.sc.h-sm .dial-wrap canvas.dial { width: 180px !important; height: 180px !important; }
+.sc.h-sm .dial-center .num { font-size: 22px; }
+
+.sc.h-lg .dial-wrap canvas.dial { width: 360px !important; height: 360px !important; }
+.sc.h-lg .dial-center .num { font-size: 44px; }
+
+.sc.h-xl .dial-wrap canvas.dial { width: 480px !important; height: 480px !important; }
+.sc.h-xl .dial-center .num { font-size: 56px; }

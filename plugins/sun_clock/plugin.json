@@ -1,0 +1,44 @@
+{
+  "id": "sun_clock",
+  "label": "Sun clock",
+  "icon": "ph-sun",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "lat",
+      "label": "Latitude",
+      "type": "text",
+      "default": "-37.8136"
+    },
+    {
+      "name": "lng",
+      "label": "Longitude",
+      "type": "text",
+      "default": "144.9631"
+    },
+    {
+      "name": "place_label",
+      "label": "Location label",
+      "type": "text",
+      "default": "Melbourne"
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Sun clock",
+    "fields": [
+      {
+        "key": "SUN_CLOCK_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 1800
+      }
+    ]
+  }
+}
