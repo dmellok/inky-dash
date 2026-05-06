@@ -1,0 +1,104 @@
+@import url('/static/vendor/phosphor/style.css');
+
+:host {
+  display: block;
+  height: 100%;
+  --tone:        color-mix(in srgb, var(--theme-fg, #111) 5%, transparent);
+  --rule:        color-mix(in srgb, var(--theme-fg, #111) 8%, transparent);
+}
+
+.st {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 22px;
+  color: var(--theme-fg, #111);
+  font-family: var(--theme-font, var(--font-family, system-ui, sans-serif));
+  background: var(--theme-surface, var(--theme-bg, #fff));
+  border-radius: 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* widget head (off by default — sticky notes are usually chrome-free) */
+.widget-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+.widget-head i.ph { font-size: 20px; color: var(--theme-accent, currentColor); }
+.widget-head .label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* body — alignment toggles drive the flexbox justification. */
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+.align-start  .body { justify-content: flex-start;  text-align: left;  align-items: flex-start; }
+.align-center .body { justify-content: center;      text-align: center; align-items: center; }
+.align-end    .body { justify-content: flex-end;    text-align: right;  align-items: flex-end; }
+
+.body .accent {
+  color: var(--theme-accent, currentColor);
+  font-size: 56px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.text {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  color: var(--theme-fg, #111);
+  /* tier-driven font sizes below */
+  font-size: 64px;
+}
+.sub {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--theme-fg-soft, var(--theme-muted, #888));
+}
+
+/* length-aware shrink — long notes drop to display-medium so paragraph-
+   length text still fits without overflowing. */
+.len-mid  .text { font-size: 44px; }
+.len-long .text { font-size: 28px; line-height: 1.25; letter-spacing: -0.01em; }
+
+/* size tiers */
+.st.h-xs { padding: 12px 14px; gap: 6px; }
+.st.h-xs .widget-head { display: none; }
+.st.h-xs .body .accent { font-size: 24px; }
+.st.h-xs .text { font-size: 22px; }
+.st.h-xs.len-mid  .text { font-size: 18px; }
+.st.h-xs.len-long .text { font-size: 14px; line-height: 1.2; }
+.st.h-xs .sub { display: none; }
+
+.st.h-sm .body .accent { font-size: 36px; }
+.st.h-sm .text { font-size: 36px; }
+.st.h-sm.len-mid  .text { font-size: 26px; }
+.st.h-sm.len-long .text { font-size: 18px; }
+.st.h-sm .sub { font-size: 12px; }
+
+.st.h-lg .body .accent { font-size: 80px; }
+.st.h-lg .text { font-size: 96px; }
+.st.h-lg.len-mid  .text { font-size: 64px; }
+.st.h-lg.len-long .text { font-size: 38px; }
+
+.st.h-xl .body .accent { font-size: 110px; }
+.st.h-xl .text { font-size: 140px; }
+.st.h-xl.len-mid  .text { font-size: 88px; }
+.st.h-xl.len-long .text { font-size: 50px; }

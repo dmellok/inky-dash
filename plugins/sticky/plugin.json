@@ -1,0 +1,44 @@
+{
+  "id": "sticky",
+  "label": "Sticky note",
+  "icon": "ph-note",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "text",
+      "label": "Note text",
+      "type": "text",
+      "default": "Don't forget to look up."
+    },
+    {
+      "name": "subtitle",
+      "label": "Subtitle (optional)",
+      "type": "text",
+      "default": ""
+    },
+    {
+      "name": "icon",
+      "label": "Icon (Phosphor name, e.g. ph-note, ph-coffee)",
+      "type": "text",
+      "default": "ph-note"
+    },
+    {
+      "name": "align",
+      "label": "Alignment",
+      "type": "select",
+      "default": "center",
+      "choices": [
+        {"value": "start",  "label": "Top-left"},
+        {"value": "center", "label": "Center"},
+        {"value": "end",    "label": "Bottom-right"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": false
+    }
+  ]
+}
