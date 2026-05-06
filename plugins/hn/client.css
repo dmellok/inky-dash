@@ -54,6 +54,17 @@
   border-radius: 999px;
 }
 
+/* chart variant — bar chart fills the body. */
+.chart-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+.chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* story list */
 .story-list {
   list-style: none;

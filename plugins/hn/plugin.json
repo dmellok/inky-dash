@@ -31,6 +31,16 @@
       ]
     },
     {
+      "name": "view",
+      "label": "View",
+      "type": "select",
+      "default": "list",
+      "choices": [
+        {"value": "list",  "label": "Numbered list"},
+        {"value": "chart", "label": "Score chart"}
+      ]
+    },
+    {
       "name": "show_header",
       "label": "Show widget header",
       "type": "bool",
