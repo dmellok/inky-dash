@@ -1,0 +1,51 @@
+{
+  "id": "hn",
+  "label": "Hacker News",
+  "icon": "ph-flame",
+  "version": "1.0.0",
+  "kinds": ["widget"],
+  "cell_options": [
+    {
+      "name": "feed",
+      "label": "Feed",
+      "type": "select",
+      "default": "top",
+      "choices": [
+        {"value": "top",  "label": "Top stories"},
+        {"value": "new",  "label": "New stories"},
+        {"value": "best", "label": "Best stories"},
+        {"value": "ask",  "label": "Ask HN"},
+        {"value": "show", "label": "Show HN"}
+      ]
+    },
+    {
+      "name": "count",
+      "label": "Number of stories",
+      "type": "select",
+      "default": "5",
+      "choices": [
+        {"value": "3",  "label": "3"},
+        {"value": "5",  "label": "5"},
+        {"value": "8",  "label": "8"},
+        {"value": "10", "label": "10"}
+      ]
+    },
+    {
+      "name": "show_header",
+      "label": "Show widget header",
+      "type": "bool",
+      "default": true
+    }
+  ],
+  "settings": {
+    "title": "Hacker News",
+    "fields": [
+      {
+        "key": "HN_CACHE_S",
+        "label": "Cache (seconds)",
+        "type": "int",
+        "default": 600
+      }
+    ]
+  }
+}
