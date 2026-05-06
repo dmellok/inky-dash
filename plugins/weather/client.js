@@ -42,7 +42,10 @@ export default async function render(host, ctx) {
   // chart.js init cost when the chart wouldn't be visible anyway).
   const showTop    = H >= 240 && W >= 320;   // h-sm and up
   const showStats  = H >= 480;               // h-md and up
-  const showHourly = H >= 800;               // h-lg and up
+  // The hourly chart is a horizontal element — at h-lg+ we always have
+  // room, but stack_3 cells on a portrait panel land in h-md with plenty
+  // of width to spare, so unlock it there too.
+  const showHourly = H >= 800 || (H >= 480 && W >= 640);
   const showDaily  = H >= 1200;              // h-xl
   // The page panel-header (multi-cell pages) already shows a clock — don't
   // duplicate it inside the widget's top bar.

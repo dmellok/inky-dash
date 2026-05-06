@@ -337,12 +337,24 @@
   grid-template-rows: auto auto auto auto;
   padding: 16px 20px;
 }
-.wx.h-md .hourly, .wx.h-md .daily { display: none; }
+.wx.h-md .daily { display: none; }
+/* Narrow medium cells still hide the hourly chart — there's no horizontal
+   room for the chart + tick row to read cleanly. Wide medium (w-md, ≥640
+   px) cells like stack_3 portrait keep it. */
+.wx.h-md:not(.w-md) .hourly { display: none; }
 .wx.h-md .hero .big-ic { width: 130px; height: 130px; }
 .wx.h-md .hero .big-ic i.ph { font-size: 130px; }
 .wx.h-md .hero .temp { font-size: clamp(96px, 12vw, 130px); }
 .wx.h-md .metric { padding: 12px 14px; }
 .wx.h-md .metric .m-ic { width: 56px; height: 56px; }
+/* Tighter chart in h-md so the hero + metrics + hourly all fit in ~533px
+   without spilling. Smaller tick icons, lower min height, less padding. */
+.wx.h-md.w-md .hourly { gap: 2px; }
+.wx.h-md.w-md .hourly .chart-box { min-height: 80px; }
+.wx.h-md.w-md .hourly .tick > svg,
+.wx.h-md.w-md .hourly .tick .m-ic { width: 40px; height: 40px; }
+.wx.h-md.w-md .hourly .tick i.ph { font-size: 32px; }
+.wx.h-md.w-md .hourly .tick .h { font-size: 14px; }
 
 /* h-lg (~ 800–1200px) — hero + top + stats + chart; daily hidden. */
 .wx.h-lg .daily { display: none; }
