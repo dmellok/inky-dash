@@ -6,6 +6,8 @@ Composable widgets, themeable everything, drag-and-drop schedule priorities, pus
 
 ![version](https://img.shields.io/github/v/tag/dmellok/inky-dash?label=version&sort=semver) ![status](https://img.shields.io/badge/status-personal_project-blue) ![python](https://img.shields.io/badge/python-3.11+-green) ![flask](https://img.shields.io/badge/flask-3.0+-lightgrey)
 
+![Dashboard list](docs/screenshots/home.png)
+
 ---
 
 ## What it does
@@ -16,6 +18,46 @@ Composable widgets, themeable everything, drag-and-drop schedule priorities, pus
 - **Schedules.** Interval and one-shot schedules with day-of-week masks. Drag rows to set priority — when several fire at the same tick, the topmost wins.
 - **Push.** A unified `/send` page accepts files, URLs, live webpages and saved dashboards, all going through one render → publish pipeline with a panel-aspect live preview, history, and replay.
 - **Plugins.** Drop a folder into `plugins/` with a `plugin.json` manifest, optional `server.py` (`fetch()` / `blueprint()` / `choices()`), and `client.{js,css}`. The loader picks them up at boot. The 13 plugins shipping today were built against the same contract.
+
+## Dashboards
+
+A few of the bundled dashboard layouts rendered at panel resolution — each
+cell carries its own theme so the page reads as a tonally distinct
+composition:
+
+| Morning | Glance | Outdoors |
+| --- | --- | --- |
+| ![Morning dashboard](docs/screenshots/dash-morning.png) | ![Glance dashboard](docs/screenshots/dash-glance.png) | ![Outdoors dashboard](docs/screenshots/dash-outdoors.png) |
+| `hero_top_two_below` · clock + weather + todo | `grid_2x2` · weather + sun & moon + HN + FX | `hero_top_two_below` · weather + wind + tide |
+
+| Night Sky | Year Pulse | Earth Pulse |
+| --- | --- | --- |
+| ![Night Sky dashboard](docs/screenshots/dash-night-sky.png) | ![Year Pulse dashboard](docs/screenshots/dash-year-pulse.png) | ![Earth Pulse dashboard](docs/screenshots/dash-earth-pulse.png) |
+| `stack_2` · NASA APOD + moon calendar | `grid_2x2` · year ring + habits + moon + sticky | `row_2` · air quality + earthquakes |
+
+| Planner | Finance |
+| --- | --- |
+| ![Planner dashboard](docs/screenshots/dash-planner.png) | ![Finance dashboard](docs/screenshots/dash-finance.png) |
+| `hero_bottom_two_above` · countdown + sun & moon + calendar | `stack_2` · crypto + FX with sparklines |
+
+## Admin UI
+
+The companion ships a small admin UI that lives at `http://<host>:5555/`.
+
+| Dashboard editor | Theme builder |
+| --- | --- |
+| ![Dashboard editor](docs/screenshots/editor.png) | ![Theme builder](docs/screenshots/theme-builder.png) |
+| Drop cells into a layout, theme each one independently, see the live preview at panel aspect ratio. | Edit any palette key with a colour picker, preview against a real widget, save user themes alongside the bundled ones. |
+
+| Send page | Schedules |
+| --- | --- |
+| ![Send page](docs/screenshots/send.png) | ![Schedules](docs/screenshots/schedules.png) |
+| Push files / URLs / webpages / saved dashboards through one pipeline with a panel-aspect live preview and replayable history. | Drag rows to set priority — when several schedules fire in the same tick the topmost wins. Daily timeline shows tonight's coverage at a glance. |
+
+| Settings | Plugins |
+| --- | --- |
+| ![Settings](docs/screenshots/settings.png) | ![Plugins](docs/screenshots/widgets.png) |
+| Panel preset auto-detect, MQTT, all plugin settings in one merged page. Save & restart resets cleanly. | Enable/disable plugins per-install. Plugins ship their own settings sections that fold into `/settings` automatically. |
 
 ## Architecture in one diagram
 
