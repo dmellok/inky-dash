@@ -17,7 +17,7 @@ Composable widgets, themeable everything, drag-and-drop schedule priorities, pus
 - **Fonts.** 38 bundled woff2 fonts in three flavours — modern, mid-century, thick punchy — with a global weight picker filtered to whatever weights each font ships with.
 - **Schedules.** Interval and one-shot schedules with day-of-week masks. Drag rows to set priority — when several fire at the same tick, the topmost wins.
 - **Push.** A unified `/send` page accepts files, URLs, live webpages and saved dashboards, all going through one render → publish pipeline with a panel-aspect live preview, history, and replay.
-- **Plugins.** Drop a folder into `plugins/` with a `plugin.json` manifest, optional `server.py` (`fetch()` / `blueprint()` / `choices()`), and `client.{js,css}`. The loader picks them up at boot. The 13 plugins shipping today were built against the same contract.
+- **Plugins.** Drop a folder into `plugins/` with a `plugin.json` manifest, optional `server.py` (`fetch()` / `blueprint()` / `choices()`), and `client.{js,css}`. The loader picks them up at boot. ~30 plugins ship in the box (clock, weather, calendar, todo, news, xkcd, NASA APOD, gallery, Unsplash, webpage, Hacker News, Wikipedia, on-this-day, world clock, countdown, year progress, sun/moon, sun clock, moon calendar, wind compass, tide chart, air quality, earthquakes, FX rates, crypto, sticky note, habit grid, plus theme + font cores) all built against the same contract.
 
 ## Dashboards
 
@@ -116,21 +116,78 @@ Plugin-specific settings (`NASA_API_KEY`, `UNSPLASH_ACCESS_KEY`, `WEATHER_ICON_S
 
 ## Bundled plugins
 
+### Widgets
+
+**Time + dates (local, no network)**
+
+| Plugin | Purpose |
+|---|---|
+| `clock` | Digital / analog / both, 12h / 24h, optional seconds + date. Server snapshot drives push, ticks live in editor preview |
+| `countdown` | Days-until / since for a target date with `today+Nd` shorthand |
+| `year_progress` | Day-of-year hero + 52-week ribbon + accent bar; optional radial doughnut variant |
+| `world_clock` | N timezones in a strip with per-zone day/night track + "now" cursor |
+| `sun_clock` | 24-hour polar dial with daylight / civil-twilight / night segments |
+| `moon_calendar` | Full-month grid with the SVG moon phase rendered per day |
+| `sticky` | Display-weight free-text card — quotes / goals / room labels |
+
+**Astronomy + sky**
+
+| Plugin | Purpose |
+|---|---|
+| `sun_moon` | Sunrise / sunset / civil twilight / day length + moon phase tile (sunrise-sunset.org) |
+| `nasa_apod` | NASA Astronomy Picture of the Day (falls back through prior days when today's is a video) |
+
+**Weather + environment**
+
+| Plugin | Purpose |
+|---|---|
+| `weather` | open-meteo current + hourly Chart.js curve + daily bars (meteocons or phosphor icons) |
+| `wind` | Compass rose with directional arrow + speed / gusts (open-meteo) |
+| `tide` | 24-hour sea-level curve with high / low markers (open-meteo marine) |
+| `air_quality` | Current AQI hero with severity-tinted scale + 24h chart + pollutant tiles (open-meteo) |
+| `earthquakes` | Recent USGS quakes with severity-tinted magnitude bars |
+
+**News + reading**
+
+| Plugin | Purpose |
+|---|---|
+| `news` | Generic RSS / Atom feed digest |
+| `the_age` | The Age homepage scrape |
+| `hn` | Hacker News top / new / best / ask / show — list view or horizontal score chart |
+| `wikipedia` | Today's Featured Article with hero image + extract |
+| `on_this_day` | Wikipedia "On this day" — selected / events / births / deaths / holidays |
+
+**Image / display**
+
+| Plugin | Purpose |
+|---|---|
+| `xkcd` | Comic of the day |
+| `gallery` | Random or sequential image rotation from a local folder (admin page manages galleries) |
+| `unsplash` | Curated Unsplash photo |
+| `webpage` | Render any URL through headless Chromium |
+
+**Personal data + tools**
+
+| Plugin | Purpose |
+|---|---|
+| `calendar` | iCal feed (URL or file), agenda view |
+| `todo` | Quick-entry list with age-based auto-prune (admin page) |
+| `habits` | GitHub-style 26-week contribution grid for a single habit (admin page) |
+
+**Markets**
+
+| Plugin | Purpose |
+|---|---|
+| `fx` | ECB FX rates with 30-day sparklines (frankfurter.dev — no key) |
+| `crypto` | CoinGecko crypto prices with 7-day sparklines (no key) |
+
+### Themes / fonts / admin
+
 | Plugin | Kind | Purpose |
 |---|---|---|
-| `weather` | widget | open-meteo + bundled meteocons / phosphor icons |
-| `calendar` | widget | iCal feed (URL or file), agenda view |
-| `todo` | widget + admin | quick-entry list, age-based auto-prune |
-| `news` | widget | RSS/Atom feed digest |
-| `the_age` | widget | The Age homepage scrape |
-| `xkcd` | widget | comic of the day |
-| `nasa_apod` | widget | astronomy picture of the day (falls back through prior days if today's is video / 400) |
-| `gallery` | widget + admin | random or sequential image rotation from a folder |
-| `unsplash` | widget | curated Unsplash photo of the day |
-| `webpage` | widget | render any URL through headless Chromium |
-| `themes_core` | theme | 19 light + dark themes |
-| `theme_builder` | admin | palette editor with live widget-style preview |
-| `fonts_core` | font | 38 bundled woff2 fonts (modern / mid-century / thick punchy) |
+| `themes_core` | theme | 19 light + dark themes covering classic + punchy palettes |
+| `theme_builder` | admin | Palette editor with live widget-style preview, per-theme save |
+| `fonts_core` | font | 38 bundled woff2 fonts in three families — modern / mid-century / thick-punchy — with a global weight picker filtered to the weights each font ships |
 
 ## Building a plugin
 

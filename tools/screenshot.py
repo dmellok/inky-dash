@@ -6,9 +6,12 @@ Two categories of shot:
      Captured at a desktop viewport (1400×900); these are normal web
      pages and adapt to the viewport.
 
-  2. Rendered dashboards via /compose/<page_id>. Captured at the panel's
-     native pixel size — for the dev's panel that's 1200×1600 portrait.
-     GitHub renders these scaled-down in the README.
+  2. Rendered dashboards. We open the dashboard editor at /dashboards/
+     <id>/edit and screenshot just the preview-frame-wrap element on
+     the right — it auto-scales the panel rendering to fit the column,
+     giving a web-friendly thumbnail without the cropping that hits a
+     direct /compose capture (the composer renders at panel native
+     pixels which are taller than any sane README image).
 
 Outputs go to docs/screenshots/. The README links them by name, so
 re-running this script and committing the new PNGs is the refresh
@@ -21,27 +24,12 @@ Run with the dev server already up on :5555:
 from __future__ import annotations
 
 import asyncio
-import json
-import urllib.request
 from pathlib import Path
 from playwright.async_api import async_playwright
 
 
 BASE = "http://127.0.0.1:5555"
 OUT = Path("docs/screenshots")
-
-
-def _config_panel() -> tuple[int, int]:
-    """Read panel size from /api/status so the screenshots match the
-    user's actual panel resolution rather than a hardcoded guess."""
-    try:
-        with urllib.request.urlopen(f"{BASE}/api/status", timeout=5) as r:
-            body = json.loads(r.read())
-        w = int(body.get("panel_width") or 800)
-        h = int(body.get("panel_height") or 480)
-    except Exception:
-        w, h = 1200, 1600
-    return w, h
 
 
 # Admin UI pages — desktop viewport, full page captures.
@@ -70,8 +58,6 @@ DASHBOARDS = [
 
 async def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    panel_w, panel_h = _config_panel()
-    print(f"[screens] panel size = {panel_w}×{panel_h}")
     async with async_playwright() as p:
         browser = await p.chromium.launch()
 
@@ -96,29 +82,40 @@ async def main():
             print(f"  ✓ UI {slug:14} → {out}")
         await ui_ctx.close()
 
-        # ---- dashboards via /compose ----
+        # ---- dashboards via the editor's preview pane ----
+        # The editor scales the panel render to fit the right column.
+        # We screenshot just the preview-frame-wrap div so the image
+        # comes out web-friendly without us doing any resizing — and
+        # without the cropping you'd get from a direct /compose capture
+        # at panel native pixels.
         dash_ctx = await browser.new_context(
-            viewport={"width": panel_w, "height": panel_h},
-            device_scale_factor=1,
+            viewport={"width": 1600, "height": 1100},
+            device_scale_factor=2,
             color_scheme="light",
         )
         dash_page = await dash_ctx.new_page()
         for slug, page_id, label in DASHBOARDS:
-            url = f"{BASE}/compose/{page_id}?preview=1"
+            url = f"{BASE}/dashboards/{page_id}/edit"
             try:
                 await dash_page.goto(url, wait_until="networkidle", timeout=20_000)
-                # Widgets (charts especially) finish painting after the
-                # initial network-idle tick — give them a beat.
-                await dash_page.wait_for_timeout(1500)
+                # Wait for the preview iframe to actually paint —
+                # composer.js loads the page config, builds cells, then
+                # each widget fetches data + renders. networkidle alone
+                # isn't enough; give the post-init renders a beat.
+                await dash_page.wait_for_selector(
+                    "#preview-frame-wrap iframe", state="attached", timeout=10_000
+                )
+                await dash_page.wait_for_timeout(2200)
             except Exception as exc:
                 print(f"  ! dash {slug}: {exc}")
                 continue
-            out = OUT / f"{slug}.png"
-            await dash_page.screenshot(
-                path=str(out),
-                clip={"x": 0, "y": 0, "width": panel_w, "height": panel_h},
-            )
-            print(f"  ✓ dash {slug:18} → {out}")
+            try:
+                preview = dash_page.locator("#preview-frame-wrap")
+                out = OUT / f"{slug}.png"
+                await preview.screenshot(path=str(out))
+                print(f"  ✓ dash {slug:18} → {out}")
+            except Exception as exc:
+                print(f"  ! dash {slug}: locator screenshot: {exc}")
         await dash_ctx.close()
 
         await browser.close()
