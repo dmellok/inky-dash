@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
+from flask import Flask
 from flask.testing import FlaskClient
 
 from app import create_app
 
 
 @pytest.fixture
-def client() -> Iterator[FlaskClient]:
-    app = create_app()
+def app(tmp_path: Path) -> Flask:
+    app = create_app(data_root=tmp_path / "data")
     app.config["TESTING"] = True
+    return app
+
+
+@pytest.fixture
+def client(app: Flask) -> Iterator[FlaskClient]:
     with app.test_client() as client:
         yield client

@@ -1,6 +1,6 @@
 [project]
 name = "inky-dash"
-version = "0.1.0"
+version = "0.2.0"
 description = "Flask companion that composes dashboards in the browser, renders to PNG, pushes to a Pimoroni Inky Impression panel over MQTT."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -9,6 +9,7 @@ authors = [{ name = "dmellok" }]
 dependencies = [
     "flask>=3.0",
     "pydantic>=2.6",
+    "jsonschema>=4.20",
 ]
 
 [project.optional-dependencies]
@@ -38,8 +39,10 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 ignore = ["E501"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "plugins"]
 addopts = "-ra --strict-markers"
+# Plugin smoke tests live under plugins/<id>/tests/. Default file/class/function
+# discovery patterns find them.
 
 # Default: relaxed checks on the whole app package.
 # Strict checks are scoped to the four load-bearing modules called out in v4-brief §6

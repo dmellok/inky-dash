@@ -1,0 +1,40 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.clock {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  height: 100%;
+  width: 100%;
+  font-family: inherit;
+  background: var(--theme-surface);
+  color: var(--theme-fg);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.time {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.date {
+  color: var(--theme-fgSoft);
+  font-weight: 500;
+  margin-top: 0.4em;
+}
+
+.clock--xs .time { font-size: 44px; }
+
+.clock--sm .time { font-size: 72px; }
+.clock--sm .date { font-size: 14px; }
+
+.clock--md .time { font-size: 140px; }
+.clock--md .date { font-size: 22px; }
+
+.clock--lg .time { font-size: 220px; font-weight: 600; }
+.clock--lg .date { font-size: 36px; }

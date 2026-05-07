@@ -8,16 +8,19 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 0 (v0.1.0).** Skeleton only — Flask boots, one route, pytest harness, CI green. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 1 (v0.2.0).** Plugin contract live: the loader discovers folders under `plugins/`, validates each `plugin.json` against `schema/plugin.schema.json`, and serves `client.js`/`client.css` over HTTP. Bundled `clock` plugin renders at all four cell-size breakpoints (xs/sm/md/lg). Composer route `/compose/<page_id>` mounts plugin instances into per-cell shadow DOMs. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
+python -m playwright install chromium   # for plugin smoke tests
 
 # Run the dev server
 python -m app          # http://localhost:5555
+                       # http://localhost:5555/compose/_demo  — clock at full panel size
+                       # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks
 ruff check . && ruff format --check . && mypy && pytest
@@ -28,13 +31,19 @@ Python 3.11+ required.
 ## Layout
 
 ```
-app/            Flask application package
-docs/           Build brief + plugin contract
-tests/          pytest suite
-.github/        CI workflow (ruff + mypy + pytest on push and PR)
+app/                Flask application (factory, plugin loader, composer)
+docs/               Build brief + plugin contract
+plugins/<id>/       One folder per plugin; each holds plugin.json,
+                    client.js, client.css (optional), tests/
+schema/             JSON Schemas (plugin manifest today; page model in M2)
+static/             Composer bootstrap JS (mounts plugins into shadow DOMs)
+templates/          Jinja shells (compose.html today)
+tests/              Top-level pytest suite (loader unit tests, route tests)
+conftest.py         Root-level fixtures shared with plugin smoke tests
+.github/            CI workflow (ruff + mypy + pytest + Playwright)
 ```
 
-Plugins, the renderer, the MQTT bridge, and the admin UI all land in later milestones — see the brief.
+The renderer, MQTT bridge, theme/font system, page editor, and full plugin set all land in later milestones — see the brief.
 
 ## License
 

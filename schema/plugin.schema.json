@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inky-dash.local/schema/plugin.schema.json",
+  "title": "Inky Dash plugin manifest (v1)",
+  "description": "The shape of plugin.json. See docs/v4-plugins.md for the prose contract.",
+  "type": "object",
+  "required": ["manifest_version", "id", "name", "version", "kind", "supports"],
+  "properties": {
+    "manifest_version": {
+      "const": 1,
+      "description": "Contract version. The loader rejects anything else."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Lowercase snake_case. Must equal the plugin folder name."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+].*)?$"
+    },
+    "kind": {
+      "enum": ["widget", "theme", "font", "admin"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "supports": {
+      "type": "object",
+      "required": ["sizes"],
+      "properties": {
+        "sizes": {
+          "type": "array",
+          "items": { "enum": ["xs", "sm", "md", "lg"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "panels": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "cell_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "label"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "enum": ["string", "number", "select", "boolean", "color"] },
+          "label": { "type": "string" },
+          "default": {},
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["value", "label"],
+              "properties": {
+                "value": {},
+                "label": { "type": "string" }
+              }
+            }
+          },
+          "choices_from": { "type": "string" }
+        }
+      }
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "label"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "secret": { "type": "boolean" },
+          "default": {}
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "properties": {
+        "dither": { "enum": ["none", "floyd-steinberg", "ordered"] },
+        "full_bleed": { "type": "boolean" },
+        "needs_network": { "type": "boolean" }
+      }
+    },
+    "themes": { "type": "array" },
+    "fonts": { "type": "array" }
+  }
+}
