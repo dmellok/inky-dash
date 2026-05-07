@@ -1,9 +1,8 @@
 """Composer: builds the page that Playwright screenshots and the editor previews.
 
-For Milestone 1 the page model is hardcoded — a tiny demo page registry plus a
-test-mode route that mounts a single plugin at a chosen breakpoint. M2 replaces
-the demo registry with file-loaded ``Page`` models validated against the JSON
-Schema in ``schema/page.schema.json``.
+Reads pages from the file-backed ``PageStore`` (data/core/pages.json). The
+demo page is seeded on first run by ``create_app``. ``/_test/render`` mounts
+a single plugin at a chosen breakpoint without persisting anything.
 """
 
 from __future__ import annotations
@@ -13,6 +12,7 @@ from typing import Any
 from flask import Blueprint, abort, current_app, render_template, request
 
 from app.plugin_loader import PluginRegistry
+from app.state import PageStore
 
 bp = Blueprint("composer", __name__)
 
@@ -22,27 +22,6 @@ SIZE_DIMENSIONS: dict[str, tuple[int, int]] = {
     "sm": (380, 240),
     "md": (640, 400),
     "lg": (1200, 800),
-}
-
-
-# Demo page registry — replaced by file-loaded pages in M2.
-_DEMO_PAGES: dict[str, dict[str, Any]] = {
-    "_demo": {
-        "id": "_demo",
-        "name": "Demo",
-        "panel": {"w": 1600, "h": 1200},
-        "cells": [
-            {
-                "id": "cell-1",
-                "x": 0,
-                "y": 0,
-                "w": 1600,
-                "h": 1200,
-                "plugin": "clock",
-                "options": {"format": "24h", "show_date": True},
-            }
-        ],
-    }
 }
 
 
@@ -70,12 +49,13 @@ def _hydrated_page(page: dict[str, Any]) -> dict[str, Any]:
 
 @bp.get("/compose/<page_id>")
 def compose(page_id: str) -> str:
-    page = _DEMO_PAGES.get(page_id)
+    store: PageStore = current_app.config["PAGE_STORE"]
+    page = store.get(page_id)
     if page is None:
         abort(404)
     return render_template(
         "compose.html",
-        page=_hydrated_page(page),
+        page=_hydrated_page(page.model_dump(mode="json")),
         for_push=request.args.get("for_push") == "1",
     )
 

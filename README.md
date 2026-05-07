@@ -8,19 +8,26 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 1 (v0.2.0).** Plugin contract live: the loader discovers folders under `plugins/`, validates each `plugin.json` against `schema/plugin.schema.json`, and serves `client.js`/`client.css` over HTTP. Bundled `clock` plugin renders at all four cell-size breakpoints (xs/sm/md/lg). Composer route `/compose/<page_id>` mounts plugin instances into per-cell shadow DOMs. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 2 (v0.3.0).** Page model live: `schema/page.schema.json` is the source of truth, hand-aligned pydantic models in `app/state/`, and TS type definitions auto-generated into `static/types/page.d.ts`. The composer reads pages from `data/core/pages.json` (atomic writes via tmp-rename); a demo page is seeded on first run. The Lit-based design system (`id-button`, `id-card`, `id-slider`, `id-tab-bar`, `id-form-row`) lives at `/_components`. The editor at `/editor/<page_id>` exercises the full schema flow: pick a layout preset, assign a plugin per cell, edit `cell_options`, save → server validates with pydantic → file. Bundle is built by esbuild (~30 KB minified per entry). See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
 ```bash
+# Python side
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m playwright install chromium   # for plugin smoke tests
+python -m playwright install chromium
+
+# JS side (Bun in CI; npm works locally too)
+bun install && bun run build      # or: npm install && npm run build
 
 # Run the dev server
-python -m app          # http://localhost:5555
-                       # http://localhost:5555/compose/_demo  — clock at full panel size
-                       # http://localhost:5555/_test/render?plugin=clock&size=md
+python -m app
+# http://localhost:5555/                          — index
+# http://localhost:5555/editor/_demo              — page editor
+# http://localhost:5555/_components               — design system demo
+# http://localhost:5555/compose/_demo             — composer (what Playwright will screenshot)
+# http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks
 ruff check . && ruff format --check . && mypy && pytest
@@ -31,19 +38,28 @@ Python 3.11+ required.
 ## Layout
 
 ```
-app/                Flask application (factory, plugin loader, composer)
+app/                Flask application
+  state/            mypy --strict — page model, page store, future schedules + history
+  composer.py       /compose/<page_id> + /_test/render
+  admin.py          /editor + /_components + /api/pages + /api/widgets
+  plugin_loader.py  mypy --strict — discovery + schema validation + asset routes
 docs/               Build brief + plugin contract
-plugins/<id>/       One folder per plugin; each holds plugin.json,
-                    client.js, client.css (optional), tests/
-schema/             JSON Schemas (plugin manifest today; page model in M2)
-static/             Composer bootstrap JS (mounts plugins into shadow DOMs)
-templates/          Jinja shells (compose.html today)
-tests/              Top-level pytest suite (loader unit tests, route tests)
-conftest.py         Root-level fixtures shared with plugin smoke tests
-.github/            CI workflow (ruff + mypy + pytest + Playwright)
+plugins/<id>/       Drop-a-folder plugin: plugin.json + client.js + tests/
+schema/             JSON Schemas (plugin manifest, page model)
+static/
+  components/       Lit design system (id-* web components)
+  pages/            Editor + components-demo entry points
+  composer.js       Bootstrap that mounts plugins into shadow DOMs
+  dist/             Build output (gitignored)
+  types/            Generated TS types (gitignored)
+templates/          Jinja shells: compose, editor, components_demo
+tests/              Top-level pytest suite
+conftest.py         Root fixtures shared with plugin smoke tests
+tools/              gen-page-types.mjs (schema → .d.ts)
+.github/            CI: Python + Bun + Playwright + bundle build
 ```
 
-The renderer, MQTT bridge, theme/font system, page editor, and full plugin set all land in later milestones — see the brief.
+The renderer, MQTT bridge, theme/font system, schedules, and the rest of the plugin set land in later milestones — see the brief.
 
 ## License
 

@@ -20,13 +20,22 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.1"
+
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Install Playwright browser
         run: python -m playwright install --with-deps chromium
+
+      - name: Install JS deps + build admin bundle
+        run: |
+          bun install
+          bun run build
 
       - name: Lint (ruff)
         run: ruff check .

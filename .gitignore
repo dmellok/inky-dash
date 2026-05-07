@@ -21,9 +21,12 @@ htmlcov/
 # State (created at runtime, never committed)
 data/
 
-# Frontend build output (later milestones)
+# Frontend
 node_modules/
 static/dist/
+static/types/page.d.ts
+package-lock.json
+bun.lockb
 
 # Editor / OS
 .DS_Store
