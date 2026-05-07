@@ -8,6 +8,8 @@ Composable widgets, themeable everything, drag-and-drop schedule priorities, pus
 
 ![Dashboard list](docs/screenshots/home.png)
 
+> **Hardware tested:** built and verified against a [13.3" Inky Impression](https://shop.pimoroni.com/products/inky-impression-13-3) (1600×1200) only. The renderer reads `PANEL_WIDTH` / `PANEL_HEIGHT` from `.env`, so other Impression sizes (4", 5.7", 7.3") *should* work — but I don't own one to confirm widget layouts hold up at smaller resolutions. Reports + PRs welcome.
+
 ---
 
 ## What it does

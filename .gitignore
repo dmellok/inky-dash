@@ -38,3 +38,7 @@ renders/stress/
 # Internal design docs (excluded by repo owner)
 v3-brief.md
 v3-plugins.md
+
+# Blog post drafts + their screenshots
+docs/blog.md
+docs/blog-screenshots/
