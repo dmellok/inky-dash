@@ -1,0 +1,22 @@
+{
+  "manifest_version": 1,
+  "id": "gallery",
+  "name": "Gallery",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Rotates through images in data/plugins/gallery/. Drop JPG/PNG/WEBP files there.",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "mode",
+      "type": "select",
+      "label": "Selection",
+      "default": "random",
+      "choices": [
+        { "value": "random", "label": "Random" },
+        { "value": "sequential", "label": "Sequential (rotates each render)" }
+      ]
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "full_bleed": true }
+}

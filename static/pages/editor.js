@@ -689,6 +689,7 @@ class IdEditor extends LitElement {
       return html`<p>${this.error ? `Error: ${this.error}` : "Loading…"}</p>`;
     }
     return html`
+      <link rel="stylesheet" href="/static/icons/phosphor.css">
       <div class="header">
         <h1>Editor — ${this.page.id}</h1>
         <div>
@@ -800,13 +801,14 @@ class IdEditor extends LitElement {
           ?disabled=${this.pushing || this.saving}
           @click=${() => this._push()}
         >
+          <i class="ph ph-paper-plane-tilt"></i>
           ${this.pushing ? "Pushing…" : "Push to panel"}
         </id-button>
         <id-button
           @click=${() =>
             window.open(`/compose/${encodeURIComponent(this.page.id)}`, "_blank")}
         >
-          Open compose ↗
+          <i class="ph ph-arrow-square-out"></i> Open compose
         </id-button>
       </div>
       ${this.pushResult

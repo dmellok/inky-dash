@@ -1,0 +1,117 @@
+:host {
+  display: block;
+  height: 100%;
+}
+.sm {
+  display: grid;
+  align-content: center;
+  height: 100%;
+  padding: 5cqmin;
+  box-sizing: border-box;
+  background: var(--theme-surface);
+  color: var(--theme-fg);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  gap: 2cqmin;
+}
+.place {
+  font-size: min(6cqw, 10cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+
+/* Sun arc */
+.sun-row {
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+.sun-svg {
+  width: 100%;
+  max-height: 50cqh;
+  height: auto;
+}
+.sun-svg .horizon {
+  stroke: var(--theme-divider);
+  stroke-width: 0.5;
+}
+.sun-svg .arc {
+  fill: none;
+  stroke: var(--theme-divider);
+  stroke-width: 0.6;
+  stroke-dasharray: 1.5 2;
+}
+.sun-svg .endpoints circle {
+  fill: var(--theme-fgSoft);
+}
+.sun-svg .time-label {
+  fill: var(--theme-fgSoft);
+  font-size: 7px;
+  font-family: inherit;
+}
+.sun-svg .sun circle {
+  fill: var(--theme-accent);
+}
+.sun-svg .sun .rays line {
+  stroke: var(--theme-accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+.sun-svg .sun-out {
+  fill: var(--theme-fgSoft);
+  font-size: 8px;
+  font-style: italic;
+}
+.day-length {
+  font-size: min(4cqw, 7cqh);
+  color: var(--theme-fgSoft);
+}
+
+/* Moon */
+.moon-row {
+  display: flex;
+  align-items: center;
+  gap: 4cqmin;
+  justify-content: center;
+}
+.moon-svg {
+  width: min(28cqw, 40cqh);
+  height: min(28cqw, 40cqh);
+  flex-shrink: 0;
+}
+.moon-svg .moon-dark {
+  fill: var(--theme-fgSoft);
+  opacity: 0.18;
+}
+.moon-svg .moon-lit {
+  fill: var(--theme-fg);
+}
+.moon-svg .moon-outline {
+  fill: none;
+  stroke: var(--theme-divider);
+  stroke-width: 0.6;
+}
+.moon-meta {
+  text-align: left;
+  display: grid;
+  gap: 0.2em;
+}
+.moon-label {
+  font-weight: 600;
+  font-size: min(5cqw, 9cqh);
+  color: var(--theme-fg);
+}
+.moon-illum {
+  font-size: min(4cqw, 7cqh);
+  color: var(--theme-fgSoft);
+}
+
+.error-block {
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+.error {
+  font-size: min(5cqw, 9cqh);
+  color: var(--theme-danger);
+}

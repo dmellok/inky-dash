@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  height: 100%;
+}
+.countdown {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 6cqmin;
+  box-sizing: border-box;
+  background: var(--theme-surface);
+  color: var(--theme-fg);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.big {
+  font-weight: 700;
+  line-height: 1;
+  color: var(--theme-accent);
+}
+.unit {
+  font-weight: 500;
+  color: var(--theme-fgSoft);
+  margin-top: 0.2em;
+}
+.label {
+  font-weight: 500;
+  color: var(--theme-fgSoft);
+  margin-top: 0.5em;
+}

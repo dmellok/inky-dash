@@ -53,6 +53,13 @@ async function mountCell(cell) {
     options = {};
   }
 
+  let pluginData = null;
+  try {
+    pluginData = JSON.parse(cell.dataset.data || "null");
+  } catch {
+    pluginData = null;
+  }
+
   let palette = FALLBACK_THEME;
   try {
     palette = JSON.parse(cell.dataset.themePalette || "null") || FALLBACK_THEME;
@@ -71,7 +78,7 @@ async function mountCell(cell) {
     panel: { w: panelW, h: panelH, portrait: panelH > panelW },
     theme: palette,
     font: { family: fontFamily, weight: 400 },
-    data: null,
+    data: pluginData,
     preview: new URLSearchParams(location.search).get("preview") === "1",
   };
 

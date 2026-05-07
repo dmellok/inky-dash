@@ -1,0 +1,10 @@
+{
+  "manifest_version": 1,
+  "id": "todo",
+  "name": "Todo",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Quick-entry todo list. Items auto-prune when marked done (you can undo within the same session).",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "render": { "dither": "none" }
+}

@@ -92,10 +92,81 @@ def api_list_themes() -> Response:
             "mode": t.mode,
             "palette": t.palette,
             "plugin_id": t.plugin_id,
+            "is_user": t.is_user,
         }
         for t in _registry().themes.values()
     ]
     return jsonify(themes)
+
+
+@bp.post("/api/themes")
+def api_create_theme() -> tuple[Response, int] | Response:
+    """Create or replace a user theme. Saved to themes_core's data dir."""
+    from app.plugin_loader import Theme
+    from app.themes import UserTheme, UserThemeStore
+
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+    try:
+        ut = UserTheme.model_validate(body)
+    except ValidationError as err:
+        details = [
+            {"loc": ".".join(str(p) for p in e["loc"]), "msg": e["msg"]} for e in err.errors()
+        ]
+        return jsonify({"error": "validation", "details": details}), 400
+
+    registry = _registry()
+    existing = registry.themes.get(ut.id)
+    if existing is not None and not existing.is_user:
+        return (
+            jsonify({"error": f"id {ut.id!r} clashes with a built-in theme"}),
+            409,
+        )
+
+    plugin = registry.plugins.get("themes_core")
+    if plugin is None:
+        return jsonify({"error": "themes_core plugin not loaded"}), 500
+    UserThemeStore(plugin.data_dir / "user.json").upsert(ut)
+
+    new_theme = Theme(
+        id=ut.id,
+        name=ut.name,
+        mode=ut.mode or "",
+        palette=dict(ut.palette),
+        plugin_id="themes_core",
+        is_user=True,
+    )
+    registry.themes[ut.id] = new_theme
+    return jsonify(
+        {
+            "id": new_theme.id,
+            "name": new_theme.name,
+            "mode": new_theme.mode,
+            "palette": new_theme.palette,
+            "plugin_id": new_theme.plugin_id,
+            "is_user": True,
+        }
+    )
+
+
+@bp.delete("/api/themes/<theme_id>")
+def api_delete_theme(theme_id: str) -> tuple[Response, int] | tuple[str, int]:
+    from app.themes import UserThemeStore
+
+    registry = _registry()
+    theme = registry.themes.get(theme_id)
+    if theme is None:
+        return ("", 404)
+    if not theme.is_user:
+        return jsonify({"error": "cannot delete a built-in theme"}), 403
+
+    plugin = registry.plugins.get("themes_core")
+    if plugin is None:
+        return jsonify({"error": "themes_core plugin not loaded"}), 500
+    UserThemeStore(plugin.data_dir / "user.json").remove(theme_id)
+    del registry.themes[theme_id]
+    return ("", 204)
 
 
 @bp.get("/api/fonts")

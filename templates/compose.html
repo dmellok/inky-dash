@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.name|default("Compose") }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='icons/phosphor.css') }}">
   <style>
     {{ page.font_face_css|safe }}
 
@@ -42,6 +43,7 @@
          data-cell-id="{{ cell.id }}"
          data-plugin="{{ cell.plugin }}"
          data-options='{{ cell.options|tojson }}'
+         data-data='{{ cell.data|tojson }}'
          data-cell-w="{{ cell.w }}"
          data-cell-h="{{ cell.h }}"
          data-panel-w="{{ page.panel.w }}"

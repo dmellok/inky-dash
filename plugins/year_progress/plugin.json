@@ -1,0 +1,10 @@
+{
+  "manifest_version": 1,
+  "id": "year_progress",
+  "name": "Year progress",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Day of the year + 52-week ribbon. How much of the year is left.",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "render": { "dither": "none" }
+}

@@ -50,6 +50,7 @@ class Theme:
     mode: str  # "light" | "dark" | ""
     palette: dict[str, str]
     plugin_id: str
+    is_user: bool = False
 
 
 @dataclass(frozen=True)
@@ -242,6 +243,20 @@ def discover(
                     )
                     continue
                 registry.themes[theme.id] = theme
+
+            # Also pick up user-created themes saved via the /themes builder.
+            from app.themes import UserThemeStore
+
+            user_store = UserThemeStore(data_dir / "user.json")
+            for ut in user_store.load():
+                registry.themes[ut.id] = Theme(
+                    id=ut.id,
+                    name=ut.name,
+                    mode=ut.mode or "",
+                    palette=dict(ut.palette),
+                    plugin_id=plugin_id,
+                    is_user=True,
+                )
 
         if plugin.kind == "font":
             for raw_font in manifest.get("fonts", []):

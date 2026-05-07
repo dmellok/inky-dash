@@ -1,0 +1,30 @@
+{
+  "manifest_version": 1,
+  "id": "news",
+  "name": "News feed",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Generic RSS / Atom feed reader.",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "url",
+      "type": "string",
+      "label": "Feed URL",
+      "default": "https://news.ycombinator.com/rss"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Header label",
+      "default": ""
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "label": "Number of items",
+      "default": 8
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

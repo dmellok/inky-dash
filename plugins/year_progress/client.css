@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  height: 100%;
+}
+.yp {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  height: 100%;
+  width: 100%;
+  padding: 6cqmin;
+  box-sizing: border-box;
+  background: var(--theme-surface);
+  color: var(--theme-fg);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  gap: 2cqmin;
+}
+.hero {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3em;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+.day {
+  color: var(--theme-accent);
+}
+.of {
+  font-weight: 500;
+  color: var(--theme-fgSoft);
+  font-size: 0.5em;
+  letter-spacing: 0;
+}
+.total {
+  font-weight: 500;
+  color: var(--theme-fgSoft);
+  font-size: 0.7em;
+}
+.pct {
+  color: var(--theme-fgSoft);
+  font-weight: 500;
+}
+.ribbon {
+  display: grid;
+  grid-template-columns: repeat(52, 1fr);
+  gap: 2px;
+  width: 92%;
+  height: 12cqmin;
+  margin-top: 1cqmin;
+}
+.seg {
+  background: var(--theme-divider);
+  border-radius: 1px;
+}
+.seg.filled {
+  background: var(--theme-accent);
+}
+.stats {
+  color: var(--theme-fgSoft);
+  font-weight: 500;
+  margin-top: 1cqmin;
+}

@@ -1,0 +1,24 @@
+:host { display: block; height: 100%; }
+.gallery {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+}
+.gallery img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gallery.empty {
+  display: grid;
+  place-items: center;
+  background: var(--theme-surface2);
+  color: var(--theme-fgSoft);
+  padding: 24px;
+}
+.message {
+  font: 14px/1.5 system-ui, sans-serif;
+  text-align: center;
+  max-width: 70%;
+}

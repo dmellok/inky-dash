@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 5 (v0.6.0).** Themes + fonts are first-class plugins. `themes_core` ships 12 hand-tuned palettes (light + dark) with all 12 schema-required keys; `fonts_core` ships 5 webfonts (Inter, Lexend, Lora, JetBrains Mono, Bebas Neue) as latin-subset woff2. The composer resolves `page.theme` / `page.font` against the registry and emits `@font-face` rules + per-cell `--theme-*` CSS variables. Cells override their page's theme or font via optional `cell.theme` / `cell.font`. The editor at `/editor/<page_id>` now drives everything live: layout dropdown (with four hero presets), theme + font selectors, gap + corner-radius sliders, per-cell overrides, and auto-save on every edit. The abstract layout canvas is gone — the live iframe IS the cell picker, with click-targets that follow the gap inset. `/themes` shows every loaded theme as palette swatches and every font as a live sample. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 6 (v0.7.0).** Full bundled plugin set. Ten widget plugins (clock, countdown, year_progress, sun_moon, weather, air_quality, hn, news, todo, gallery) plus the existing themes_core / fonts_core. `server.py fetch()` is now wired through the composer (`ctx.data` carries the result), so any plugin can pull data server-side and have it embedded on the cell at render time. Phosphor icons (regular + fill) are bundled locally at [`/static/icons/`](static/icons/) and used in the data plugins (weather codes, news, hn) and the admin UI (editor buttons, theme builder). The theme builder is live on `/themes` — 12 colour pickers + name + mode, persisted to `data/plugins/themes_core/user.json`, the registry mutates in-memory so the new palette is immediately usable in the editor. Sun & moon renders the sun's path as an SVG arc with the sun's current position, plus the moon as a disc with a real lit/dark phase boundary. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
@@ -60,8 +60,17 @@ app/                Flask application
   push.py           mypy --strict — single-flight PushManager (render→quantize→publish)
 docs/               Build brief + plugin contract
 plugins/<id>/       Drop-a-folder plugin (kind=widget|theme|font|admin)
-  clock/            Bundled widget — fits text via JS measurement
-  themes_core/      12 starter palettes
+  clock/            Digital time, fits to cell via JS measurement
+  countdown/        Days until / since a target date
+  year_progress/    Day-of-year hero + 52-week ribbon
+  sun_moon/         SVG sun arc (current position) + moon-phase disc
+  weather/          Open-meteo current + 3-day outlook
+  air_quality/      Open-meteo European AQI + pollutant tiles
+  hn/               Hacker News top / new / best / ask / show
+  news/             Generic RSS / Atom feed
+  todo/             Quick-entry list (admin form at /plugins/todo/)
+  gallery/          Folder rotation, full_bleed (admin at /plugins/gallery/)
+  themes_core/      12 starter palettes + user-created via /themes
   fonts_core/       Inter / Lexend / Lora / JetBrains Mono / Bebas Neue (woff2)
 schema/             JSON Schemas (plugin manifest, page model)
 static/

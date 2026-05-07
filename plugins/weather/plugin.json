@@ -1,0 +1,25 @@
+{
+  "manifest_version": 1,
+  "id": "weather",
+  "name": "Weather",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Current temp + 3-day outlook from open-meteo. No API key needed.",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "cell_options": [
+    { "name": "latitude", "type": "number", "label": "Latitude", "default": 51.5074 },
+    { "name": "longitude", "type": "number", "label": "Longitude", "default": -0.1278 },
+    { "name": "label", "type": "string", "label": "Place label", "default": "London" },
+    {
+      "name": "units",
+      "type": "select",
+      "label": "Units",
+      "default": "metric",
+      "choices": [
+        { "value": "metric", "label": "Metric (°C)" },
+        { "value": "imperial", "label": "Imperial (°F)" }
+      ]
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

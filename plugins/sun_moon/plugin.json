@@ -1,0 +1,30 @@
+{
+  "manifest_version": 1,
+  "id": "sun_moon",
+  "name": "Sun & Moon",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Sunrise/sunset for a location + moon phase. Data from open-meteo.com.",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "latitude",
+      "type": "number",
+      "label": "Latitude",
+      "default": 51.5074
+    },
+    {
+      "name": "longitude",
+      "type": "number",
+      "label": "Longitude",
+      "default": -0.1278
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "label": "Place label",
+      "default": "London"
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

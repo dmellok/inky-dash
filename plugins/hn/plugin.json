@@ -1,0 +1,31 @@
+{
+  "manifest_version": 1,
+  "id": "hn",
+  "name": "Hacker News",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Hacker News stories from the public Firebase API.",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "feed",
+      "type": "select",
+      "label": "Feed",
+      "default": "topstories",
+      "choices": [
+        { "value": "topstories", "label": "Top" },
+        { "value": "newstories", "label": "New" },
+        { "value": "beststories", "label": "Best" },
+        { "value": "askstories", "label": "Ask HN" },
+        { "value": "showstories", "label": "Show HN" }
+      ]
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "label": "Number of stories",
+      "default": 10
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

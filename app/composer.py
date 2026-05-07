@@ -4,16 +4,23 @@ Reads pages from the file-backed ``PageStore``, resolves theme + font references
 through the plugin registry, emits ``@font-face`` rules for every loaded font,
 and renders one ``<div class="cell">`` per cell with its resolved palette
 already applied as CSS custom properties (``--theme-*``).
+
+For plugins that ship a ``server.py``, the composer calls ``fetch()`` and
+embeds the result as ``data-data`` on the cell so client.js receives it via
+``ctx.data``.
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from flask import Blueprint, abort, current_app, render_template, request
 
 from app.plugin_loader import Font, PluginRegistry
 from app.state import PageStore
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint("composer", __name__)
 
@@ -91,12 +98,38 @@ def _font_face_css(fonts: dict[str, Font]) -> str:
     return "\n".join(rules)
 
 
-def _hydrate_page(page_dict: dict[str, Any]) -> dict[str, Any]:
-    """Resolve options, themes, fonts, and visual layout (gap + corner_radius).
+def _fetch_plugin_data(
+    plugin_id: str,
+    options: dict[str, Any],
+    panel_w: int,
+    panel_h: int,
+    preview: bool,
+) -> Any:
+    """Call the plugin's server.py fetch() if present. Returns None on miss."""
+    plugin = _registry().get(plugin_id)
+    if plugin is None or plugin.server_module is None:
+        return None
+    fetch_fn = getattr(plugin.server_module, "fetch", None)
+    if fetch_fn is None:
+        return None
+    try:
+        return fetch_fn(
+            options,
+            {},  # settings — wired in M7 alongside the /settings page
+            ctx={
+                "panel_w": panel_w,
+                "panel_h": panel_h,
+                "preview": preview,
+                "data_dir": str(plugin.data_dir),
+            },
+        )
+    except Exception as err:  # noqa: BLE001 — surface failure to the plugin
+        logger.warning("plugin %s fetch() raised: %s", plugin_id, err)
+        return {"error": f"{type(err).__name__}: {err}"}
 
-    The page model stores raw cell xywh; the gap is applied here so the inner
-    coordinates the template renders match the picker's click targets.
-    """
+
+def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[str, Any]:
+    """Resolve options, themes, fonts, server-side data, and visual layout."""
     registry = _registry()
     page_palette = _resolve_palette(page_dict.get("theme"), registry)
     page_font = _resolve_font(page_dict.get("font"), registry)
@@ -105,6 +138,8 @@ def _hydrate_page(page_dict: dict[str, Any]) -> dict[str, Any]:
     gap = int(page_dict.get("gap", 0) or 0)
     half_gap = gap // 2
     corner_radius = int(page_dict.get("corner_radius", 0) or 0)
+    panel_w = int(page_dict["panel"]["w"])
+    panel_h = int(page_dict["panel"]["h"])
 
     cells_out: list[dict[str, Any]] = []
     for cell in page_dict["cells"]:
@@ -113,6 +148,7 @@ def _hydrate_page(page_dict: dict[str, Any]) -> dict[str, Any]:
         )
         cell_font = _resolve_font(cell["font"], registry) if cell.get("font") else page_font
         cell_font_family = cell_font.name if cell_font else page_font_family
+        resolved_options = _resolved_options(cell["plugin"], cell.get("options", {}))
         cells_out.append(
             {
                 **cell,
@@ -120,7 +156,10 @@ def _hydrate_page(page_dict: dict[str, Any]) -> dict[str, Any]:
                 "y": cell["y"] + half_gap,
                 "w": max(1, cell["w"] - half_gap * 2),
                 "h": max(1, cell["h"] - half_gap * 2),
-                "options": _resolved_options(cell["plugin"], cell.get("options", {})),
+                "options": resolved_options,
+                "data": _fetch_plugin_data(
+                    cell["plugin"], resolved_options, panel_w, panel_h, preview
+                ),
                 "palette": cell_palette,
                 "font_family": cell_font_family,
             }
@@ -142,10 +181,14 @@ def compose(page_id: str) -> str:
     page = store.get(page_id)
     if page is None:
         abort(404)
+    for_push = request.args.get("for_push") == "1"
     return render_template(
         "compose.html",
-        page=_hydrate_page(page.model_dump(mode="json", exclude_none=True)),
-        for_push=request.args.get("for_push") == "1",
+        page=_hydrate_page(
+            page.model_dump(mode="json", exclude_none=True),
+            preview=not for_push,
+        ),
+        for_push=for_push,
     )
 
 
@@ -188,6 +231,6 @@ def test_render() -> str:
     }
     return render_template(
         "compose.html",
-        page=_hydrate_page(page),
+        page=_hydrate_page(page, preview=True),
         for_push=False,
     )

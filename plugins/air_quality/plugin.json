@@ -1,0 +1,15 @@
+{
+  "manifest_version": 1,
+  "id": "air_quality",
+  "name": "Air quality",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "European AQI from open-meteo with PM2.5, PM10, NO2, O3 tiles.",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    { "name": "latitude", "type": "number", "label": "Latitude", "default": 51.5074 },
+    { "name": "longitude", "type": "number", "label": "Longitude", "default": -0.1278 },
+    { "name": "label", "type": "string", "label": "Place label", "default": "London" }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 1,
+  "id": "countdown",
+  "name": "Countdown",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Days until / since a target date.",
+  "supports": { "sizes": ["xs", "sm", "md"] },
+  "cell_options": [
+    {
+      "name": "target_date",
+      "type": "string",
+      "label": "Target date (YYYY-MM-DD)",
+      "default": "2026-12-31"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "label": "Label",
+      "default": "Until"
+    }
+  ],
+  "render": { "dither": "none" }
+}

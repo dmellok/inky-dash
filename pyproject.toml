@@ -1,6 +1,6 @@
 [project]
 name = "inky-dash"
-version = "0.6.0"
+version = "0.7.0"
 description = "Flask companion that composes dashboards in the browser, renders to PNG, pushes to a Pimoroni Inky Impression panel over MQTT."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,6 +13,7 @@ dependencies = [
     "pillow>=10.0",
     "playwright>=1.50",
     "paho-mqtt>=2.0",
+    "feedparser>=6.0",
 ]
 
 [project.optional-dependencies]
@@ -43,7 +44,11 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "plugins"]
-addopts = "-ra --strict-markers"
+pythonpath = ["."]
+# importlib mode: each test_*.py is collected without requiring a unique
+# top-level module name. Avoids the test_smoke.py collision across
+# plugins/<id>/tests/.
+addopts = "-ra --strict-markers --import-mode=importlib"
 markers = [
     "slow: launches Chromium and/or hits the live_server fixture (>1 s per test)",
 ]
