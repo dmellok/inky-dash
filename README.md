@@ -114,98 +114,20 @@ The first launch creates `data/` (pages, schedules, todos, history.db, render ca
 
 Plugin-specific settings (`NASA_API_KEY`, `UNSPLASH_ACCESS_KEY`, `WEATHER_ICON_SET`, `TODO_PRUNE_HOURS`, …) live in the same `.env`. The `/settings` UI lets you tune them with a "Save & restart" — the helper subprocess scrubs managed env keys and re-execs cleanly.
 
-## Bundled plugins
+## Documentation
 
-### Widgets
+The full docs live in the [**GitHub Wiki**](https://github.com/dmellok/inky-dash/wiki):
 
-**Time + dates (local, no network)**
-
-| Plugin | Purpose |
-|---|---|
-| `clock` | Digital / analog / both, 12h / 24h, optional seconds + date. Server snapshot drives push, ticks live in editor preview |
-| `countdown` | Days-until / since for a target date with `today+Nd` shorthand |
-| `year_progress` | Day-of-year hero + 52-week ribbon + accent bar; optional radial doughnut variant |
-| `world_clock` | N timezones in a strip with per-zone day/night track + "now" cursor |
-| `sun_clock` | 24-hour polar dial with daylight / civil-twilight / night segments |
-| `moon_calendar` | Full-month grid with the SVG moon phase rendered per day |
-| `sticky` | Display-weight free-text card — quotes / goals / room labels |
-
-**Astronomy + sky**
-
-| Plugin | Purpose |
-|---|---|
-| `sun_moon` | Sunrise / sunset / civil twilight / day length + moon phase tile (sunrise-sunset.org) |
-| `nasa_apod` | NASA Astronomy Picture of the Day (falls back through prior days when today's is a video) |
-
-**Weather + environment**
-
-| Plugin | Purpose |
-|---|---|
-| `weather` | open-meteo current + hourly Chart.js curve + daily bars (meteocons or phosphor icons) |
-| `wind` | Compass rose with directional arrow + speed / gusts (open-meteo) |
-| `tide` | 24-hour sea-level curve with high / low markers (open-meteo marine) |
-| `air_quality` | Current AQI hero with severity-tinted scale + 24h chart + pollutant tiles (open-meteo) |
-| `earthquakes` | Recent USGS quakes with severity-tinted magnitude bars |
-
-**News + reading**
-
-| Plugin | Purpose |
-|---|---|
-| `news` | Generic RSS / Atom feed digest |
-| `the_age` | The Age homepage scrape |
-| `hn` | Hacker News top / new / best / ask / show — list view or horizontal score chart |
-| `wikipedia` | Today's Featured Article with hero image + extract |
-| `on_this_day` | Wikipedia "On this day" — selected / events / births / deaths / holidays |
-
-**Image / display**
-
-| Plugin | Purpose |
-|---|---|
-| `xkcd` | Comic of the day |
-| `gallery` | Random or sequential image rotation from a local folder (admin page manages galleries) |
-| `unsplash` | Curated Unsplash photo |
-| `webpage` | Render any URL through headless Chromium |
-
-**Personal data + tools**
-
-| Plugin | Purpose |
-|---|---|
-| `calendar` | iCal feed (URL or file), agenda view |
-| `todo` | Quick-entry list with age-based auto-prune (admin page) |
-| `habits` | GitHub-style 26-week contribution grid for a single habit (admin page) |
-
-**Markets**
-
-| Plugin | Purpose |
-|---|---|
-| `fx` | ECB FX rates with 30-day sparklines (frankfurter.dev — no key) |
-| `crypto` | CoinGecko crypto prices with 7-day sparklines (no key) |
-
-### Themes / fonts / admin
-
-| Plugin | Kind | Purpose |
-|---|---|---|
-| `themes_core` | theme | 19 light + dark themes covering classic + punchy palettes |
-| `theme_builder` | admin | Palette editor with live widget-style preview, per-theme save |
-| `fonts_core` | font | 38 bundled woff2 fonts in three families — modern / mid-century / thick-punchy — with a global weight picker filtered to the weights each font ships |
-
-## Building a plugin
-
-A plugin is a directory under `plugins/` with:
-
-```
-plugins/myplugin/
-  plugin.json        # manifest: id, kinds, cell_options, settings, etc.
-  server.py          # optional: fetch(options, settings, *, panel_w, panel_h, preview)
-                     #           blueprint() -> Flask Blueprint   (admin pages)
-                     #           choices(name)                   (dropdown providers)
-  client.js          # default export render(host: ShadowRoot, ctx)
-  client.css         # scoped to the cell's shadow DOM
-```
-
-The composer renders each cell into its own shadow DOM with theme palette CSS vars (`--theme-bg`, `--theme-fg`, `--theme-accent`, …) plus the global font family on `<html>`. `client.js` paints into that shadow root. There's no global stylesheet contention — every plugin's CSS is local to its cell.
-
-The composer route at `/compose/<page_id>` is what Playwright loads for a real push *and* what the dashboard editor / send page show in their preview iframes. WYSIWYG by construction.
+- [**Installation**](https://github.com/dmellok/inky-dash/wiki/Installation) — clone, virtualenv, dependencies, `.env`, the panel listener
+- [**Quickstart**](https://github.com/dmellok/inky-dash/wiki/Quickstart) — first dashboard in five minutes
+- [**Configuration**](https://github.com/dmellok/inky-dash/wiki/Configuration) — every env var explained, panel auto-detect, MQTT
+- [**Dashboards**](https://github.com/dmellok/inky-dash/wiki/Dashboards) — composing pages, layouts, per-cell themes
+- [**Schedules**](https://github.com/dmellok/inky-dash/wiki/Schedules) — interval + one-shot, drag-to-reorder priority
+- [**Send page**](https://github.com/dmellok/inky-dash/wiki/Send-page) — pushing files / URLs / webpages / saved dashboards
+- [**Themes and fonts**](https://github.com/dmellok/inky-dash/wiki/Themes-and-fonts) — palette structure, builder, font weights
+- [**Plugins**](https://github.com/dmellok/inky-dash/wiki/Plugins) — every bundled widget, theme, font, admin plugin
+- [**Building a plugin**](https://github.com/dmellok/inky-dash/wiki/Building-a-plugin) — the plugin contract
+- [**Architecture**](https://github.com/dmellok/inky-dash/wiki/Architecture) — request flow + state shape
 
 ## Project layout
 
