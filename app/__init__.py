@@ -9,7 +9,8 @@ from werkzeug.wrappers import Response
 from app import admin, composer, plugin_loader
 from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
 from app.push import PushManager
-from app.state import Cell, HistoryStore, Page, PageStore, Panel
+from app.scheduler import Scheduler
+from app.state import Cell, HistoryStore, Page, PageStore, Panel, ScheduleStore
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = (ROOT / "VERSION").read_text().strip()
@@ -57,6 +58,7 @@ def create_app(
     plugins_dir: Path | None = None,
     data_root: Path | None = None,
     bridge: MqttBridge | None = None,
+    start_scheduler: bool | None = None,
 ) -> Flask:
     app = Flask(
         __name__,
@@ -102,6 +104,17 @@ def create_app(
         topic=os.environ.get("MQTT_TOPIC_UPDATE", "inky/update"),
     )
     app.config["PUSH_MANAGER"] = push_manager
+
+    schedule_store = ScheduleStore(data_path / "core" / "schedules.json")
+    app.config["SCHEDULE_STORE"] = schedule_store
+
+    scheduler = Scheduler(store=schedule_store, push_manager=push_manager)
+    app.config["SCHEDULER"] = scheduler
+    # Auto-start the daemon thread unless we're in tests (where the
+    # `start_scheduler=False` kwarg keeps things deterministic).
+    should_start = start_scheduler if start_scheduler is not None else True
+    if should_start:
+        scheduler.start()
 
     app.register_blueprint(composer.bp)
     app.register_blueprint(admin.bp)

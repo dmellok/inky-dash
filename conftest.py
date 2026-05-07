@@ -20,7 +20,7 @@ from app import create_app
 def live_server_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
     """Run the real Flask app on an ephemeral localhost port for browser tests."""
     data_root = tmp_path_factory.mktemp("live-data")
-    app = create_app(data_root=data_root)
+    app = create_app(data_root=data_root, start_scheduler=False)
     app.config["TESTING"] = True
     # threaded=True so handlers that internally call back into the same
     # server (e.g. /api/pages/<id>/preview.png → Playwright → /compose/<id>)

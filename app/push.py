@@ -231,3 +231,166 @@ class PushManager:
                 stale.unlink()
             except OSError as err:
                 logger.warning("Could not evict %s: %s", stale, err)
+
+    # ------------------------------------------------------------------
+    # Send-page entry points: arbitrary image bytes / arbitrary URL render.
+    # Same single-flight lock + history pipeline; bypass page lookup.
+    # ------------------------------------------------------------------
+
+    def push_image(
+        self,
+        image_bytes: bytes,
+        *,
+        source_label: str = "image",
+        options: PushOptions | None = None,
+        dither: DitherMode = "floyd-steinberg",
+    ) -> PushResult:
+        """Quantize raw image bytes (any format Pillow understands), publish."""
+        opts = options or PushOptions()
+        if dither not in VALID_DITHERS:
+            raise ValueError(f"dither must be one of {sorted(VALID_DITHERS)}, got {dither!r}")
+
+        if not self._lock.acquire(blocking=False):
+            return PushResult(
+                status="busy",
+                error="another push is already in flight",
+                options=asdict(opts),
+            )
+        try:
+            return self._push_bytes_locked(image_bytes, source_label, opts, dither)
+        finally:
+            self._lock.release()
+
+    def push_webpage(
+        self,
+        url: str,
+        *,
+        viewport_w: int = 1600,
+        viewport_h: int = 1200,
+        options: PushOptions | None = None,
+        dither: DitherMode = "floyd-steinberg",
+    ) -> PushResult:
+        """Screenshot any URL with the renderer, then quantize + publish."""
+        opts = options or PushOptions()
+        if dither not in VALID_DITHERS:
+            raise ValueError(f"dither must be one of {sorted(VALID_DITHERS)}, got {dither!r}")
+
+        if not self._lock.acquire(blocking=False):
+            return PushResult(
+                status="busy",
+                error="another push is already in flight",
+                options=asdict(opts),
+            )
+        try:
+            started = time.monotonic()
+            try:
+                raw = render_to_png(
+                    RenderRequest(url=url, viewport_w=viewport_w, viewport_h=viewport_h)
+                )
+            except Exception as err:  # noqa: BLE001
+                duration = time.monotonic() - started
+                history_id = self._history.record(
+                    page_id=f"webpage:{url[:80]}",
+                    digest=None,
+                    status="failed",
+                    duration_s=duration,
+                    error=f"render: {err}",
+                    options=asdict(opts),
+                )
+                return PushResult(
+                    status="failed",
+                    error=f"render: {err}",
+                    duration_s=duration,
+                    history_id=history_id,
+                    options=asdict(opts),
+                )
+            return self._push_bytes_locked(raw, f"webpage:{url[:80]}", opts, dither)
+        finally:
+            self._lock.release()
+
+    def _push_bytes_locked(
+        self,
+        image_bytes: bytes,
+        source_label: str,
+        opts: PushOptions,
+        dither: DitherMode,
+    ) -> PushResult:
+        """Shared tail end of push_image / push_webpage: quantize → store → publish."""
+        started = time.monotonic()
+        try:
+            quantized = quantize_to_png(image_bytes, dither=dither)
+        except Exception as err:  # noqa: BLE001
+            duration = time.monotonic() - started
+            history_id = self._history.record(
+                page_id=source_label,
+                digest=None,
+                status="failed",
+                duration_s=duration,
+                error=f"quantize: {err}",
+                options=asdict(opts),
+            )
+            return PushResult(
+                status="failed",
+                error=f"quantize: {err}",
+                duration_s=duration,
+                history_id=history_id,
+                options=asdict(opts),
+            )
+
+        digest = hashlib.sha256(quantized).hexdigest()[:16]
+        artifact = self._renders_dir / f"{digest}.png"
+        if not artifact.exists():
+            artifact.write_bytes(quantized)
+        else:
+            artifact.touch()
+        self._evict_lru()
+
+        public_url = f"{self._base_url}/renders/{digest}.png"
+        payload = {
+            "url": public_url,
+            "rotate": opts.rotate,
+            "scale": opts.scale,
+            "bg": opts.bg,
+            "saturation": opts.saturation,
+        }
+        try:
+            self._bridge.publish(
+                self._topic, json.dumps(payload).encode("utf-8"), qos=1, retain=False
+            )
+        except Exception as err:  # noqa: BLE001
+            duration = time.monotonic() - started
+            history_id = self._history.record(
+                page_id=source_label,
+                digest=digest,
+                status="failed",
+                duration_s=duration,
+                error=f"mqtt: {err}",
+                options=asdict(opts),
+            )
+            return PushResult(
+                status="failed",
+                digest=digest,
+                url=public_url,
+                error=f"mqtt: {err}",
+                duration_s=duration,
+                history_id=history_id,
+                options=asdict(opts),
+            )
+
+        duration = time.monotonic() - started
+        history_id = self._history.record(
+            page_id=source_label,
+            digest=digest,
+            status="sent",
+            duration_s=duration,
+            error=None,
+            options=asdict(opts),
+        )
+        return PushResult(
+            status="sent",
+            digest=digest,
+            url=public_url,
+            duration_s=duration,
+            history_id=history_id,
+            options=asdict(opts),
+        )

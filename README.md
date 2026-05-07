@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 6 (v0.7.0).** Full bundled plugin set. Ten widget plugins (clock, countdown, year_progress, sun_moon, weather, air_quality, hn, news, todo, gallery) plus the existing themes_core / fonts_core. `server.py fetch()` is now wired through the composer (`ctx.data` carries the result), so any plugin can pull data server-side and have it embedded on the cell at render time. Phosphor icons (regular + fill) are bundled locally at [`/static/icons/`](static/icons/) and used in the data plugins (weather codes, news, hn) and the admin UI (editor buttons, theme builder). The theme builder is live on `/themes` — 12 colour pickers + name + mode, persisted to `data/plugins/themes_core/user.json`, the registry mutates in-memory so the new palette is immediately usable in the editor. Sun & moon renders the sun's path as an SVG arc with the sun's current position, plus the moon as a disc with a real lit/dark phase boundary. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 7 (v0.8.0).** Schedules + Send page. A background `Scheduler` daemon thread fires schedules whose time has come — `interval` (every N minutes) or `oneshot` (a single fire at a specific datetime). Both honour a day-of-week mask, an optional time-of-day window (with wrap-around for night-time hours), and a numeric priority. `/schedules` is the admin page (list + create/edit/delete + manual "Fire now"); `/send` is a one-page push tool that takes saved dashboards, image URLs, webpages (screenshotted), or uploaded files. PushManager grew `push_image` (raw bytes) and `push_webpage` (any URL) entry points; everything still goes through the same single-flight lock + history pipeline. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
@@ -38,6 +38,10 @@ python -m app
 # http://localhost:5555/api/listener/status                — last retained status from listener
 # http://localhost:5555/api/themes                         — loaded themes (JSON)
 # http://localhost:5555/api/fonts                          — loaded fonts (JSON)
+# http://localhost:5555/schedules                          — schedules admin
+# http://localhost:5555/send                               — send-anything page
+# http://localhost:5555/api/schedules                      — schedules CRUD
+# http://localhost:5555/api/send/{page,url,webpage,file}   — send pipelines
 # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks

@@ -1,0 +1,517 @@
+import { LitElement, html, css } from "lit";
+import "../components/index.js";
+
+const DAYS = [
+  { id: 0, label: "Mon", short: "M" },
+  { id: 1, label: "Tue", short: "T" },
+  { id: 2, label: "Wed", short: "W" },
+  { id: 3, label: "Thu", short: "T" },
+  { id: 4, label: "Fri", short: "F" },
+  { id: 5, label: "Sat", short: "S" },
+  { id: 6, label: "Sun", short: "S" },
+];
+
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 32);
+}
+
+function newSchedule(pageId) {
+  return {
+    id: "",
+    name: "",
+    page_id: pageId || "",
+    enabled: true,
+    type: "interval",
+    interval_minutes: 60,
+    fires_at: null,
+    days_of_week: [0, 1, 2, 3, 4, 5, 6],
+    time_of_day_start: null,
+    time_of_day_end: null,
+    priority: 0,
+    dither: "floyd-steinberg",
+  };
+}
+
+class SchedulesPage extends LitElement {
+  static properties = {
+    schedules: { state: true },
+    pages: { state: true },
+    error: { state: true },
+    editing: { state: true },
+    saving: { state: true },
+    firing: { state: true },
+  };
+
+  static styles = css`
+    :host {
+      display: block;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: var(--id-fg, #1a1612);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+    p.lede {
+      margin: 0 0 16px;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 12px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 8px;
+      background: var(--id-surface, #ffffff);
+      margin-bottom: 8px;
+    }
+    .row.disabled {
+      opacity: 0.55;
+    }
+    .name { font-weight: 600; }
+    .meta {
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .meta .ph {
+      margin-right: 0.3em;
+      color: var(--id-accent, #d97757);
+    }
+    .actions { display: flex; gap: 6px; }
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .form {
+      display: grid;
+      gap: 12px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    @media (max-width: 700px) {
+      .form-row { grid-template-columns: 1fr; gap: 4px; }
+      .row { grid-template-columns: 1fr; }
+    }
+    label.field {
+      font-size: 13px;
+      color: var(--id-fg-soft, #5a4f44);
+      font-weight: 500;
+    }
+    input[type="text"], input[type="number"], input[type="datetime-local"], input[type="time"], select {
+      width: 100%;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 6px;
+      font: inherit;
+      min-height: 38px;
+      background: var(--id-bg, #ffffff);
+    }
+    .day-picker {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .day-picker button {
+      min-width: 38px;
+      min-height: 38px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 6px;
+      background: transparent;
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .day-picker button[aria-pressed="true"] {
+      background: var(--id-accent, #d97757);
+      color: white;
+      border-color: transparent;
+    }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .empty {
+      text-align: center;
+      padding: 32px 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      font-style: italic;
+    }
+    .error {
+      color: var(--id-danger, #c97c70);
+      padding: 8px 0;
+    }
+    a.nav {
+      font-size: 13px;
+      color: var(--id-fg-soft, #5a4f44);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3em;
+    }
+    a.nav:hover { color: var(--id-accent, #d97757); }
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--id-surface2, #f5e8d8);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  `;
+
+  constructor() {
+    super();
+    this.schedules = [];
+    this.pages = [];
+    this.error = null;
+    this.editing = null; // null or schedule object being edited
+    this.saving = false;
+    this.firing = null; // id of schedule currently firing
+  }
+
+  async connectedCallback() {
+    super.connectedCallback();
+    await this._load();
+  }
+
+  async _load() {
+    try {
+      const [schedulesRes, pagesRes] = await Promise.all([
+        fetch("/api/schedules"),
+        fetch("/api/pages"),
+      ]);
+      this.schedules = await schedulesRes.json();
+      this.pages = await pagesRes.json();
+    } catch (err) {
+      this.error = err.message;
+    }
+  }
+
+  _startNew() {
+    this.editing = newSchedule(this.pages[0]?.id || "");
+  }
+
+  _edit(s) {
+    this.editing = JSON.parse(JSON.stringify(s));
+  }
+
+  _cancel() {
+    this.editing = null;
+    this.error = null;
+  }
+
+  async _save() {
+    this.saving = true;
+    this.error = null;
+    const draft = { ...this.editing };
+    if (!draft.id) draft.id = slugify(draft.name) || `sched-${Date.now()}`;
+    if (draft.type === "interval") {
+      draft.fires_at = null;
+    } else {
+      draft.interval_minutes = null;
+    }
+    try {
+      const res = await fetch(`/api/schedules/${encodeURIComponent(draft.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error(
+          body.details
+            ? `${body.error}: ${body.details.map((d) => d.msg).join("; ")}`
+            : body.error || `HTTP ${res.status}`
+        );
+      }
+      this.editing = null;
+      await this._load();
+    } catch (err) {
+      this.error = err.message;
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  async _delete(s) {
+    if (!confirm(`Delete schedule "${s.name}"?`)) return;
+    try {
+      await fetch(`/api/schedules/${encodeURIComponent(s.id)}`, { method: "DELETE" });
+      await this._load();
+    } catch (err) {
+      this.error = err.message;
+    }
+  }
+
+  async _toggleEnabled(s) {
+    const updated = { ...s, enabled: !s.enabled };
+    await fetch(`/api/schedules/${encodeURIComponent(s.id)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+    await this._load();
+  }
+
+  async _fireNow(s) {
+    this.firing = s.id;
+    try {
+      const res = await fetch(`/api/schedules/${encodeURIComponent(s.id)}/fire`, {
+        method: "POST",
+      });
+      const body = await res.json();
+      if (!res.ok || body.status !== "sent") {
+        this.error = `${s.name}: ${body.error || body.status}`;
+      }
+    } catch (err) {
+      this.error = err.message;
+    } finally {
+      this.firing = null;
+    }
+  }
+
+  _renderRow(s) {
+    const dowSet = new Set(s.days_of_week || []);
+    const allDays = dowSet.size === 7;
+    const dayLabel = allDays
+      ? "Every day"
+      : DAYS.filter((d) => dowSet.has(d.id))
+          .map((d) => d.label)
+          .join(", ");
+    return html`
+      <div class="row ${!s.enabled ? "disabled" : ""}">
+        <div>
+          <div class="name">${s.name} <span class="badge">${s.type}</span></div>
+          <div class="meta">
+            <span><i class="ph ph-cube"></i>${s.page_id}</span>
+            ${s.type === "interval"
+              ? html`<span><i class="ph ph-clock-clockwise"></i>every ${s.interval_minutes} min</span>`
+              : html`<span><i class="ph ph-calendar"></i>${s.fires_at}${s.fired ? " (fired)" : ""}</span>`}
+            <span><i class="ph ph-calendar-blank"></i>${dayLabel}</span>
+            ${s.priority
+              ? html`<span><i class="ph ph-arrow-up"></i>priority ${s.priority}</span>`
+              : null}
+          </div>
+        </div>
+        <label class="toggle">
+          <input
+            type="checkbox"
+            ?checked=${s.enabled}
+            @change=${() => this._toggleEnabled(s)}
+          />
+          ${s.enabled ? "On" : "Off"}
+        </label>
+        <div class="actions">
+          <id-button @click=${() => this._fireNow(s)} ?disabled=${this.firing === s.id}>
+            <i class="ph ph-paper-plane-tilt"></i>
+            ${this.firing === s.id ? "Firing…" : "Fire now"}
+          </id-button>
+        </div>
+        <div class="actions">
+          <id-button @click=${() => this._edit(s)}>
+            <i class="ph ph-pencil-simple"></i>
+          </id-button>
+          <id-button variant="danger" @click=${() => this._delete(s)}>
+            <i class="ph ph-trash"></i>
+          </id-button>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderEditor() {
+    const e = this.editing;
+    const toggleDay = (dayId) => {
+      const set = new Set(e.days_of_week || []);
+      if (set.has(dayId)) set.delete(dayId);
+      else set.add(dayId);
+      this.editing = { ...e, days_of_week: [...set].sort((a, b) => a - b) };
+    };
+    return html`
+      <id-card heading=${e.id ? `Edit "${e.name || e.id}"` : "New schedule"}>
+        <div class="form">
+          <div class="form-row">
+            <label class="field">Name</label>
+            <input
+              type="text"
+              .value=${e.name}
+              placeholder="e.g. Morning weather"
+              @input=${(ev) => (this.editing = { ...e, name: ev.target.value })}
+            />
+          </div>
+          <div class="form-row">
+            <label class="field">Page</label>
+            <select
+              @change=${(ev) => (this.editing = { ...e, page_id: ev.target.value })}
+            >
+              ${this.pages.map(
+                (p) => html`<option value=${p.id} ?selected=${p.id === e.page_id}>${p.name} (${p.id})</option>`
+              )}
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="field">Type</label>
+            <select
+              @change=${(ev) => (this.editing = { ...e, type: ev.target.value })}
+            >
+              <option value="interval" ?selected=${e.type === "interval"}>Interval (recurring)</option>
+              <option value="oneshot" ?selected=${e.type === "oneshot"}>One-shot (single fire)</option>
+            </select>
+          </div>
+          ${e.type === "interval"
+            ? html`
+                <div class="form-row">
+                  <label class="field">Every (minutes)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10080"
+                    .value=${String(e.interval_minutes ?? 60)}
+                    @input=${(ev) =>
+                      (this.editing = { ...e, interval_minutes: Number(ev.target.value) })}
+                  />
+                </div>
+              `
+            : html`
+                <div class="form-row">
+                  <label class="field">Fires at</label>
+                  <input
+                    type="datetime-local"
+                    .value=${(e.fires_at || "").slice(0, 16)}
+                    @input=${(ev) => (this.editing = { ...e, fires_at: ev.target.value })}
+                  />
+                </div>
+              `}
+          <div class="form-row">
+            <label class="field">Days of week</label>
+            <div class="day-picker">
+              ${DAYS.map(
+                (d) => html`
+                  <button
+                    type="button"
+                    aria-pressed=${(e.days_of_week || []).includes(d.id) ? "true" : "false"}
+                    @click=${() => toggleDay(d.id)}
+                  >
+                    ${d.short}
+                  </button>
+                `
+              )}
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="field">Time-of-day window</label>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input
+                type="time"
+                .value=${e.time_of_day_start || ""}
+                @input=${(ev) =>
+                  (this.editing = { ...e, time_of_day_start: ev.target.value || null })}
+                style="flex:1;"
+              />
+              <span style="color:var(--id-fg-soft);">to</span>
+              <input
+                type="time"
+                .value=${e.time_of_day_end || ""}
+                @input=${(ev) =>
+                  (this.editing = { ...e, time_of_day_end: ev.target.value || null })}
+                style="flex:1;"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="field">Priority</label>
+            <input
+              type="number"
+              .value=${String(e.priority || 0)}
+              @input=${(ev) => (this.editing = { ...e, priority: Number(ev.target.value) || 0 })}
+            />
+          </div>
+          <div class="form-row">
+            <label class="field">Dither</label>
+            <select
+              @change=${(ev) => (this.editing = { ...e, dither: ev.target.value })}
+            >
+              <option value="floyd-steinberg" ?selected=${e.dither === "floyd-steinberg"}>Floyd–Steinberg</option>
+              <option value="none" ?selected=${e.dither === "none"}>None</option>
+            </select>
+          </div>
+        </div>
+        ${this.error ? html`<p class="error">${this.error}</p>` : null}
+        <div class="toolbar">
+          <id-button variant="primary" ?disabled=${this.saving} @click=${() => this._save()}>
+            <i class="ph ph-floppy-disk"></i> ${this.saving ? "Saving…" : "Save"}
+          </id-button>
+          <id-button @click=${() => this._cancel()}>
+            <i class="ph ph-x"></i> Cancel
+          </id-button>
+        </div>
+      </id-card>
+    `;
+  }
+
+  render() {
+    return html`
+      <link rel="stylesheet" href="/static/icons/phosphor.css">
+      <a class="nav" href="/editor"><i class="ph ph-arrow-left"></i> back to editor</a>
+      <h1>Schedules</h1>
+      <p class="lede">
+        Trigger pushes on a recurring interval or at a specific time.
+        Schedules run in the background as long as the companion is up.
+      </p>
+
+      ${this.editing ? this._renderEditor() : null}
+
+      <div class="section-head">
+        <span>${this.schedules.length} schedule${this.schedules.length === 1 ? "" : "s"}</span>
+        ${!this.editing
+          ? html`<id-button variant="primary" @click=${() => this._startNew()}>
+              <i class="ph ph-plus"></i> New schedule
+            </id-button>`
+          : null}
+      </div>
+
+      ${!this.editing && this.error ? html`<p class="error">${this.error}</p>` : null}
+
+      ${this.schedules.length === 0
+        ? html`<div class="empty">No schedules yet.</div>`
+        : this.schedules.map((s) => this._renderRow(s))}
+    `;
+  }
+}
+
+customElements.define("schedules-page", SchedulesPage);
+document.body.append(document.createElement("schedules-page"));

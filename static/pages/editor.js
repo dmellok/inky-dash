@@ -804,6 +804,15 @@ class IdEditor extends LitElement {
           <i class="ph ph-paper-plane-tilt"></i>
           ${this.pushing ? "Pushing…" : "Push to panel"}
         </id-button>
+        <id-button @click=${() => (window.location.href = "/send")}>
+          <i class="ph ph-paper-plane"></i> Send page
+        </id-button>
+        <id-button @click=${() => (window.location.href = "/schedules")}>
+          <i class="ph ph-clock-clockwise"></i> Schedules
+        </id-button>
+        <id-button @click=${() => (window.location.href = "/themes")}>
+          <i class="ph ph-palette"></i> Themes
+        </id-button>
         <id-button
           @click=${() =>
             window.open(`/compose/${encodeURIComponent(this.page.id)}`, "_blank")}

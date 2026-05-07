@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Send — Inky Dash</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='icons/phosphor.css') }}">
+  <style>
+    :root {
+      --id-bg: #ffffff;
+      --id-fg: #1a1612;
+      --id-fg-soft: #5a4f44;
+      --id-surface: #ffffff;
+      --id-surface2: #f5e8d8;
+      --id-divider: #c8b89b;
+      --id-accent: #d97757;
+      --id-accent-soft: #aa5a3f;
+      --id-danger: #c97c70;
+    }
+    body { margin: 0; background: var(--id-bg); color: var(--id-fg); }
+  </style>
+</head>
+<body>
+  <script type="module" src="{{ url_for('static', filename='dist/send.js') }}"></script>
+</body>
+</html>

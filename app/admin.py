@@ -18,7 +18,8 @@ from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
 from app.quantizer import DitherMode, quantize_to_png
 from app.renderer import RenderRequest, render_to_png
-from app.state import HistoryStore, Page, PageStore
+from app.scheduler import Scheduler
+from app.state import HistoryStore, Page, PageStore, Schedule, ScheduleStore
 
 _VALID_DITHER_MODES: frozenset[str] = frozenset({"floyd-steinberg", "none"})
 
@@ -330,6 +331,206 @@ def api_history() -> Response:
             for r in rows
         ]
     )
+
+
+def _schedules() -> ScheduleStore:
+    s: ScheduleStore = current_app.config["SCHEDULE_STORE"]
+    return s
+
+
+def _scheduler() -> Scheduler:
+    s: Scheduler = current_app.config["SCHEDULER"]
+    return s
+
+
+@bp.get("/schedules")
+def schedules_page() -> str:
+    return render_template("schedules.html")
+
+
+@bp.get("/send")
+def send_page() -> str:
+    return render_template("send.html")
+
+
+@bp.get("/api/schedules")
+def api_list_schedules() -> Response:
+    return jsonify([s.model_dump(mode="json", exclude_none=True) for s in _schedules().all()])
+
+
+@bp.get("/api/schedules/<schedule_id>")
+def api_get_schedule(schedule_id: str) -> Response:
+    s = _schedules().get(schedule_id)
+    if s is None:
+        abort(404)
+    return jsonify(s.model_dump(mode="json", exclude_none=True))
+
+
+@bp.put("/api/schedules/<schedule_id>")
+def api_save_schedule(schedule_id: str) -> tuple[Response, int] | Response:
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+    if body.get("id") != schedule_id:
+        return jsonify({"error": "schedule id in body must match URL"}), 400
+    try:
+        schedule = Schedule.model_validate(body)
+    except ValidationError as err:
+        details = [
+            {"loc": ".".join(str(p) for p in e["loc"]), "msg": e["msg"]} for e in err.errors()
+        ]
+        return jsonify({"error": "validation", "details": details}), 400
+    _schedules().upsert(schedule)
+    return jsonify(schedule.model_dump(mode="json", exclude_none=True))
+
+
+@bp.delete("/api/schedules/<schedule_id>")
+def api_delete_schedule(schedule_id: str) -> tuple[str, int]:
+    return ("", 204) if _schedules().delete(schedule_id) else ("", 404)
+
+
+@bp.post("/api/schedules/<schedule_id>/fire")
+def api_fire_schedule(schedule_id: str) -> tuple[Response, int] | Response:
+    """Manually fire a schedule once, ignoring its time constraints."""
+    result = _scheduler().fire_now(schedule_id)
+    if result is None:
+        return ("", 404)  # type: ignore[return-value]
+    return jsonify(
+        {
+            "status": result.status,
+            "digest": result.digest,
+            "url": result.url,
+            "error": result.error,
+            "duration_s": round(result.duration_s, 3),
+        }
+    )
+
+
+def _push_options_from_body(body: dict[str, Any]) -> tuple[PushOptions | None, str | None]:
+    """Extract optional rotate/scale/bg/saturation overrides from a send body."""
+    kwargs: dict[str, Any] = {}
+    for field_name in ("rotate", "scale", "bg", "saturation"):
+        if field_name in body:
+            kwargs[field_name] = body[field_name]
+    if not kwargs:
+        return None, None
+    try:
+        return PushOptions(**kwargs), None
+    except (TypeError, ValueError) as err:
+        return None, str(err)
+
+
+def _send_response(result: Any) -> Response | tuple[Response, int]:
+    payload = jsonify(
+        {
+            "status": result.status,
+            "digest": result.digest,
+            "url": result.url,
+            "error": result.error,
+            "duration_s": round(result.duration_s, 3),
+            "history_id": result.history_id,
+        }
+    )
+    if result.status == "sent":
+        return payload
+    if result.status == "busy":
+        return payload, 409
+    if result.status == "not_found":
+        return payload, 404
+    return payload, 502
+
+
+@bp.post("/api/send/page")
+def api_send_page() -> tuple[Response, int] | Response:
+    body = request.get_json(silent=True) or {}
+    page_id = body.get("page_id")
+    if not page_id or not isinstance(page_id, str):
+        return jsonify({"error": "page_id is required"}), 400
+    dither = body.get("dither", "floyd-steinberg")
+    if dither not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither!r}"}), 400
+    options, err = _push_options_from_body(body)
+    if err is not None:
+        return jsonify({"error": err}), 400
+    result = _push_manager().push(page_id, options=options, dither=cast_dither(dither))
+    return _send_response(result)
+
+
+@bp.post("/api/send/url")
+def api_send_url() -> tuple[Response, int] | Response:
+    """Download an image from a URL and push it as-is (after quantization)."""
+    import urllib.request
+
+    body = request.get_json(silent=True) or {}
+    url = (body.get("url") or "").strip()
+    if not url or not (url.startswith("http://") or url.startswith("https://")):
+        return jsonify({"error": "url must be an http(s) URL"}), 400
+    dither = body.get("dither", "floyd-steinberg")
+    if dither not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither!r}"}), 400
+    options, err = _push_options_from_body(body)
+    if err is not None:
+        return jsonify({"error": err}), 400
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "inky-dash/0.8"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            image_bytes = resp.read()
+    except Exception as err:  # noqa: BLE001
+        return jsonify({"error": f"download: {err}"}), 502
+    result = _push_manager().push_image(
+        image_bytes,
+        source_label=f"url:{url[:80]}",
+        options=options,
+        dither=cast_dither(dither),
+    )
+    return _send_response(result)
+
+
+@bp.post("/api/send/webpage")
+def api_send_webpage() -> tuple[Response, int] | Response:
+    """Screenshot any URL with the renderer, then push the result."""
+    body = request.get_json(silent=True) or {}
+    url = (body.get("url") or "").strip()
+    if not url or not (url.startswith("http://") or url.startswith("https://")):
+        return jsonify({"error": "url must be an http(s) URL"}), 400
+    dither = body.get("dither", "floyd-steinberg")
+    if dither not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither!r}"}), 400
+    viewport_w = int(body.get("viewport_w", 1600) or 1600)
+    viewport_h = int(body.get("viewport_h", 1200) or 1200)
+    options, err = _push_options_from_body(body)
+    if err is not None:
+        return jsonify({"error": err}), 400
+    result = _push_manager().push_webpage(
+        url,
+        viewport_w=viewport_w,
+        viewport_h=viewport_h,
+        options=options,
+        dither=cast_dither(dither),
+    )
+    return _send_response(result)
+
+
+@bp.post("/api/send/file")
+def api_send_file() -> tuple[Response, int] | Response:
+    """Upload an image file directly (multipart/form-data)."""
+    if "file" not in request.files:
+        return jsonify({"error": "expected a 'file' part in multipart body"}), 400
+    upload = request.files["file"]
+    if upload.filename == "":
+        return jsonify({"error": "no file selected"}), 400
+    dither = request.form.get("dither", "floyd-steinberg")
+    if dither not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither!r}"}), 400
+    image_bytes = upload.read()
+    if not image_bytes:
+        return jsonify({"error": "uploaded file is empty"}), 400
+    result = _push_manager().push_image(
+        image_bytes,
+        source_label=f"file:{upload.filename}",
+        dither=cast_dither(dither),
+    )
+    return _send_response(result)
 
 
 @bp.get("/api/listener/status")
