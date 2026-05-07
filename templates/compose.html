@@ -5,25 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.name|default("Compose") }}</title>
   <style>
+    {{ page.font_face_css|safe }}
+
     html, body { margin: 0; padding: 0; }
     body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: #fff;
-      color: #1a1612;
+      font-family: '{{ page.font_family }}', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: {{ page.palette.bg }};
+      color: {{ page.palette.fg }};
     }
     .panel {
       position: relative;
       width: {{ page.panel.w }}px;
       height: {{ page.panel.h }}px;
       overflow: hidden;
+      background: {{ page.palette.bg }};
     }
     .cell {
       position: absolute;
       box-sizing: border-box;
       overflow: hidden;
+      border-radius: {{ page.corner_radius }}px;
+      /* Each cell is a sizing container so plugins can use cqw/cqh CSS units
+         to auto-scale to their cell dimensions. Avoids overflow at the panel
+         level — plugin CSS scales itself, no JS measuring needed. */
+      container-type: size;
     }
     .cell.error {
-      outline: 2px solid #c97c70;
+      outline: 2px solid {{ page.palette.danger }};
     }
   </style>
 </head>
@@ -38,7 +46,11 @@
          data-cell-h="{{ cell.h }}"
          data-panel-w="{{ page.panel.w }}"
          data-panel-h="{{ page.panel.h }}"
-         style="left: {{ cell.x }}px; top: {{ cell.y }}px; width: {{ cell.w }}px; height: {{ cell.h }}px;"></div>
+         data-theme-palette='{{ cell.palette|tojson }}'
+         data-font-family="{{ cell.font_family }}"
+         style="left: {{ cell.x }}px; top: {{ cell.y }}px; width: {{ cell.w }}px; height: {{ cell.h }}px;
+                font-family: '{{ cell.font_family }}', system-ui, sans-serif;
+                {% for key, val in cell.palette.items() %}--theme-{{ key }}: {{ val }};{% endfor %}"></div>
     {% endfor %}
   </div>
   <script type="module" src="{{ url_for('static', filename='composer.js') }}"></script>

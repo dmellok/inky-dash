@@ -29,6 +29,40 @@ const LAYOUTS = {
       { x: 1, y: 1, w: 1, h: 1 },
     ],
   },
+  // Hero layouts use a 2-col × 3-row grid: hero spans 2×2, two side cells are 1×1.
+  "hero-top": {
+    label: "Hero top",
+    cells: [
+      { x: 0, y: 0, w: 2, h: 2 },
+      { x: 0, y: 2, w: 1, h: 1 },
+      { x: 1, y: 2, w: 1, h: 1 },
+    ],
+  },
+  "hero-bottom": {
+    label: "Hero bottom",
+    cells: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 1, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 2, h: 2 },
+    ],
+  },
+  // Hero left/right use 3-col × 2-row: hero spans 2×2, two stacked cells are 1×1.
+  "hero-left": {
+    label: "Hero left",
+    cells: [
+      { x: 0, y: 0, w: 2, h: 2 },
+      { x: 2, y: 0, w: 1, h: 1 },
+      { x: 2, y: 1, w: 1, h: 1 },
+    ],
+  },
+  "hero-right": {
+    label: "Hero right",
+    cells: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 1, y: 0, w: 2, h: 2 },
+    ],
+  },
 };
 
 function pixelize(layoutKey, panel) {
@@ -66,6 +100,8 @@ class IdEditor extends LitElement {
     pageId: { type: String, attribute: "page-id" },
     page: { state: true },
     widgets: { state: true },
+    themes: { state: true },
+    fonts: { state: true },
     saving: { state: true },
     saved: { state: true },
     error: { state: true },
@@ -116,34 +152,56 @@ class IdEditor extends LitElement {
         grid-template-columns: 1fr 1fr;
       }
     }
-    .canvas {
+    .picker-frame {
       position: relative;
-      background: var(--id-surface2, #f5e8d8);
+      width: 100%;
+      aspect-ratio: ${PANEL_W} / ${PANEL_H};
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 8px;
-      aspect-ratio: ${PANEL_W} / ${PANEL_H};
       overflow: hidden;
+      background: var(--id-surface2, #f5e8d8);
     }
-    .canvas-cell {
+    .picker-frame iframe {
       position: absolute;
-      border: 1px solid var(--id-divider, #c8b89b);
-      background: var(--id-surface, #ffffff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      color: var(--id-fg-soft, #5a4f44);
-      cursor: pointer;
+      top: 0;
+      left: 0;
+      width: ${PANEL_W}px;
+      height: ${PANEL_H}px;
+      border: 0;
+      transform-origin: top left;
+      pointer-events: none;
+    }
+    .cell-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .cell-hit {
+      position: absolute;
       box-sizing: border-box;
+      border: 2px solid transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background 100ms ease, border-color 100ms ease;
     }
-    .canvas-cell.selected {
-      border: 2px solid var(--id-accent, #d97757);
-      z-index: 1;
+    .cell-hit:hover {
+      background: rgba(0, 0, 0, 0.06);
+      border-color: rgba(0, 0, 0, 0.2);
     }
-    .layout-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+    .cell-hit[data-selected="true"] {
+      border-color: var(--id-accent, #d97757);
+      background: rgba(217, 119, 87, 0.12);
+    }
+    .cell-hit-label {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      pointer-events: none;
     }
     input[type="text"], select {
       width: 100%;
@@ -250,6 +308,8 @@ class IdEditor extends LitElement {
     this.pageId = null;
     this.page = null;
     this.widgets = [];
+    this.themes = [];
+    this.fonts = [];
     this.saving = false;
     this.saved = false;
     this.error = null;
@@ -265,8 +325,14 @@ class IdEditor extends LitElement {
   async connectedCallback() {
     super.connectedCallback();
     try {
-      const widgetsRes = await fetch("/api/widgets");
+      const [widgetsRes, themesRes, fontsRes] = await Promise.all([
+        fetch("/api/widgets"),
+        fetch("/api/themes"),
+        fetch("/api/fonts"),
+      ]);
       this.widgets = await widgetsRes.json();
+      this.themes = await themesRes.json();
+      this.fonts = await fontsRes.json();
       if (this.pageId) {
         const pageRes = await fetch(`/api/pages/${encodeURIComponent(this.pageId)}`);
         if (pageRes.ok) {
@@ -304,6 +370,7 @@ class IdEditor extends LitElement {
     this.layoutKey = key;
     if (this.selectedCell >= newCells.length) this.selectedCell = 0;
     this.saved = false;
+    this._scheduleAutoSave();
   }
 
   _setCellPlugin(index, pluginId) {
@@ -311,6 +378,7 @@ class IdEditor extends LitElement {
     newCells[index] = { ...newCells[index], plugin: pluginId, options: {} };
     this.page = { ...this.page, cells: newCells };
     this.saved = false;
+    this._scheduleAutoSave();
   }
 
   _setCellOption(index, optName, value) {
@@ -321,11 +389,51 @@ class IdEditor extends LitElement {
     };
     this.page = { ...this.page, cells: newCells };
     this.saved = false;
+    this._scheduleAutoSave();
   }
 
   _setName(name) {
     this.page = { ...this.page, name };
     this.saved = false;
+    this._scheduleAutoSave();
+  }
+
+  _setPageTheme(themeId) {
+    this.page = { ...this.page, theme: themeId };
+    this.saved = false;
+    this._scheduleAutoSave();
+  }
+
+  _setPageFont(fontId) {
+    this.page = { ...this.page, font: fontId };
+    this.saved = false;
+    this._scheduleAutoSave();
+  }
+
+  _setPageGap(value) {
+    this.page = { ...this.page, gap: Number(value) || 0 };
+    this.saved = false;
+    this._scheduleAutoSave();
+  }
+
+  _setPageCornerRadius(value) {
+    this.page = { ...this.page, corner_radius: Number(value) || 0 };
+    this.saved = false;
+    this._scheduleAutoSave();
+  }
+
+  _setCellOverride(index, field, value) {
+    const newCells = this.page.cells.slice();
+    const cell = { ...newCells[index] };
+    if (value === "" || value === null) {
+      delete cell[field];
+    } else {
+      cell[field] = value;
+    }
+    newCells[index] = cell;
+    this.page = { ...this.page, cells: newCells };
+    this.saved = false;
+    this._scheduleAutoSave();
   }
 
   async _save() {
@@ -351,6 +459,15 @@ class IdEditor extends LitElement {
     }
   }
 
+  // Debounced auto-save: every edit triggers a save 250ms after the last
+  // change, then the iframe URL's cache-bust forces a reload.
+  _scheduleAutoSave() {
+    if (this._saveTimer) clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      if (this.page) this._save();
+    }, 250);
+  }
+
   async _push() {
     this.pushing = true;
     this.pushResult = null;
@@ -372,23 +489,29 @@ class IdEditor extends LitElement {
     }
   }
 
-  _scaleIframe() {
-    const wrap = this.shadowRoot?.querySelector(".preview-tile-frame.iframe-wrap");
-    const iframe = wrap?.querySelector("iframe");
-    if (!wrap || !iframe) return;
-    const scale = wrap.clientWidth / PANEL_W;
-    iframe.style.transform = `scale(${scale})`;
+  _scaleIframes() {
+    const wraps = this.shadowRoot?.querySelectorAll(".iframe-wrap");
+    if (!wraps) return;
+    for (const wrap of wraps) {
+      const iframe = wrap.querySelector("iframe");
+      if (!iframe) continue;
+      const scale = wrap.clientWidth / PANEL_W;
+      iframe.style.transform = `scale(${scale})`;
+    }
   }
 
   firstUpdated() {
-    this._resizeObserver = new ResizeObserver(() => this._scaleIframe());
-    const wrap = this.shadowRoot?.querySelector(".preview-tile-frame.iframe-wrap");
-    if (wrap) this._resizeObserver.observe(wrap);
-    this._scaleIframe();
+    this._resizeObserver = new ResizeObserver(() => this._scaleIframes());
+    const wraps = this.shadowRoot?.querySelectorAll(".iframe-wrap");
+    wraps?.forEach((w) => this._resizeObserver.observe(w));
+    this._scaleIframes();
   }
 
   updated() {
-    this._scaleIframe();
+    this._scaleIframes();
+    // Watch any newly-added iframe-wraps (e.g. quantized preview tile appearing).
+    const wraps = this.shadowRoot?.querySelectorAll(".iframe-wrap");
+    wraps?.forEach((w) => this._resizeObserver?.observe(w));
   }
 
   disconnectedCallback() {
@@ -396,14 +519,13 @@ class IdEditor extends LitElement {
     this._resizeObserver?.disconnect();
   }
 
-  _renderPreview() {
+  _renderQuantizedPreview() {
     if (!this.page) return null;
     const id = encodeURIComponent(this.page.id);
     const cacheBust = this.lastSavedAt || "initial";
-    const composeUrl = `/compose/${id}?for_push=1&t=${cacheBust}`;
     const previewUrl = `/api/pages/${id}/preview.png?dither=${this.dither}&t=${cacheBust}`;
     return html`
-      <id-card heading="Preview" subheading="Live render (left) vs how the panel will paint it (right).">
+      <id-card heading="Panel paint" subheading="The same render projected to the Spectra 6 gamut — what the panel will actually paint.">
         <id-form-row label="Dither">
           <select
             .value=${this.dither}
@@ -416,50 +538,56 @@ class IdEditor extends LitElement {
             <option value="none">None (nearest colour)</option>
           </select>
         </id-form-row>
-        <div class="preview-grid">
-          <div class="preview-tile">
-            <div class="preview-tile-label">Live</div>
-            <div class="preview-tile-frame iframe-wrap">
-              <iframe src=${composeUrl} title="Live preview" loading="lazy"></iframe>
-            </div>
+        <div class="preview-tile">
+          <div class="preview-tile-label">
+            <span>Quantized</span>
+            ${this.previewLoading ? html`<span class="preview-spinner"></span>` : null}
           </div>
-          <div class="preview-tile">
-            <div class="preview-tile-label">
-              <span>Quantized</span>
-              ${this.previewLoading ? html`<span class="preview-spinner"></span>` : null}
-            </div>
-            <div class="preview-tile-frame">
-              <img
-                src=${previewUrl}
-                alt="Quantized preview"
-                loading="lazy"
-                @load=${() => (this.previewLoading = false)}
-                @loadstart=${() => (this.previewLoading = true)}
-              />
-            </div>
+          <div class="preview-tile-frame">
+            <img
+              src=${previewUrl}
+              alt="Quantized preview"
+              loading="lazy"
+              @load=${() => (this.previewLoading = false)}
+              @loadstart=${() => (this.previewLoading = true)}
+            />
           </div>
         </div>
       </id-card>
     `;
   }
 
-  _renderCanvas() {
+  _renderPicker() {
     const cells = this.page.cells;
-    return html`<div class="canvas">
-      ${cells.map(
-        (c, i) => html`
-          <div
-            class="canvas-cell ${i === this.selectedCell ? "selected" : ""}"
-            style="left: ${(c.x / PANEL_W) * 100}%;
-                   top: ${(c.y / PANEL_H) * 100}%;
-                   width: ${(c.w / PANEL_W) * 100}%;
-                   height: ${(c.h / PANEL_H) * 100}%;"
-            @click=${() => (this.selectedCell = i)}
-          >
-            ${c.plugin}
-          </div>
-        `
-      )}
+    const id = encodeURIComponent(this.page.id);
+    const cacheBust = this.lastSavedAt || "initial";
+    const composeUrl = `/compose/${id}?for_push=1&t=${cacheBust}`;
+    // Match the composer's gap inset so the click targets sit on top of the
+    // visually-shrunken cells in the iframe.
+    const halfGap = (this.page.gap || 0) / 2;
+    return html`<div class="picker-frame iframe-wrap">
+      <iframe src=${composeUrl} title="Live preview"></iframe>
+      <div class="cell-overlay">
+        ${cells.map((c, i) => {
+          const x = c.x + halfGap;
+          const y = c.y + halfGap;
+          const w = Math.max(1, c.w - halfGap * 2);
+          const h = Math.max(1, c.h - halfGap * 2);
+          return html`
+            <div
+              class="cell-hit"
+              data-selected=${i === this.selectedCell ? "true" : "false"}
+              style="left: ${(x / PANEL_W) * 100}%;
+                     top: ${(y / PANEL_H) * 100}%;
+                     width: ${(w / PANEL_W) * 100}%;
+                     height: ${(h / PANEL_H) * 100}%;"
+              @click=${() => (this.selectedCell = i)}
+            >
+              <span class="cell-hit-label">${i + 1} · ${c.plugin}</span>
+            </div>
+          `;
+        })}
+      </div>
     </div>`;
   }
 
@@ -485,9 +613,39 @@ class IdEditor extends LitElement {
             )}
           </select>
         </id-form-row>
+        <id-form-row label="Theme override" hint="Leave on Inherit to use the page theme.">
+          <select
+            @change=${(e) =>
+              this._setCellOverride(this.selectedCell, "theme", e.target.value || null)}
+          >
+            <option value="" ?selected=${!cell.theme}>Inherit page</option>
+            ${this.themes.map(
+              (t) => html`
+                <option value=${t.id} ?selected=${t.id === cell.theme}>
+                  ${t.name}
+                </option>
+              `
+            )}
+          </select>
+        </id-form-row>
+        <id-form-row label="Font override">
+          <select
+            @change=${(e) =>
+              this._setCellOverride(this.selectedCell, "font", e.target.value || null)}
+          >
+            <option value="" ?selected=${!cell.font}>Inherit page</option>
+            ${this.fonts.map(
+              (f) => html`
+                <option value=${f.id} ?selected=${f.id === cell.font}>
+                  ${f.name}
+                </option>
+              `
+            )}
+          </select>
+        </id-form-row>
         ${widget && (widget.cell_options || []).length
           ? widget.cell_options.map((opt) => this._renderOption(cell, opt))
-          : html`<p class="empty">No options.</p>`}
+          : html`<p class="empty">No widget options.</p>`}
       </id-card>
     `;
   }
@@ -536,9 +694,11 @@ class IdEditor extends LitElement {
         <div>
           ${this.error
             ? html`<span class="status error">${this.error}</span>`
-            : this.saved
-              ? html`<span class="status">Saved.</span>`
-              : html`<span class="status">Unsaved changes</span>`}
+            : this.saving
+              ? html`<span class="status">Saving…</span>`
+              : this.saved
+                ? html`<span class="status">Saved · auto-saves on edit</span>`
+                : html`<span class="status">Auto-saves on edit</span>`}
         </div>
       </div>
 
@@ -550,19 +710,73 @@ class IdEditor extends LitElement {
             @input=${(e) => this._setName(e.target.value)}
           />
         </id-form-row>
-        <id-form-row label="Layout" hint="Pick a preset; M2 ships four.">
-          <div class="layout-row">
+        <id-form-row label="Layout">
+          <select
+            @change=${(e) => this._onLayoutChange(e.target.value)}
+          >
             ${Object.entries(LAYOUTS).map(
               ([key, l]) => html`
-                <id-button
-                  variant=${this.layoutKey === key ? "primary" : "default"}
-                  @click=${() => this._onLayoutChange(key)}
-                >
+                <option value=${key} ?selected=${this.layoutKey === key}>
                   ${l.label}
-                </id-button>
+                </option>
               `
             )}
-          </div>
+            ${this.layoutKey === "custom"
+              ? html`<option value="custom" selected>Custom (manual)</option>`
+              : null}
+          </select>
+        </id-form-row>
+        <id-form-row label="Theme" hint="Page-wide; cells can override.">
+          <select
+            @change=${(e) => this._setPageTheme(e.target.value)}
+          >
+            ${this.themes.length === 0
+              ? html`<option>(no themes loaded)</option>`
+              : null}
+            ${this.themes.map(
+              (t) => html`
+                <option value=${t.id} ?selected=${t.id === (this.page.theme || "default")}>
+                  ${t.name}${t.mode ? ` — ${t.mode}` : ""}
+                </option>
+              `
+            )}
+          </select>
+        </id-form-row>
+        <id-form-row label="Font">
+          <select
+            @change=${(e) => this._setPageFont(e.target.value)}
+          >
+            ${this.fonts.length === 0
+              ? html`<option>(no fonts loaded)</option>`
+              : null}
+            ${this.fonts.map(
+              (f) => html`
+                <option value=${f.id} ?selected=${f.id === (this.page.font || "default")}>
+                  ${f.name}${f.category ? ` — ${f.category}` : ""}
+                </option>
+              `
+            )}
+          </select>
+        </id-form-row>
+        <id-form-row label="Gap" hint="Pixels between widgets and around the panel edge.">
+          <id-slider
+            min="0"
+            max="120"
+            step="2"
+            value=${this.page.gap || 0}
+            suffix="px"
+            @change=${(e) => this._setPageGap(e.detail.value)}
+          ></id-slider>
+        </id-form-row>
+        <id-form-row label="Corner radius">
+          <id-slider
+            min="0"
+            max="120"
+            step="2"
+            value=${this.page.corner_radius || 0}
+            suffix="px"
+            @change=${(e) => this._setPageCornerRadius(e.detail.value)}
+          ></id-slider>
         </id-form-row>
       </id-card>
 
@@ -571,9 +785,9 @@ class IdEditor extends LitElement {
       <div class="grid">
         <div>
           <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--id-fg-soft); margin: 0 0 8px;">
-            Layout (${PANEL_W}×${PANEL_H})
+            Live preview · ${PANEL_W}×${PANEL_H} · click a region to edit it
           </h2>
-          ${this._renderCanvas()}
+          ${this._renderPicker()}
         </div>
         <div>${this._renderCellOptions()}</div>
       </div>
@@ -583,15 +797,6 @@ class IdEditor extends LitElement {
       <div class="actions">
         <id-button
           variant="primary"
-          ?disabled=${this.saving}
-          @click=${async () => {
-            this.previewLoading = true;
-            await this._save();
-          }}
-        >
-          ${this.saving ? "Saving…" : "Save"}
-        </id-button>
-        <id-button
           ?disabled=${this.pushing || this.saving}
           @click=${() => this._push()}
         >
@@ -614,7 +819,7 @@ class IdEditor extends LitElement {
 
       <div style="height: 16px"></div>
 
-      ${this._renderPreview()}
+      ${this._renderQuantizedPreview()}
     `;
   }
 }

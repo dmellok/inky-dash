@@ -1,6 +1,6 @@
 [project]
 name = "inky-dash"
-version = "0.5.0"
+version = "0.6.0"
 description = "Flask companion that composes dashboards in the browser, renders to PNG, pushes to a Pimoroni Inky Impression panel over MQTT."
 readme = "README.md"
 requires-python = ">=3.11"

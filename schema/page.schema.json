@@ -17,12 +17,26 @@
     "theme": {
       "type": "string",
       "default": "default",
-      "description": "Theme id resolved by themes_core in M5; ignored until then."
+      "description": "Theme id resolved by themes_core."
     },
     "font": {
       "type": "string",
       "default": "default",
-      "description": "Font id resolved by fonts_core in M5; ignored until then."
+      "description": "Font id resolved by fonts_core."
+    },
+    "gap": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 200,
+      "default": 0,
+      "description": "Pixel gap inset around every cell. Half is applied per side, so adjacent cells get the full gap between them and the panel edges get half."
+    },
+    "corner_radius": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 200,
+      "default": 0,
+      "description": "Rounded corners on each cell, in pixels."
     },
     "cells": {
       "type": "array",
@@ -50,7 +64,15 @@
         "w": { "type": "integer", "minimum": 1 },
         "h": { "type": "integer", "minimum": 1 },
         "plugin": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-        "options": { "type": "object" }
+        "options": { "type": "object" },
+        "theme": {
+          "type": "string",
+          "description": "Optional theme id override; falls back to the page's theme."
+        },
+        "font": {
+          "type": "string",
+          "description": "Optional font id override; falls back to the page's font."
+        }
       }
     }
   }

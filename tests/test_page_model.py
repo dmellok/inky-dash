@@ -54,7 +54,8 @@ def test_default_theme_and_font() -> None:
 
 def test_round_trip_dump_then_load() -> None:
     page = Page.model_validate(VALID_PAGE)
-    dumped = page.model_dump(mode="json")
+    # exclude_none drops cell.theme/font when unset — matches what PageStore writes.
+    dumped = page.model_dump(mode="json", exclude_none=True)
     jsonschema.validate(dumped, SCHEMA)
     Page.model_validate(dumped)
 

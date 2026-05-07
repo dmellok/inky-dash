@@ -46,7 +46,9 @@ class PageStore:
 
     def upsert(self, page: Page) -> None:
         raw = self._load_raw()
-        new_record = page.model_dump(mode="json")
+        # exclude_none keeps optional fields (cell.theme/font) out of JSON when
+        # unset, so the saved file matches the schema (which rejects null).
+        new_record = page.model_dump(mode="json", exclude_none=True)
         for index, existing in enumerate(raw):
             if existing.get("id") == page.id:
                 raw[index] = new_record

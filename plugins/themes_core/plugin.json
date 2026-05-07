@@ -1,0 +1,239 @@
+{
+  "manifest_version": 1,
+  "id": "themes_core",
+  "name": "Core themes",
+  "version": "0.1.0",
+  "kind": "theme",
+  "description": "12 starter themes. Off-gamut accents are intentional — Floyd-Steinberg dithers them into pleasing results on the panel (v4-brief §3).",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "themes": [
+    {
+      "id": "default",
+      "name": "Default (Linen)",
+      "mode": "light",
+      "palette": {
+        "bg": "#fbf7f1",
+        "surface": "#ffffff",
+        "surface2": "#f5e8d8",
+        "fg": "#1a1612",
+        "fgSoft": "#5a4f44",
+        "muted": "#8b7e70",
+        "accent": "#d97757",
+        "accentSoft": "#aa5a3f",
+        "divider": "#d8c8a8",
+        "danger": "#c97c70",
+        "warn": "#d4a957",
+        "ok": "#7da670"
+      }
+    },
+    {
+      "id": "ember",
+      "name": "Ember",
+      "mode": "dark",
+      "palette": {
+        "bg": "#1a1612",
+        "surface": "#241e18",
+        "surface2": "#2e261d",
+        "fg": "#f5e8d8",
+        "fgSoft": "#c8b89b",
+        "muted": "#8b7e70",
+        "accent": "#d97757",
+        "accentSoft": "#aa5a3f",
+        "divider": "#3a2f24",
+        "danger": "#c97c70",
+        "warn": "#d4a957",
+        "ok": "#7da670"
+      }
+    },
+    {
+      "id": "frost",
+      "name": "Frost",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0d1117",
+        "surface": "#161b22",
+        "surface2": "#1c2128",
+        "fg": "#e6edf3",
+        "fgSoft": "#8b949e",
+        "muted": "#6e7681",
+        "accent": "#58a6ff",
+        "accentSoft": "#388bfd",
+        "divider": "#30363d",
+        "danger": "#f85149",
+        "warn": "#d29922",
+        "ok": "#3fb950"
+      }
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "mode": "light",
+      "palette": {
+        "bg": "#f3f5ee",
+        "surface": "#ffffff",
+        "surface2": "#e7ecdb",
+        "fg": "#1f2a1d",
+        "fgSoft": "#4a5742",
+        "muted": "#7f8b73",
+        "accent": "#5b8a5f",
+        "accentSoft": "#3f6b43",
+        "divider": "#cfd9bd",
+        "danger": "#a6584a",
+        "warn": "#c4a352",
+        "ok": "#5b8a5f"
+      }
+    },
+    {
+      "id": "cobalt",
+      "name": "Cobalt",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a1628",
+        "surface": "#142036",
+        "surface2": "#1c2a44",
+        "fg": "#e8edf5",
+        "fgSoft": "#a5b4c8",
+        "muted": "#6f7c91",
+        "accent": "#4080ff",
+        "accentSoft": "#2f5fcc",
+        "divider": "#283a55",
+        "danger": "#e06b5e",
+        "warn": "#e0a948",
+        "ok": "#5fb37a"
+      }
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "mode": "light",
+      "palette": {
+        "bg": "#fff5f0",
+        "surface": "#ffffff",
+        "surface2": "#ffe5d6",
+        "fg": "#3a1f15",
+        "fgSoft": "#6b3e2d",
+        "muted": "#9a705c",
+        "accent": "#e85f3a",
+        "accentSoft": "#b84528",
+        "divider": "#f4cdb6",
+        "danger": "#c33a25",
+        "warn": "#d4a01c",
+        "ok": "#5f9e60"
+      }
+    },
+    {
+      "id": "pulp",
+      "name": "Pulp",
+      "mode": "light",
+      "palette": {
+        "bg": "#fffbe8",
+        "surface": "#ffffff",
+        "surface2": "#fff1bf",
+        "fg": "#2a230d",
+        "fgSoft": "#5a4d20",
+        "muted": "#8a7a3c",
+        "accent": "#e0a51f",
+        "accentSoft": "#a87a0e",
+        "divider": "#ead995",
+        "danger": "#c8513a",
+        "warn": "#d4831f",
+        "ok": "#638a3a"
+      }
+    },
+    {
+      "id": "charcoal",
+      "name": "Charcoal",
+      "mode": "dark",
+      "palette": {
+        "bg": "#000000",
+        "surface": "#111111",
+        "surface2": "#1c1c1c",
+        "fg": "#ffffff",
+        "fgSoft": "#b8b8b8",
+        "muted": "#7a7a7a",
+        "accent": "#ffffff",
+        "accentSoft": "#cccccc",
+        "divider": "#2a2a2a",
+        "danger": "#ff5a4a",
+        "warn": "#ffb347",
+        "ok": "#7adc8a"
+      }
+    },
+    {
+      "id": "mint",
+      "name": "Mint",
+      "mode": "light",
+      "palette": {
+        "bg": "#eff8f3",
+        "surface": "#ffffff",
+        "surface2": "#d8eedf",
+        "fg": "#0f2a1d",
+        "fgSoft": "#3f5f4f",
+        "muted": "#6a8579",
+        "accent": "#10b981",
+        "accentSoft": "#0a8059",
+        "divider": "#bcdcc6",
+        "danger": "#c44a3e",
+        "warn": "#d09921",
+        "ok": "#10b981"
+      }
+    },
+    {
+      "id": "plum",
+      "name": "Plum",
+      "mode": "dark",
+      "palette": {
+        "bg": "#1a0f1f",
+        "surface": "#241730",
+        "surface2": "#2f1f3d",
+        "fg": "#f0e6f5",
+        "fgSoft": "#c0a8d0",
+        "muted": "#8a7596",
+        "accent": "#a855f7",
+        "accentSoft": "#7e3ec2",
+        "divider": "#3d2848",
+        "danger": "#e85a7a",
+        "warn": "#d49a2a",
+        "ok": "#7ac478"
+      }
+    },
+    {
+      "id": "goldenrod",
+      "name": "Goldenrod",
+      "mode": "light",
+      "palette": {
+        "bg": "#fbf3df",
+        "surface": "#ffffff",
+        "surface2": "#f3e0a8",
+        "fg": "#2c2208",
+        "fgSoft": "#5c4f1d",
+        "muted": "#8d7a3a",
+        "accent": "#c08a1f",
+        "accentSoft": "#8a6010",
+        "divider": "#dcc88a",
+        "danger": "#b54a35",
+        "warn": "#d4a01c",
+        "ok": "#6e9a3a"
+      }
+    },
+    {
+      "id": "indigo",
+      "name": "Indigo",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0f0f23",
+        "surface": "#1a1a35",
+        "surface2": "#252548",
+        "fg": "#e8e8ff",
+        "fgSoft": "#a8a8d0",
+        "muted": "#7575a0",
+        "accent": "#7c5cff",
+        "accentSoft": "#5a40c9",
+        "divider": "#2a2a55",
+        "danger": "#e85a6a",
+        "warn": "#e0a440",
+        "ok": "#5fc080"
+      }
+    }
+  ]
+}

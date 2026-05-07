@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 4 (v0.5.0).** MQTT push pipeline live. `app/mqtt_bridge.py` wraps paho-mqtt (publish + retained-status subscribe); a `NullBridge` keeps the app bootable without a broker. `app/push.py` is the single-flight `PushManager`: render → quantize → write `data/core/renders/<digest>.png` → publish the wire-format JSON job to `inky/update`. Every attempt is recorded in `data/core/history.db` (SQLite). The editor's "Push to panel" button drives the whole pipeline. The Pi listener at [dmellok/inky-dash-listener](https://github.com/dmellok/inky-dash-listener) reads the same wire format v3 spoke — byte-for-byte unchanged. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 5 (v0.6.0).** Themes + fonts are first-class plugins. `themes_core` ships 12 hand-tuned palettes (light + dark) with all 12 schema-required keys; `fonts_core` ships 5 webfonts (Inter, Lexend, Lora, JetBrains Mono, Bebas Neue) as latin-subset woff2. The composer resolves `page.theme` / `page.font` against the registry and emits `@font-face` rules + per-cell `--theme-*` CSS variables. Cells override their page's theme or font via optional `cell.theme` / `cell.font`. The editor at `/editor/<page_id>` now drives everything live: layout dropdown (with four hero presets), theme + font selectors, gap + corner-radius sliders, per-cell overrides, and auto-save on every edit. The abstract layout canvas is gone — the live iframe IS the cell picker, with click-targets that follow the gap inset. `/themes` shows every loaded theme as palette swatches and every font as a live sample. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
@@ -28,6 +28,7 @@ bun install && bun run build      # or: npm install && npm run build
 python -m app
 # http://localhost:5555/                                   — index
 # http://localhost:5555/editor/_demo                       — page editor + preview + push
+# http://localhost:5555/themes                             — themes + fonts viewer
 # http://localhost:5555/_components                        — design system demo
 # http://localhost:5555/compose/_demo                      — what Playwright screenshots
 # http://localhost:5555/api/pages/_demo/raw.png            — pre-quantize render
@@ -35,6 +36,8 @@ python -m app
 # http://localhost:5555/api/pages/_demo/push  (POST)       — render + quantize + publish
 # http://localhost:5555/api/history                        — recent push attempts
 # http://localhost:5555/api/listener/status                — last retained status from listener
+# http://localhost:5555/api/themes                         — loaded themes (JSON)
+# http://localhost:5555/api/fonts                          — loaded fonts (JSON)
 # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks
@@ -56,7 +59,10 @@ app/                Flask application
   mqtt_bridge.py    paho-mqtt publisher + listener-status subscriber; NullBridge fallback
   push.py           mypy --strict — single-flight PushManager (render→quantize→publish)
 docs/               Build brief + plugin contract
-plugins/<id>/       Drop-a-folder plugin: plugin.json + client.js + tests/
+plugins/<id>/       Drop-a-folder plugin (kind=widget|theme|font|admin)
+  clock/            Bundled widget — fits text via JS measurement
+  themes_core/      12 starter palettes
+  fonts_core/       Inter / Lexend / Lora / JetBrains Mono / Bebas Neue (woff2)
 schema/             JSON Schemas (plugin manifest, page model)
 static/
   components/       Lit design system (id-* web components)

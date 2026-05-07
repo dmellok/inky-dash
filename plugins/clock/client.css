@@ -1,3 +1,10 @@
+/*
+ * Clock styling. Sizing is handled in JS (client.js fitText) — measuring the
+ * rendered text against the cell's actual pixel dimensions is the only way to
+ * stay correct across font swaps and option toggles. CSS here just sets
+ * colours, weights, and layout.
+ */
+
 :host {
   display: block;
   height: 100%;
@@ -15,26 +22,22 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+  box-sizing: border-box;
 }
 
 .time {
   font-weight: 700;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .date {
   color: var(--theme-fgSoft);
   font-weight: 500;
   margin-top: 0.4em;
+  white-space: nowrap;
 }
 
-.clock--xs .time { font-size: 44px; }
-
-.clock--sm .time { font-size: 72px; }
-.clock--sm .date { font-size: 14px; }
-
-.clock--md .time { font-size: 140px; }
-.clock--md .date { font-size: 22px; }
-
-.clock--lg .time { font-size: 220px; font-weight: 600; }
-.clock--lg .date { font-size: 36px; }
+.clock--lg .time {
+  font-weight: 600;
+}

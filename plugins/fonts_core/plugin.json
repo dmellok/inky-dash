@@ -1,0 +1,62 @@
+{
+  "manifest_version": 1,
+  "id": "fonts_core",
+  "name": "Core fonts",
+  "version": "0.1.0",
+  "kind": "font",
+  "description": "Bundled woff2 fonts (latin subset). Sourced from Google Fonts (SIL OFL 1.1). Add more by dropping woff2 files in files/ and listing them below.",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "fonts": [
+    {
+      "id": "default",
+      "name": "Inter",
+      "category": "sans",
+      "weights": [400, 500, 700],
+      "files": {
+        "400": "files/inter-400.woff2",
+        "500": "files/inter-500.woff2",
+        "700": "files/inter-700.woff2"
+      }
+    },
+    {
+      "id": "lexend",
+      "name": "Lexend",
+      "category": "sans",
+      "weights": [400, 500, 700],
+      "files": {
+        "400": "files/lexend-400.woff2",
+        "500": "files/lexend-500.woff2",
+        "700": "files/lexend-700.woff2"
+      }
+    },
+    {
+      "id": "jetbrainsmono",
+      "name": "JetBrains Mono",
+      "category": "mono",
+      "weights": [400, 700],
+      "files": {
+        "400": "files/jetbrainsmono-400.woff2",
+        "700": "files/jetbrainsmono-700.woff2"
+      }
+    },
+    {
+      "id": "lora",
+      "name": "Lora",
+      "category": "serif",
+      "weights": [400, 700],
+      "files": {
+        "400": "files/lora-400.woff2",
+        "700": "files/lora-700.woff2"
+      }
+    },
+    {
+      "id": "bebasneue",
+      "name": "Bebas Neue",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/bebasneue-400.woff2"
+      }
+    }
+  ]
+}

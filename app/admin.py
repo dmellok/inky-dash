@@ -52,7 +52,7 @@ def editor(page_id: str) -> str:
 
 @bp.get("/api/pages")
 def api_list_pages() -> Response:
-    return jsonify([p.model_dump(mode="json") for p in _store().all()])
+    return jsonify([p.model_dump(mode="json", exclude_none=True) for p in _store().all()])
 
 
 @bp.get("/api/pages/<page_id>")
@@ -60,7 +60,7 @@ def api_get_page(page_id: str) -> Response:
     page = _store().get(page_id)
     if page is None:
         abort(404)
-    return jsonify(page.model_dump(mode="json"))
+    return jsonify(page.model_dump(mode="json", exclude_none=True))
 
 
 @bp.put("/api/pages/<page_id>")
@@ -75,12 +75,48 @@ def api_save_page(page_id: str) -> tuple[Response, int] | Response:
     except ValidationError as err:
         return jsonify({"error": "validation", "details": err.errors()}), 400
     _store().upsert(page)
-    return jsonify(page.model_dump(mode="json"))
+    return jsonify(page.model_dump(mode="json", exclude_none=True))
 
 
 @bp.delete("/api/pages/<page_id>")
 def api_delete_page(page_id: str) -> tuple[str, int]:
     return ("", 204) if _store().delete(page_id) else ("", 404)
+
+
+@bp.get("/api/themes")
+def api_list_themes() -> Response:
+    themes = [
+        {
+            "id": t.id,
+            "name": t.name,
+            "mode": t.mode,
+            "palette": t.palette,
+            "plugin_id": t.plugin_id,
+        }
+        for t in _registry().themes.values()
+    ]
+    return jsonify(themes)
+
+
+@bp.get("/api/fonts")
+def api_list_fonts() -> Response:
+    fonts = [
+        {
+            "id": f.id,
+            "name": f.name,
+            "category": f.category,
+            "weights": list(f.weights),
+            "files": f.files,
+            "plugin_id": f.plugin_id,
+        }
+        for f in _registry().fonts.values()
+    ]
+    return jsonify(fonts)
+
+
+@bp.get("/themes")
+def themes_page() -> str:
+    return render_template("themes.html")
 
 
 @bp.get("/api/widgets")

@@ -43,6 +43,25 @@ class LoaderError:
     message: str
 
 
+@dataclass(frozen=True)
+class Theme:
+    id: str
+    name: str
+    mode: str  # "light" | "dark" | ""
+    palette: dict[str, str]
+    plugin_id: str
+
+
+@dataclass(frozen=True)
+class Font:
+    id: str
+    name: str
+    category: str  # "sans" | "serif" | "mono" | "display" | "handwriting" | ""
+    weights: tuple[int, ...]
+    files: dict[str, str]  # weight str → URL path (/plugins/<id>/files/<file>)
+    plugin_id: str
+
+
 @dataclass
 class Plugin:
     id: str
@@ -81,12 +100,20 @@ class Plugin:
 class PluginRegistry:
     plugins: dict[str, Plugin] = field(default_factory=dict)
     errors: list[LoaderError] = field(default_factory=list)
+    themes: dict[str, Theme] = field(default_factory=dict)
+    fonts: dict[str, Font] = field(default_factory=dict)
 
     def get(self, plugin_id: str) -> Plugin | None:
         return self.plugins.get(plugin_id)
 
     def widgets(self) -> list[Plugin]:
         return [p for p in self.plugins.values() if p.kind == "widget"]
+
+    def get_theme(self, theme_id: str) -> Theme | None:
+        return self.themes.get(theme_id)
+
+    def get_font(self, font_id: str) -> Font | None:
+        return self.fonts.get(font_id)
 
 
 def _load_schema(schema_path: Path) -> dict[str, Any]:
@@ -191,13 +218,52 @@ def discover(
         data_dir = data_root / plugin_id
         data_dir.mkdir(parents=True, exist_ok=True)
 
-        registry.plugins[plugin_id] = Plugin(
+        plugin = Plugin(
             id=plugin_id,
             path=child,
             manifest=manifest,
             data_dir=data_dir,
             server_module=server_module,
         )
+        registry.plugins[plugin_id] = plugin
+
+        if plugin.kind == "theme":
+            for raw_theme in manifest.get("themes", []):
+                theme = Theme(
+                    id=str(raw_theme["id"]),
+                    name=str(raw_theme["name"]),
+                    mode=str(raw_theme.get("mode", "")),
+                    palette={k: str(v) for k, v in raw_theme["palette"].items()},
+                    plugin_id=plugin_id,
+                )
+                if theme.id in registry.themes:
+                    registry.errors.append(
+                        LoaderError(plugin_id, child, f"duplicate theme id {theme.id!r}")
+                    )
+                    continue
+                registry.themes[theme.id] = theme
+
+        if plugin.kind == "font":
+            for raw_font in manifest.get("fonts", []):
+                files_map = {
+                    str(weight): f"/plugins/{plugin_id}/{path}"
+                    for weight, path in raw_font["files"].items()
+                }
+                font = Font(
+                    id=str(raw_font["id"]),
+                    name=str(raw_font["name"]),
+                    category=str(raw_font.get("category", "")),
+                    weights=tuple(int(w) for w in raw_font["weights"]),
+                    files=files_map,
+                    plugin_id=plugin_id,
+                )
+                if font.id in registry.fonts:
+                    registry.errors.append(
+                        LoaderError(plugin_id, child, f"duplicate font id {font.id!r}")
+                    )
+                    continue
+                registry.fonts[font.id] = font
+
         logger.info("Loaded plugin %s (kind=%s)", plugin_id, manifest["kind"])
 
     return registry

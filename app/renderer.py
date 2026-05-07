@@ -51,6 +51,36 @@ def render_to_png(request: RenderRequest) -> bytes:
             page = context.new_page()
             page.set_default_timeout(request.timeout_ms)
             page.goto(request.url, wait_until=request.wait_until)
+            # Block screenshot until every cell's font is actually loaded.
+            # document.fonts.ready only awaits fonts already in the pending set;
+            # explicit document.fonts.load() triggers the request and waits.
+            # Plugins that measure text against the cell (clock, etc.) need
+            # this — fallback metrics differ enough to blow up the layout.
+            page.evaluate(
+                """async () => {
+                    if (!document.fonts || !document.fonts.load) return;
+                    const families = new Set();
+                    document.querySelectorAll('.cell').forEach((cell) => {
+                        const ff = getComputedStyle(cell).fontFamily;
+                        if (!ff) return;
+                        const first = ff.split(',')[0].trim()
+                            .replace(/^['\"]|['\"]$/g, '');
+                        if (first) families.add(first);
+                    });
+                    const loads = [];
+                    for (const family of families) {
+                        for (const weight of [400, 500, 600, 700]) {
+                            loads.push(
+                                document.fonts.load(
+                                    weight + ' 100px \"' + family + '\"'
+                                ).catch(() => {})
+                            );
+                        }
+                    }
+                    await Promise.all(loads);
+                    await document.fonts.ready;
+                }"""
+            )
             png: bytes = page.screenshot(
                 full_page=False,
                 type="png",

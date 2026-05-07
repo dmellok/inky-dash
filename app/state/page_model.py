@@ -32,6 +32,8 @@ class Cell(BaseModel):
     h: int = Field(ge=1)
     plugin: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     options: dict[str, Any] = Field(default_factory=dict)
+    theme: str | None = None
+    font: str | None = None
 
 
 class Page(BaseModel):
@@ -41,4 +43,6 @@ class Page(BaseModel):
     panel: Panel
     theme: str = "default"
     font: str = "default"
+    gap: int = Field(default=0, ge=0, le=200)
+    corner_radius: int = Field(default=0, ge=0, le=200)
     cells: list[Cell] = Field(default_factory=list)
