@@ -9,12 +9,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from flask import Blueprint, abort, current_app, jsonify, render_template, request
+from flask import Blueprint, abort, current_app, jsonify, render_template, request, url_for
 from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
 from app.plugin_loader import PluginRegistry
+from app.quantizer import DitherMode, quantize_to_png
+from app.renderer import RenderRequest, render_to_png
 from app.state import Page, PageStore
+
+_VALID_DITHER_MODES: frozenset[str] = frozenset({"floyd-steinberg", "none"})
 
 bp = Blueprint("admin", __name__)
 
@@ -90,3 +94,45 @@ def api_list_widgets() -> Response:
         for p in _registry().widgets()
     ]
     return jsonify(widgets)
+
+
+def _render_page_png(page_id: str) -> tuple[bytes, int, int]:
+    """Render the page at panel resolution, return (png_bytes, panel_w, panel_h)."""
+    page = _store().get(page_id)
+    if page is None:
+        abort(404)
+    compose_url = url_for(
+        "composer.compose", page_id=page_id, for_push=1, _external=True
+    )
+    raw = render_to_png(
+        RenderRequest(
+            url=compose_url,
+            viewport_w=page.panel.w,
+            viewport_h=page.panel.h,
+        )
+    )
+    return raw, page.panel.w, page.panel.h
+
+
+@bp.get("/api/pages/<page_id>/raw.png")
+def api_render_raw(page_id: str) -> Response:
+    """Untouched browser screenshot — the input to the quantizer."""
+    raw, _, _ = _render_page_png(page_id)
+    return Response(raw, mimetype="image/png")
+
+
+@bp.get("/api/pages/<page_id>/preview.png")
+def api_render_preview(page_id: str) -> tuple[Response, int] | Response:
+    """Quantized PNG — what the panel will actually paint."""
+    dither_arg = request.args.get("dither", "floyd-steinberg")
+    if dither_arg not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither_arg!r}"}), 400
+    raw, _, _ = _render_page_png(page_id)
+    quantized = quantize_to_png(raw, dither=cast_dither(dither_arg))
+    return Response(quantized, mimetype="image/png")
+
+
+def cast_dither(value: str) -> DitherMode:
+    """Narrow a validated string to the DitherMode literal for the quantizer."""
+    assert value in _VALID_DITHER_MODES
+    return value  # type: ignore[return-value]

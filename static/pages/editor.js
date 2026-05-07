@@ -71,6 +71,9 @@ class IdEditor extends LitElement {
     error: { state: true },
     selectedCell: { state: true },
     layoutKey: { state: true },
+    lastSavedAt: { state: true },
+    dither: { state: true },
+    previewLoading: { state: true },
   };
 
   static styles = css`
@@ -166,6 +169,78 @@ class IdEditor extends LitElement {
       color: var(--id-fg-soft, #5a4f44);
       font-style: italic;
     }
+    .preview-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 700px) {
+      .preview-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .preview-tile {
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--id-bg, #ffffff);
+    }
+    .preview-tile-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 8px 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      border-bottom: 1px solid var(--id-divider, #c8b89b);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-tile-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: ${PANEL_W} / ${PANEL_H};
+      background: var(--id-surface2, #f5e8d8);
+      overflow: hidden;
+    }
+    .preview-tile-frame iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: ${PANEL_W}px;
+      height: ${PANEL_H}px;
+      border: 0;
+      transform-origin: top left;
+    }
+    .preview-tile-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .preview-tile-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--id-fg-soft, #5a4f44);
+      font-size: 13px;
+      text-align: center;
+      padding: 16px;
+    }
+    .preview-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--id-divider, #c8b89b);
+      border-top-color: var(--id-accent, #d97757);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   `;
 
   constructor() {
@@ -178,6 +253,9 @@ class IdEditor extends LitElement {
     this.error = null;
     this.selectedCell = 0;
     this.layoutKey = "1x1";
+    this.lastSavedAt = 0;
+    this.dither = "floyd-steinberg";
+    this.previewLoading = false;
   }
 
   async connectedCallback() {
@@ -261,11 +339,83 @@ class IdEditor extends LitElement {
       }
       this.page = await res.json();
       this.saved = true;
+      this.lastSavedAt = Date.now();
     } catch (err) {
       this.error = err.message;
     } finally {
       this.saving = false;
     }
+  }
+
+  _scaleIframe() {
+    const wrap = this.shadowRoot?.querySelector(".preview-tile-frame.iframe-wrap");
+    const iframe = wrap?.querySelector("iframe");
+    if (!wrap || !iframe) return;
+    const scale = wrap.clientWidth / PANEL_W;
+    iframe.style.transform = `scale(${scale})`;
+  }
+
+  firstUpdated() {
+    this._resizeObserver = new ResizeObserver(() => this._scaleIframe());
+    const wrap = this.shadowRoot?.querySelector(".preview-tile-frame.iframe-wrap");
+    if (wrap) this._resizeObserver.observe(wrap);
+    this._scaleIframe();
+  }
+
+  updated() {
+    this._scaleIframe();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this._resizeObserver?.disconnect();
+  }
+
+  _renderPreview() {
+    if (!this.page) return null;
+    const id = encodeURIComponent(this.page.id);
+    const cacheBust = this.lastSavedAt || "initial";
+    const composeUrl = `/compose/${id}?for_push=1&t=${cacheBust}`;
+    const previewUrl = `/api/pages/${id}/preview.png?dither=${this.dither}&t=${cacheBust}`;
+    return html`
+      <id-card heading="Preview" subheading="Live render (left) vs how the panel will paint it (right).">
+        <id-form-row label="Dither">
+          <select
+            .value=${this.dither}
+            @change=${(e) => {
+              this.dither = e.target.value;
+              this.lastSavedAt = Date.now();
+            }}
+          >
+            <option value="floyd-steinberg">Floyd–Steinberg (default)</option>
+            <option value="none">None (nearest colour)</option>
+          </select>
+        </id-form-row>
+        <div class="preview-grid">
+          <div class="preview-tile">
+            <div class="preview-tile-label">Live</div>
+            <div class="preview-tile-frame iframe-wrap">
+              <iframe src=${composeUrl} title="Live preview" loading="lazy"></iframe>
+            </div>
+          </div>
+          <div class="preview-tile">
+            <div class="preview-tile-label">
+              <span>Quantized</span>
+              ${this.previewLoading ? html`<span class="preview-spinner"></span>` : null}
+            </div>
+            <div class="preview-tile-frame">
+              <img
+                src=${previewUrl}
+                alt="Quantized preview"
+                loading="lazy"
+                @load=${() => (this.previewLoading = false)}
+                @loadstart=${() => (this.previewLoading = true)}
+              />
+            </div>
+          </div>
+        </div>
+      </id-card>
+    `;
   }
 
   _renderCanvas() {
@@ -409,7 +559,10 @@ class IdEditor extends LitElement {
         <id-button
           variant="primary"
           ?disabled=${this.saving}
-          @click=${() => this._save()}
+          @click=${async () => {
+            this.previewLoading = true;
+            await this._save();
+          }}
         >
           ${this.saving ? "Saving…" : "Save"}
         </id-button>
@@ -420,6 +573,10 @@ class IdEditor extends LitElement {
           Open compose ↗
         </id-button>
       </div>
+
+      <div style="height: 16px"></div>
+
+      ${this._renderPreview()}
     `;
   }
 }

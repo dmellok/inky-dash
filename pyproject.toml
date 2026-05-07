@@ -1,6 +1,6 @@
 [project]
 name = "inky-dash"
-version = "0.3.0"
+version = "0.4.0"
 description = "Flask companion that composes dashboards in the browser, renders to PNG, pushes to a Pimoroni Inky Impression panel over MQTT."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -10,6 +10,8 @@ dependencies = [
     "flask>=3.0",
     "pydantic>=2.6",
     "jsonschema>=4.20",
+    "pillow>=10.0",
+    "playwright>=1.50",
 ]
 
 [project.optional-dependencies]
@@ -41,6 +43,9 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 testpaths = ["tests", "plugins"]
 addopts = "-ra --strict-markers"
+markers = [
+    "slow: launches Chromium and/or hits the live_server fixture (>1 s per test)",
+]
 # Plugin smoke tests live under plugins/<id>/tests/. Default file/class/function
 # discovery patterns find them.
 

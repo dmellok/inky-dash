@@ -22,7 +22,10 @@ def live_server_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
     data_root = tmp_path_factory.mktemp("live-data")
     app = create_app(data_root=data_root)
     app.config["TESTING"] = True
-    server: BaseWSGIServer = make_server("127.0.0.1", 0, app)
+    # threaded=True so handlers that internally call back into the same
+    # server (e.g. /api/pages/<id>/preview.png → Playwright → /compose/<id>)
+    # don't deadlock on a single-threaded WSGI loop.
+    server: BaseWSGIServer = make_server("127.0.0.1", 0, app, threaded=True)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:

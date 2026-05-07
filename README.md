@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 2 (v0.3.0).** Page model live: `schema/page.schema.json` is the source of truth, hand-aligned pydantic models in `app/state/`, and TS type definitions auto-generated into `static/types/page.d.ts`. The composer reads pages from `data/core/pages.json` (atomic writes via tmp-rename); a demo page is seeded on first run. The Lit-based design system (`id-button`, `id-card`, `id-slider`, `id-tab-bar`, `id-form-row`) lives at `/_components`. The editor at `/editor/<page_id>` exercises the full schema flow: pick a layout preset, assign a plugin per cell, edit `cell_options`, save → server validates with pydantic → file. Bundle is built by esbuild (~30 KB minified per entry). See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 3 (v0.4.0).** Render + quantize pipeline live. `app/renderer.py` drives headless Chromium via Playwright at panel resolution; `app/quantizer.py` projects to the Spectra 6 7-colour gamut (Floyd–Steinberg dither default, nearest-colour for "none"). The editor's preview pane shows the live iframe and the quantized PNG side-by-side — what the user sees in the browser is what the panel will paint. WYSIWYG by construction. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
@@ -23,10 +23,12 @@ bun install && bun run build      # or: npm install && npm run build
 
 # Run the dev server
 python -m app
-# http://localhost:5555/                          — index
-# http://localhost:5555/editor/_demo              — page editor
-# http://localhost:5555/_components               — design system demo
-# http://localhost:5555/compose/_demo             — composer (what Playwright will screenshot)
+# http://localhost:5555/                                   — index
+# http://localhost:5555/editor/_demo                       — page editor + preview pane
+# http://localhost:5555/_components                        — design system demo
+# http://localhost:5555/compose/_demo                      — what Playwright screenshots
+# http://localhost:5555/api/pages/_demo/raw.png            — pre-quantize render
+# http://localhost:5555/api/pages/_demo/preview.png        — quantized render (panel paint)
 # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks
@@ -41,8 +43,10 @@ Python 3.11+ required.
 app/                Flask application
   state/            mypy --strict — page model, page store, future schedules + history
   composer.py       /compose/<page_id> + /_test/render
-  admin.py          /editor + /_components + /api/pages + /api/widgets
+  admin.py          /editor + /_components + /api/pages + /api/widgets + preview PNGs
   plugin_loader.py  mypy --strict — discovery + schema validation + asset routes
+  renderer.py       mypy --strict — Playwright wrapper, screenshot at panel resolution
+  quantizer.py      Pillow-based gamut projection (Spectra 6) + Floyd–Steinberg dither
 docs/               Build brief + plugin contract
 plugins/<id>/       Drop-a-folder plugin: plugin.json + client.js + tests/
 schema/             JSON Schemas (plugin manifest, page model)
