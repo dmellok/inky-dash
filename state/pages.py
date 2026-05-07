@@ -111,6 +111,10 @@ class Page:
     header_theme: str | None = None
     theme: str | None = None
     font: str | None = None
+    # Per-dashboard saturation override for the e-ink push (0.0–1.0).
+    # None = use the global push default. Schedule-level saturation, when
+    # set, still takes precedence over this.
+    saturation: float | None = None
 
     def to_json(self) -> dict:
         # Rule 7: omit empty optional fields.
@@ -134,12 +138,15 @@ class Page:
             out["theme"] = self.theme
         if self.font:
             out["font"] = self.font
+        if self.saturation is not None:
+            out["saturation"] = self.saturation
         return out
 
     @classmethod
     def from_json(cls, data: dict) -> "Page":
         if "id" not in data or "name" not in data:
             raise ValueError("page requires id and name")
+        sat_raw = data.get("saturation")
         return cls(
             id=str(data["id"]),
             name=str(data["name"]),
@@ -152,6 +159,7 @@ class Page:
             header_theme=data.get("header_theme") or None,
             theme=data.get("theme") or None,
             font=data.get("font") or None,
+            saturation=float(sat_raw) if sat_raw is not None else None,
         )
 
 

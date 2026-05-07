@@ -104,6 +104,7 @@ setColorInput("bg_color", state.page.bg_color || "#ffffff");
 // field falls back to the new-dashboard defaults (38 / 20).
 setSlider("cell_gap", state.page.cell_gap ?? 38);
 setSlider("cell_radius", state.page.cell_radius ?? 20);
+setSaturationSlider(state.page.saturation);
 form.elements.theme.value = state.page.theme || "";
 form.elements.header_theme.value = state.page.header_theme || "";
 setIcon(state.page.icon || "");
@@ -464,6 +465,7 @@ function attachFormListeners() {
   // Sliders
   bindSlider("cell_gap");
   bindSlider("cell_radius");
+  bindSaturationSlider();
 
   bind(form.elements.theme, "change", () => { state.page.theme = form.elements.theme.value || null; scheduleDraft(); });
   bind(form.elements.header_theme, "change", () => { state.page.header_theme = form.elements.header_theme.value || null; scheduleDraft(); });
@@ -488,6 +490,38 @@ function setSlider(name, value) {
   const readout = form.querySelector(`[data-readout="${name}"]`);
   if (readout) readout.textContent = `${value}px`;
   state.page[name] = value;
+}
+
+// Saturation is optional (null = inherit the global push default) and
+// float-valued, so it can't share bindSlider's int + "px" assumptions.
+function bindSaturationSlider() {
+  const el = form.elements.saturation;
+  const readout = form.querySelector('[data-readout="saturation"]');
+  bind(el, "input", () => {
+    const v = parseFloat(el.value);
+    if (Number.isFinite(v)) {
+      state.page.saturation = v;
+      readout.textContent = v.toFixed(2);
+    } else {
+      state.page.saturation = null;
+      readout.textContent = "use default (0.50)";
+    }
+    scheduleDraft();
+  });
+}
+
+function setSaturationSlider(value) {
+  const el = form.elements.saturation;
+  const readout = form.querySelector('[data-readout="saturation"]');
+  if (value === null || value === undefined) {
+    el.value = "";
+    readout.textContent = "use default (0.50)";
+    state.page.saturation = null;
+  } else {
+    el.value = value;
+    readout.textContent = Number(value).toFixed(2);
+    state.page.saturation = Number(value);
+  }
 }
 
 function setColorInput(name, value) {
@@ -626,6 +660,7 @@ function serializePage() {
   if (p.id) out.id = p.id;
   if (p.cell_gap) out.cell_gap = p.cell_gap;
   if (p.cell_radius) out.cell_radius = p.cell_radius;
+  if (p.saturation !== null && p.saturation !== undefined) out.saturation = p.saturation;
   if (p.bg_color && p.bg_color.toLowerCase() !== "#ffffff") out.bg_color = p.bg_color;
   if (p.icon) out.icon = p.icon;
   if (p.theme) out.theme = p.theme;

@@ -403,10 +403,17 @@ def make_blueprint(manager: PushManager) -> Blueprint:
 
     @bp.post("/api/push/<page_id>")
     def push_page(page_id):
-        if not manager.pages.get(page_id):
+        page = manager.pages.get(page_id)
+        if not page:
             abort(404)
         try:
             options = request.get_json(silent=True) or {}
+            # Page-level saturation seeds the request options so saved
+            # dashboards push with their tuned colour intensity. Caller-
+            # supplied saturation (Send page slider, schedule override) still
+            # wins because the explicit key in `options` survives the merge.
+            if page.saturation is not None and "saturation" not in options:
+                options["saturation"] = page.saturation
             return jsonify(
                 manager.push(
                     source="page",
