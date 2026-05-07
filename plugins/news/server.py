@@ -16,12 +16,14 @@ CACHE_TTL = 600  # 10 minutes
 def fetch(
     options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]
 ) -> dict[str, Any]:
-    url = (options.get("url") or "").strip()
+    # Cell URL overrides the global default-url setting; either-or is fine.
+    url = (options.get("url") or settings.get("default_url") or "").strip()
     count = max(1, min(int(options.get("count", 8) or 8), 30))
     title_override = options.get("title", "")
+    user_agent = settings.get("user_agent") or "inky-dash/1.0"
 
     if not url:
-        return {"error": "Feed URL is required."}
+        return {"error": "No feed URL configured (cell option or settings)."}
 
     data_dir = Path(ctx["data_dir"])
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -34,7 +36,7 @@ def fetch(
             pass
 
     try:
-        parsed = feedparser.parse(url, agent="inky-dash/0.7")
+        parsed = feedparser.parse(url, agent=user_agent)
     except Exception as err:
         return {"error": f"{type(err).__name__}: {err}"}
 

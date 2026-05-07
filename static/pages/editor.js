@@ -301,6 +301,56 @@ class IdEditor extends LitElement {
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      z-index: 50;
+    }
+    .overlay-card {
+      background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
+      max-width: 460px;
+      width: 100%;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+    .overlay-card h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    .overlay-card kbd {
+      display: inline-block;
+      min-width: 22px;
+      padding: 2px 6px;
+      font: 12px/1 ui-monospace, "JetBrains Mono", monospace;
+      background: var(--id-surface2, #f5e8d8);
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 4px;
+      text-align: center;
+    }
+    .overlay-shortcuts {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 12px;
+      margin: 12px 0;
+      align-items: baseline;
+    }
+    .overlay-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 16px;
+      gap: 8px;
+    }
+    .actions { gap: 8px; flex-wrap: wrap; }
+    @media (max-width: 700px) {
+      :host { padding: 16px 12px; }
+      .actions id-button { flex: 1; min-width: 110px; }
+    }
   `;
 
   constructor() {
@@ -320,10 +370,16 @@ class IdEditor extends LitElement {
     this.previewLoading = false;
     this.pushing = false;
     this.pushResult = null;
+    this.showHelp = false;
+    this.showOnboarding =
+      typeof localStorage !== "undefined" &&
+      localStorage.getItem("inky_onboarded_v1") !== "yes";
+    this._onKeydown = this._onKeydown.bind(this);
   }
 
   async connectedCallback() {
     super.connectedCallback();
+    window.addEventListener("keydown", this._onKeydown);
     try {
       const [widgetsRes, themesRes, fontsRes] = await Promise.all([
         fetch("/api/widgets"),
@@ -517,6 +573,51 @@ class IdEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._resizeObserver?.disconnect();
+    window.removeEventListener("keydown", this._onKeydown);
+  }
+
+  _onKeydown(event) {
+    // Don't intercept when the user is typing in a text input.
+    const tag = (event.target?.tagName || "").toLowerCase();
+    const inEditable = ["input", "textarea", "select"].includes(tag);
+
+    const meta = event.metaKey || event.ctrlKey;
+    if (meta && (event.key === "s" || event.key === "S")) {
+      event.preventDefault();
+      this._save();
+      return;
+    }
+    if (meta && event.key === "Enter") {
+      event.preventDefault();
+      this._push();
+      return;
+    }
+    if (event.key === "Escape" && (this.showHelp || this.showOnboarding)) {
+      event.preventDefault();
+      this._dismissOverlays();
+      return;
+    }
+    if (event.key === "?" && !inEditable) {
+      event.preventDefault();
+      this.showHelp = !this.showHelp;
+      return;
+    }
+    if (!inEditable && /^[1-9]$/.test(event.key)) {
+      const idx = Number(event.key) - 1;
+      if (this.page && idx < this.page.cells.length) {
+        this.selectedCell = idx;
+      }
+    }
+  }
+
+  _dismissOverlays() {
+    this.showHelp = false;
+    this.showOnboarding = false;
+    try {
+      localStorage.setItem("inky_onboarded_v1", "yes");
+    } catch {
+      /* ignore */
+    }
   }
 
   _renderQuantizedPreview() {
@@ -800,12 +901,13 @@ class IdEditor extends LitElement {
           variant="primary"
           ?disabled=${this.pushing || this.saving}
           @click=${() => this._push()}
+          title="Push (⌘↵)"
         >
           <i class="ph ph-paper-plane-tilt"></i>
           ${this.pushing ? "Pushing…" : "Push to panel"}
         </id-button>
         <id-button @click=${() => (window.location.href = "/send")}>
-          <i class="ph ph-paper-plane"></i> Send page
+          <i class="ph ph-paper-plane"></i> Send
         </id-button>
         <id-button @click=${() => (window.location.href = "/schedules")}>
           <i class="ph ph-clock-clockwise"></i> Schedules
@@ -813,11 +915,17 @@ class IdEditor extends LitElement {
         <id-button @click=${() => (window.location.href = "/themes")}>
           <i class="ph ph-palette"></i> Themes
         </id-button>
+        <id-button @click=${() => (window.location.href = "/settings")}>
+          <i class="ph ph-gear"></i> Settings
+        </id-button>
+        <id-button @click=${() => (this.showHelp = true)} title="Shortcuts (?)">
+          <i class="ph ph-keyboard"></i>
+        </id-button>
         <id-button
           @click=${() =>
             window.open(`/compose/${encodeURIComponent(this.page.id)}`, "_blank")}
         >
-          <i class="ph ph-arrow-square-out"></i> Open compose
+          <i class="ph ph-arrow-square-out"></i> Compose
         </id-button>
       </div>
       ${this.pushResult
@@ -831,6 +939,64 @@ class IdEditor extends LitElement {
       <div style="height: 16px"></div>
 
       ${this._renderQuantizedPreview()}
+      ${this.showOnboarding ? this._renderOnboarding() : null}
+      ${this.showHelp ? this._renderHelp() : null}
+    `;
+  }
+
+  _renderOnboarding() {
+    return html`
+      <div class="overlay" @click=${() => this._dismissOverlays()}>
+        <div class="overlay-card" @click=${(e) => e.stopPropagation()}>
+          <h3>Welcome to Inky Dash</h3>
+          <p style="color: var(--id-fg-soft); margin: 0 0 12px;">
+            A quick tour of what's here:
+          </p>
+          <ol style="margin: 0 0 12px; padding-left: 20px; line-height: 1.7;">
+            <li>Pick a <strong>layout</strong> (top of the page) to split the panel into cells.</li>
+            <li>Click any cell in the live preview to <strong>edit it</strong> on the right.</li>
+            <li>Set <strong>theme</strong>, <strong>font</strong>, <strong>gap</strong>, <strong>radius</strong> per page.</li>
+            <li><strong>Push to panel</strong> renders, dithers, publishes via MQTT.</li>
+          </ol>
+          <p style="color: var(--id-fg-soft); font-size: 13px; margin: 0 0 8px;">
+            Press <kbd>?</kbd> any time to see all shortcuts.
+          </p>
+          <div class="overlay-actions">
+            <id-button variant="primary" @click=${() => this._dismissOverlays()}>
+              <i class="ph ph-check"></i> Got it
+            </id-button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderHelp() {
+    const platform =
+      typeof navigator !== "undefined" && /mac/i.test(navigator.platform)
+        ? "⌘"
+        : "Ctrl";
+    return html`
+      <div class="overlay" @click=${() => (this.showHelp = false)}>
+        <div class="overlay-card" @click=${(e) => e.stopPropagation()}>
+          <h3>Keyboard shortcuts</h3>
+          <div class="overlay-shortcuts">
+            <span><kbd>${platform}</kbd>+<kbd>S</kbd></span><span>Save now</span>
+            <span><kbd>${platform}</kbd>+<kbd>↵</kbd></span><span>Push to panel</span>
+            <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Select cell N</span>
+            <span><kbd>?</kbd></span><span>Toggle this help</span>
+            <span><kbd>Esc</kbd></span><span>Close overlays</span>
+          </div>
+          <p style="color: var(--id-fg-soft); font-size: 12px; margin: 12px 0 0;">
+            Edits auto-save 250 ms after you stop changing things.
+          </p>
+          <div class="overlay-actions">
+            <id-button @click=${() => (this.showHelp = false)}>
+              <i class="ph ph-x"></i> Close
+            </id-button>
+          </div>
+        </div>
+      </div>
     `;
   }
 }

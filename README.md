@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 7 (v0.8.0).** Schedules + Send page. A background `Scheduler` daemon thread fires schedules whose time has come — `interval` (every N minutes) or `oneshot` (a single fire at a specific datetime). Both honour a day-of-week mask, an optional time-of-day window (with wrap-around for night-time hours), and a numeric priority. `/schedules` is the admin page (list + create/edit/delete + manual "Fire now"); `/send` is a one-page push tool that takes saved dashboards, image URLs, webpages (screenshotted), or uploaded files. PushManager grew `push_image` (raw bytes) and `push_webpage` (any URL) entry points; everything still goes through the same single-flight lock + history pipeline. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**v1.0.0 — first stable.** Eight milestones in: a Flask + Lit companion that composes dashboards in the browser, renders them through Playwright + Pillow's gamut quantizer, and pushes to a Pimoroni Inky Impression panel over MQTT. Ten bundled widget plugins, twelve themes + five fonts, a theme builder, schedules with day-of-week + time-of-day windows, a Send page (saved / URL / webpage / file), per-plugin settings (with secret masking), Phosphor icons throughout, keyboard shortcuts on the editor (`?` for the list), and a first-visit onboarding card. The MQTT wire format is byte-for-byte identical to v3 — the existing [`inky-dash-listener`](https://github.com/dmellok/inky-dash-listener) Pi side works unchanged. See [`docs/v4-brief.md`](docs/v4-brief.md) for the milestone roadmap that got us here.
 
 ## Quick start
 
@@ -40,8 +40,10 @@ python -m app
 # http://localhost:5555/api/fonts                          — loaded fonts (JSON)
 # http://localhost:5555/schedules                          — schedules admin
 # http://localhost:5555/send                               — send-anything page
+# http://localhost:5555/settings                           — per-plugin settings
 # http://localhost:5555/api/schedules                      — schedules CRUD
 # http://localhost:5555/api/send/{page,url,webpage,file}   — send pipelines
+# http://localhost:5555/api/settings                       — settings GET / PUT
 # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks

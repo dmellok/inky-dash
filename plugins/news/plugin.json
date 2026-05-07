@@ -10,8 +10,8 @@
     {
       "name": "url",
       "type": "string",
-      "label": "Feed URL",
-      "default": "https://news.ycombinator.com/rss"
+      "label": "Feed URL (overrides default)",
+      "default": ""
     },
     {
       "name": "title",
@@ -24,6 +24,20 @@
       "type": "number",
       "label": "Number of items",
       "default": 8
+    }
+  ],
+  "settings": [
+    {
+      "name": "default_url",
+      "type": "string",
+      "label": "Default feed URL",
+      "default": "https://news.ycombinator.com/rss"
+    },
+    {
+      "name": "user_agent",
+      "type": "string",
+      "label": "User-Agent string",
+      "default": "inky-dash/1.0"
     }
   ],
   "render": { "dither": "none", "needs_network": true }

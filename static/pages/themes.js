@@ -109,6 +109,12 @@ class ThemesPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       overflow: hidden;
     }
+    @media (max-width: 480px) {
+      :host { padding: 16px 12px; }
+      .grid { grid-template-columns: 1fr; }
+      .editor-fields { grid-template-columns: 1fr; }
+      .palette-editor { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    }
     .preview-strip .pill {
       padding: 3px 8px;
       border-radius: 999px;

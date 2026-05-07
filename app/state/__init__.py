@@ -10,6 +10,7 @@ from app.state.page_model import Cell, Page, Panel
 from app.state.page_store import PageStore
 from app.state.schedule_model import Schedule
 from app.state.schedule_store import ScheduleStore
+from app.state.settings_store import SettingsStore
 
 __all__ = [
     "Cell",
@@ -20,4 +21,5 @@ __all__ = [
     "Panel",
     "Schedule",
     "ScheduleStore",
+    "SettingsStore",
 ]

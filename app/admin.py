@@ -19,7 +19,7 @@ from app.push import PushManager, PushOptions
 from app.quantizer import DitherMode, quantize_to_png
 from app.renderer import RenderRequest, render_to_png
 from app.scheduler import Scheduler
-from app.state import HistoryStore, Page, PageStore, Schedule, ScheduleStore
+from app.state import HistoryStore, Page, PageStore, Schedule, ScheduleStore, SettingsStore
 
 _VALID_DITHER_MODES: frozenset[str] = frozenset({"floyd-steinberg", "none"})
 
@@ -531,6 +531,97 @@ def api_send_file() -> tuple[Response, int] | Response:
         dither=cast_dither(dither),
     )
     return _send_response(result)
+
+
+def _settings() -> SettingsStore:
+    s: SettingsStore = current_app.config["SETTINGS_STORE"]
+    return s
+
+
+_SECRET_PLACEHOLDER = "•••"
+
+
+@bp.get("/settings")
+def settings_page() -> str:
+    return render_template("settings.html")
+
+
+@bp.get("/api/settings")
+def api_list_settings() -> Response:
+    """List every plugin that declares ``settings`` in its manifest, with
+    current values. Secrets cross the wire as a placeholder + ``is_set`` flag —
+    real values stay on the server."""
+    registry = _registry()
+    store = _settings()
+    out: list[dict[str, Any]] = []
+    for plugin_id, plugin in registry.plugins.items():
+        decls = plugin.manifest.get("settings") or []
+        if not decls:
+            continue
+        current = store.get(plugin_id)
+        fields: list[dict[str, Any]] = []
+        for d in decls:
+            name = str(d["name"])
+            secret = bool(d.get("secret", False))
+            value = current.get(name)
+            is_set = name in current and value not in (None, "")
+            fields.append(
+                {
+                    "name": name,
+                    "type": d.get("type", "string"),
+                    "label": d.get("label", name),
+                    "default": d.get("default"),
+                    "choices": d.get("choices"),
+                    "secret": secret,
+                    "is_set": is_set,
+                    "value": (_SECRET_PLACEHOLDER if secret and is_set else value),
+                }
+            )
+        out.append(
+            {
+                "plugin_id": plugin_id,
+                "plugin_name": plugin.name,
+                "settings": fields,
+            }
+        )
+    return jsonify(out)
+
+
+@bp.put("/api/settings/<plugin_id>")
+def api_save_settings(plugin_id: str) -> tuple[Response, int] | tuple[str, int]:
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+    plugin = _registry().plugins.get(plugin_id)
+    if plugin is None:
+        return ("", 404)
+
+    decls = plugin.manifest.get("settings") or []
+    decl_by_name = {str(d["name"]): d for d in decls}
+    valid_names = set(decl_by_name)
+
+    store = _settings()
+    existing = store.get(plugin_id)
+    merged: dict[str, Any] = dict(existing)
+    for name, raw in body.items():
+        if name not in valid_names:
+            continue
+        decl = decl_by_name[name]
+        is_secret = bool(decl.get("secret", False))
+        # Secrets: empty string or the placeholder means "leave unchanged".
+        if is_secret and (raw == "" or raw == _SECRET_PLACEHOLDER):
+            continue
+        if decl.get("type") == "boolean":
+            merged[name] = bool(raw)
+        elif decl.get("type") == "number":
+            try:
+                merged[name] = float(raw) if raw not in (None, "") else None
+            except (TypeError, ValueError):
+                return jsonify({"error": f"{name} must be a number"}), 400
+        else:
+            merged[name] = raw
+    store.set(plugin_id, merged)
+    return ("", 204)
 
 
 @bp.get("/api/listener/status")

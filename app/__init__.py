@@ -10,7 +10,15 @@ from app import admin, composer, plugin_loader
 from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
 from app.push import PushManager
 from app.scheduler import Scheduler
-from app.state import Cell, HistoryStore, Page, PageStore, Panel, ScheduleStore
+from app.state import (
+    Cell,
+    HistoryStore,
+    Page,
+    PageStore,
+    Panel,
+    ScheduleStore,
+    SettingsStore,
+)
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = (ROOT / "VERSION").read_text().strip()
@@ -88,6 +96,9 @@ def create_app(
 
     history = HistoryStore(data_path / "core" / "history.db")
     app.config["HISTORY_STORE"] = history
+
+    settings_store = SettingsStore(data_path / "plugins")
+    app.config["SETTINGS_STORE"] = settings_store
 
     renders_dir = data_path / "core" / "renders"
     app.config["RENDERS_DIR"] = renders_dir

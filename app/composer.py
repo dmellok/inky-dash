@@ -112,10 +112,12 @@ def _fetch_plugin_data(
     fetch_fn = getattr(plugin.server_module, "fetch", None)
     if fetch_fn is None:
         return None
+    settings_store = current_app.config["SETTINGS_STORE"]
+    settings = settings_store.get(plugin_id)
     try:
         return fetch_fn(
             options,
-            {},  # settings — wired in M7 alongside the /settings page
+            settings,
             ctx={
                 "panel_w": panel_w,
                 "panel_h": panel_h,
