@@ -118,9 +118,10 @@ Plugin-specific settings (`NASA_API_KEY`, `UNSPLASH_ACCESS_KEY`, `WEATHER_ICON_S
 
 The full docs live in the [**GitHub Wiki**](https://github.com/dmellok/inky-dash/wiki):
 
-- [**Installation**](https://github.com/dmellok/inky-dash/wiki/Installation) — clone, virtualenv, dependencies, `.env`, the panel listener
+- [**Installation**](https://github.com/dmellok/inky-dash/wiki/Installation) — clone, virtualenv, dependencies, `.env`
 - [**Quickstart**](https://github.com/dmellok/inky-dash/wiki/Quickstart) — first dashboard in five minutes
 - [**Configuration**](https://github.com/dmellok/inky-dash/wiki/Configuration) — every env var explained, panel auto-detect, MQTT
+- [**Panel listener**](https://github.com/dmellok/inky-dash/wiki/Panel-listener) — running the Pi-side listener (companion repo: [dmellok/inky-dash-listener](https://github.com/dmellok/inky-dash-listener))
 - [**Dashboards**](https://github.com/dmellok/inky-dash/wiki/Dashboards) — composing pages, layouts, per-cell themes
 - [**Schedules**](https://github.com/dmellok/inky-dash/wiki/Schedules) — interval + one-shot, drag-to-reorder priority
 - [**Send page**](https://github.com/dmellok/inky-dash/wiki/Send-page) — pushing files / URLs / webpages / saved dashboards
