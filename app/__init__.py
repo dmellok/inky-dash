@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, abort, send_from_directory
+from werkzeug.wrappers import Response
 
 from app import admin, composer, plugin_loader
-from app.state import Cell, Page, PageStore, Panel
+from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
+from app.push import PushManager
+from app.state import Cell, HistoryStore, Page, PageStore, Panel
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = (ROOT / "VERSION").read_text().strip()
 DEFAULT_PLUGINS_DIR = ROOT / "plugins"
 DEFAULT_DATA_ROOT = ROOT / "data"
 PLUGIN_SCHEMA_PATH = ROOT / "schema" / "plugin.schema.json"
+DEFAULT_BASE_URL = "http://localhost:5555"
 
 
 _DEMO_PAGE = Page(
@@ -32,10 +37,26 @@ _DEMO_PAGE = Page(
 )
 
 
+def _build_bridge() -> MqttBridge:
+    """Construct the MQTT bridge from env vars. Falls back to NullBridge if
+    MQTT_HOST is unset — the app boots fine, push attempts raise loudly."""
+    host = os.environ.get("MQTT_HOST")
+    if not host:
+        return NullBridge()
+    return PahoBridge(
+        host=host,
+        port=int(os.environ.get("MQTT_PORT", "1883")),
+        username=os.environ.get("MQTT_USERNAME") or None,
+        password=os.environ.get("MQTT_PASSWORD") or None,
+        status_topic=os.environ.get("MQTT_TOPIC_STATUS", "inky/status"),
+    )
+
+
 def create_app(
     *,
     plugins_dir: Path | None = None,
     data_root: Path | None = None,
+    bridge: MqttBridge | None = None,
 ) -> Flask:
     app = Flask(
         __name__,
@@ -63,15 +84,42 @@ def create_app(
         page_store.upsert(_DEMO_PAGE)
     app.config["PAGE_STORE"] = page_store
 
+    history = HistoryStore(data_path / "core" / "history.db")
+    app.config["HISTORY_STORE"] = history
+
+    renders_dir = data_path / "core" / "renders"
+    app.config["RENDERS_DIR"] = renders_dir
+
+    bridge_impl = bridge if bridge is not None else _build_bridge()
+    app.config["MQTT_BRIDGE"] = bridge_impl
+
+    push_manager = PushManager(
+        bridge=bridge_impl,
+        history=history,
+        page_store=page_store,
+        renders_dir=renders_dir,
+        base_url=os.environ.get("COMPANION_BASE_URL", DEFAULT_BASE_URL),
+        topic=os.environ.get("MQTT_TOPIC_UPDATE", "inky/update"),
+    )
+    app.config["PUSH_MANAGER"] = push_manager
+
     app.register_blueprint(composer.bp)
     app.register_blueprint(admin.bp)
+
+    @app.get("/renders/<digest>.png")
+    def serve_render(digest: str) -> Response:
+        # Constrain digest shape — the artifact filenames are 16-hex SHA256s.
+        if len(digest) != 16 or not all(c in "0123456789abcdef" for c in digest):
+            abort(404)
+        return send_from_directory(renders_dir, f"{digest}.png")
 
     @app.get("/")
     def index() -> str:
         widgets = len(registry.widgets())
         errors = len(registry.errors)
-        return f"Inky Dash v{VERSION} — {widgets} widget plugin(s) loaded" + (
-            f", {errors} error(s)" if errors else ""
+        bridge_state = "connected" if not isinstance(bridge_impl, NullBridge) else "off"
+        return f"Inky Dash v{VERSION} — {widgets} widget plugin(s) loaded, MQTT {bridge_state}" + (
+            f", {errors} plugin error(s)" if errors else ""
         )
 
     @app.get("/healthz")
@@ -82,6 +130,9 @@ def create_app(
             "plugins": {
                 "loaded": sorted(registry.plugins.keys()),
                 "errors": [{"id": e.plugin_id, "message": e.message} for e in registry.errors],
+            },
+            "mqtt": {
+                "connected": not isinstance(bridge_impl, NullBridge),
             },
         }
 

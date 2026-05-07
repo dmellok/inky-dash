@@ -74,6 +74,8 @@ class IdEditor extends LitElement {
     lastSavedAt: { state: true },
     dither: { state: true },
     previewLoading: { state: true },
+    pushing: { state: true },
+    pushResult: { state: true },
   };
 
   static styles = css`
@@ -256,6 +258,8 @@ class IdEditor extends LitElement {
     this.lastSavedAt = 0;
     this.dither = "floyd-steinberg";
     this.previewLoading = false;
+    this.pushing = false;
+    this.pushResult = null;
   }
 
   async connectedCallback() {
@@ -344,6 +348,27 @@ class IdEditor extends LitElement {
       this.error = err.message;
     } finally {
       this.saving = false;
+    }
+  }
+
+  async _push() {
+    this.pushing = true;
+    this.pushResult = null;
+    try {
+      const res = await fetch(
+        `/api/pages/${encodeURIComponent(this.page.id)}/push`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ dither: this.dither }),
+        }
+      );
+      const body = await res.json();
+      this.pushResult = { ok: res.ok, ...body };
+    } catch (err) {
+      this.pushResult = { ok: false, error: err.message };
+    } finally {
+      this.pushing = false;
     }
   }
 
@@ -567,12 +592,25 @@ class IdEditor extends LitElement {
           ${this.saving ? "Saving…" : "Save"}
         </id-button>
         <id-button
+          ?disabled=${this.pushing || this.saving}
+          @click=${() => this._push()}
+        >
+          ${this.pushing ? "Pushing…" : "Push to panel"}
+        </id-button>
+        <id-button
           @click=${() =>
             window.open(`/compose/${encodeURIComponent(this.page.id)}`, "_blank")}
         >
           Open compose ↗
         </id-button>
       </div>
+      ${this.pushResult
+        ? html`<div class="status ${this.pushResult.ok ? "" : "error"}" style="margin-top: 8px;">
+            ${this.pushResult.ok
+              ? `Sent (${this.pushResult.digest}, ${this.pushResult.duration_s}s)`
+              : `Push failed: ${this.pushResult.error || this.pushResult.status}`}
+          </div>`
+        : null}
 
       <div style="height: 16px"></div>
 

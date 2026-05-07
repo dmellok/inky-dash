@@ -13,10 +13,12 @@ from flask import Blueprint, abort, current_app, jsonify, render_template, reque
 from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
+from app.mqtt_bridge import MqttBridge
 from app.plugin_loader import PluginRegistry
+from app.push import PushManager, PushOptions
 from app.quantizer import DitherMode, quantize_to_png
 from app.renderer import RenderRequest, render_to_png
-from app.state import Page, PageStore
+from app.state import HistoryStore, Page, PageStore
 
 _VALID_DITHER_MODES: frozenset[str] = frozenset({"floyd-steinberg", "none"})
 
@@ -101,9 +103,7 @@ def _render_page_png(page_id: str) -> tuple[bytes, int, int]:
     page = _store().get(page_id)
     if page is None:
         abort(404)
-    compose_url = url_for(
-        "composer.compose", page_id=page_id, for_push=1, _external=True
-    )
+    compose_url = url_for("composer.compose", page_id=page_id, for_push=1, _external=True)
     raw = render_to_png(
         RenderRequest(
             url=compose_url,
@@ -136,3 +136,104 @@ def cast_dither(value: str) -> DitherMode:
     """Narrow a validated string to the DitherMode literal for the quantizer."""
     assert value in _VALID_DITHER_MODES
     return value  # type: ignore[return-value]
+
+
+def _push_manager() -> PushManager:
+    pm: PushManager = current_app.config["PUSH_MANAGER"]
+    return pm
+
+
+def _bridge() -> MqttBridge:
+    bridge: MqttBridge = current_app.config["MQTT_BRIDGE"]
+    return bridge
+
+
+def _history() -> HistoryStore:
+    h: HistoryStore = current_app.config["HISTORY_STORE"]
+    return h
+
+
+@bp.post("/api/pages/<page_id>/push")
+def api_push_page(page_id: str) -> tuple[Response, int] | Response:
+    """Render → quantize → publish MQTT job.
+
+    Body (all optional):
+      { "rotate": int, "scale": str, "bg": str, "saturation": float, "dither": str }
+    """
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict):
+        return jsonify({"error": "body must be a JSON object"}), 400
+
+    dither_arg = body.get("dither", "floyd-steinberg")
+    if not isinstance(dither_arg, str) or dither_arg not in _VALID_DITHER_MODES:
+        return jsonify({"error": f"invalid dither mode: {dither_arg!r}"}), 400
+
+    options_kwargs: dict[str, Any] = {}
+    for field_name in ("rotate", "scale", "bg", "saturation"):
+        if field_name in body:
+            options_kwargs[field_name] = body[field_name]
+
+    try:
+        options = PushOptions(**options_kwargs)
+    except (TypeError, ValueError) as err:
+        return jsonify({"error": str(err)}), 400
+
+    result = _push_manager().push(page_id, options=options, dither=cast_dither(dither_arg))
+
+    response = jsonify(
+        {
+            "status": result.status,
+            "digest": result.digest,
+            "url": result.url,
+            "error": result.error,
+            "duration_s": round(result.duration_s, 3),
+            "history_id": result.history_id,
+            "options": result.options,
+        }
+    )
+    if result.status == "sent":
+        return response
+    if result.status == "busy":
+        return response, 409
+    if result.status == "not_found":
+        return response, 404
+    return response, 502
+
+
+@bp.get("/api/history")
+def api_history() -> Response:
+    raw_limit = request.args.get("limit", "50")
+    try:
+        limit = max(1, min(int(raw_limit), 500))
+    except ValueError:
+        limit = 50
+    rows = _history().recent(limit=limit)
+    return jsonify(
+        [
+            {
+                "id": r.id,
+                "ts": r.ts.isoformat(),
+                "page_id": r.page_id,
+                "digest": r.digest,
+                "status": r.status,
+                "duration_s": round(r.duration_s, 3),
+                "error": r.error,
+                "options": r.options,
+            }
+            for r in rows
+        ]
+    )
+
+
+@bp.get("/api/listener/status")
+def api_listener_status() -> Response:
+    status = _bridge().listener_status
+    if status is None:
+        return jsonify({"state": "unknown", "received_at": None, "raw": None})
+    return jsonify(
+        {
+            "state": status.state,
+            "received_at": status.received_at.isoformat(),
+            "raw": status.raw,
+        }
+    )

@@ -8,7 +8,7 @@ The Pi-side listener is a separate project: [dmellok/inky-dash-listener](https:/
 
 ## Status
 
-**Milestone 3 (v0.4.0).** Render + quantize pipeline live. `app/renderer.py` drives headless Chromium via Playwright at panel resolution; `app/quantizer.py` projects to the Spectra 6 7-colour gamut (Floyd–Steinberg dither default, nearest-colour for "none"). The editor's preview pane shows the live iframe and the quantized PNG side-by-side — what the user sees in the browser is what the panel will paint. WYSIWYG by construction. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
+**Milestone 4 (v0.5.0).** MQTT push pipeline live. `app/mqtt_bridge.py` wraps paho-mqtt (publish + retained-status subscribe); a `NullBridge` keeps the app bootable without a broker. `app/push.py` is the single-flight `PushManager`: render → quantize → write `data/core/renders/<digest>.png` → publish the wire-format JSON job to `inky/update`. Every attempt is recorded in `data/core/history.db` (SQLite). The editor's "Push to panel" button drives the whole pipeline. The Pi listener at [dmellok/inky-dash-listener](https://github.com/dmellok/inky-dash-listener) reads the same wire format v3 spoke — byte-for-byte unchanged. See [`docs/v4-brief.md`](docs/v4-brief.md) for the full milestone plan up to v1.0.
 
 ## Quick start
 
@@ -22,13 +22,19 @@ python -m playwright install chromium
 bun install && bun run build      # or: npm install && npm run build
 
 # Run the dev server
+# To enable push, set MQTT_HOST (and friends) before launching:
+#   export MQTT_HOST=192.168.1.50     # broker the Pi listener subscribes to
+#   export COMPANION_BASE_URL=http://192.168.1.10:5555  # how the Pi reaches us
 python -m app
 # http://localhost:5555/                                   — index
-# http://localhost:5555/editor/_demo                       — page editor + preview pane
+# http://localhost:5555/editor/_demo                       — page editor + preview + push
 # http://localhost:5555/_components                        — design system demo
 # http://localhost:5555/compose/_demo                      — what Playwright screenshots
 # http://localhost:5555/api/pages/_demo/raw.png            — pre-quantize render
 # http://localhost:5555/api/pages/_demo/preview.png        — quantized render (panel paint)
+# http://localhost:5555/api/pages/_demo/push  (POST)       — render + quantize + publish
+# http://localhost:5555/api/history                        — recent push attempts
+# http://localhost:5555/api/listener/status                — last retained status from listener
 # http://localhost:5555/_test/render?plugin=clock&size=md
 
 # Run the checks
@@ -47,6 +53,8 @@ app/                Flask application
   plugin_loader.py  mypy --strict — discovery + schema validation + asset routes
   renderer.py       mypy --strict — Playwright wrapper, screenshot at panel resolution
   quantizer.py      Pillow-based gamut projection (Spectra 6) + Floyd–Steinberg dither
+  mqtt_bridge.py    paho-mqtt publisher + listener-status subscriber; NullBridge fallback
+  push.py           mypy --strict — single-flight PushManager (render→quantize→publish)
 docs/               Build brief + plugin contract
 plugins/<id>/       Drop-a-folder plugin: plugin.json + client.js + tests/
 schema/             JSON Schemas (plugin manifest, page model)

@@ -21,9 +21,7 @@ requires_built_bundle = pytest.mark.skipif(
 
 
 @requires_built_bundle
-def test_components_page_renders_design_system(
-    page: Page, live_server_url: str
-) -> None:
+def test_components_page_renders_design_system(page: Page, live_server_url: str) -> None:
     page.goto(f"{live_server_url}/_components")
     expect(page.locator("components-demo")).to_be_visible()
     page.wait_for_function(
