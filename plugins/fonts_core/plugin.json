@@ -57,6 +57,129 @@
       "files": {
         "400": "files/bebasneue-400.woff2"
       }
+    },
+    {
+      "id": "nunito",
+      "name": "Nunito",
+      "category": "sans",
+      "weights": [700, 800, 900],
+      "files": {
+        "700": "files/nunito.woff2",
+        "800": "files/nunito.woff2",
+        "900": "files/nunito.woff2"
+      }
+    },
+    {
+      "id": "anton",
+      "name": "Anton",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/anton-400.woff2"
+      }
+    },
+    {
+      "id": "archivoblack",
+      "name": "Archivo Black",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/archivoblack-400.woff2"
+      }
+    },
+    {
+      "id": "bowlbyone",
+      "name": "Bowlby One",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/bowlbyone-400.woff2"
+      }
+    },
+    {
+      "id": "fjallaone",
+      "name": "Fjalla One",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/fjallaone-400.woff2"
+      }
+    },
+    {
+      "id": "spacegrotesk",
+      "name": "Space Grotesk",
+      "category": "sans",
+      "weights": [500, 700],
+      "files": {
+        "500": "files/spacegrotesk.woff2",
+        "700": "files/spacegrotesk.woff2"
+      }
+    },
+    {
+      "id": "outfit",
+      "name": "Outfit",
+      "category": "sans",
+      "weights": [700, 800, 900],
+      "files": {
+        "700": "files/outfit.woff2",
+        "800": "files/outfit.woff2",
+        "900": "files/outfit.woff2"
+      }
+    },
+    {
+      "id": "bigshoulders",
+      "name": "Big Shoulders",
+      "category": "display",
+      "weights": [700, 800],
+      "files": {
+        "700": "files/bigshoulders.woff2",
+        "800": "files/bigshoulders.woff2"
+      }
+    },
+    {
+      "id": "bungee",
+      "name": "Bungee",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/bungee-400.woff2"
+      }
+    },
+    {
+      "id": "majormono",
+      "name": "Major Mono Display",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/majormono-400.woff2"
+      }
+    },
+    {
+      "id": "modak",
+      "name": "Modak",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/modak-400.woff2"
+      }
+    },
+    {
+      "id": "coiny",
+      "name": "Coiny",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/coiny-400.woff2"
+      }
+    },
+    {
+      "id": "changaone",
+      "name": "Changa One",
+      "category": "display",
+      "weights": [400],
+      "files": {
+        "400": "files/changaone-400.woff2"
+      }
     }
   ]
 }

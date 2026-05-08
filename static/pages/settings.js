@@ -20,7 +20,7 @@ class SettingsPage extends LitElement {
       color: var(--id-fg, #1a1612);
     }
     .container {
-      max-width: 760px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -56,13 +56,112 @@ class SettingsPage extends LitElement {
       font: inherit;
       min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
+    }
+    /* Accent-colored focus ring — overrides the browser default blue. */
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--id-accent, #b06750);
+      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    }
+    /* Custom select chevron — disables the native widget so the
+       box matches plain inputs in size, padding, and theme. */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 12px;
+      padding-right: 32px;
     }
     label.checkbox {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       min-height: var(--id-control-h, 40px);
       font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Toggle switch — replaces native checkbox styling. */
+    label.checkbox input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 36px;
+      height: 20px;
+      background: var(--id-divider, #c8b89b);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+    label.checkbox input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+      transition: transform 150ms ease;
+    }
+    label.checkbox input[type="checkbox"]:checked {
+      background: var(--id-accent, #b06750);
+    }
+    label.checkbox input[type="checkbox"]:checked::before {
+      transform: translateX(16px);
+    }
+    label.checkbox input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 2px;
+    }
+
+    /* Custom radio dots. */
+    label.radio {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--id-fg, #0f172a);
+    }
+    label.radio input[type="radio"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--id-divider, #c8b89b);
+      border-radius: 50%;
+      margin: 0;
+      flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+      transition: border-color 150ms ease;
+    }
+    label.radio input[type="radio"]:hover {
+      border-color: var(--id-fg-soft, #5a4f44);
+    }
+    label.radio input[type="radio"]:checked {
+      border-color: var(--id-accent, #b06750);
+    }
+    label.radio input[type="radio"]:checked::before {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: var(--id-accent, #b06750);
+    }
+    label.radio input[type="radio"]:focus-visible {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 2px;
     }
     .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .empty {
@@ -396,16 +495,19 @@ class SettingsPage extends LitElement {
     if (!this.appDraft) return null;
     const draft = this.appDraft;
     const appearance =
-      draft.appearance || { theme: "auto", accent: "#4f46e5" };
+      draft.appearance || { theme: "auto", accent: "#b06750" };
+    // Warm, dusty palette — less saturated and more grounded than the
+    // standard tailwind brights. Each entry keeps the original hue but
+    // shifts toward earth tones for a softer feel.
     const presets = [
-      { value: "#4f46e5", label: "Indigo" },
-      { value: "#0ea5e9", label: "Sky" },
-      { value: "#10b981", label: "Emerald" },
-      { value: "#f59e0b", label: "Amber" },
-      { value: "#ef4444", label: "Red" },
-      { value: "#a855f7", label: "Purple" },
-      { value: "#ec4899", label: "Pink" },
-      { value: "#64748b", label: "Slate" },
+      { value: "#b06750", label: "Terracotta" },
+      { value: "#c4884e", label: "Mustard" },
+      { value: "#8a9b6a", label: "Sage" },
+      { value: "#5c8a82", label: "Teal" },
+      { value: "#6c7c9a", label: "Dusty blue" },
+      { value: "#8b6f9b", label: "Mauve" },
+      { value: "#b07089", label: "Rose" },
+      { value: "#857872", label: "Stone" },
     ];
     const isSaving = this.saving.app;
     const isSaved = this.saved.app;
@@ -518,7 +620,7 @@ class SettingsPage extends LitElement {
         <div class="form-row">
           <label class="field">Orientation</label>
           <div>
-            <label class="checkbox" style="margin-right: 16px;">
+            <label class="radio" style="margin-right: 16px;">
               <input
                 type="radio"
                 name="orientation"
@@ -528,7 +630,7 @@ class SettingsPage extends LitElement {
               />
               Portrait
             </label>
-            <label class="checkbox">
+            <label class="radio">
               <input
                 type="radio"
                 name="orientation"

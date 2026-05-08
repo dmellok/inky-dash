@@ -25,11 +25,10 @@ FAKE_PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 
 @pytest.fixture
 def fake_render(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace the renderer/quantizer with no-op functions returning fake bytes."""
-    monkeypatch.setattr(push_module, "render_to_png", lambda req: b"raw" + FAKE_PNG)
-    monkeypatch.setattr(
-        push_module, "quantize_to_png", lambda src, *, dither: FAKE_PNG + dither.encode()
-    )
+    """Replace the renderer with a no-op returning fake bytes. Quantizing
+    moved to the panel listener — the push pipeline only renders + (maybe)
+    rotates now."""
+    monkeypatch.setattr(push_module, "render_to_png", lambda req: FAKE_PNG)
 
 
 def _seed_demo(page_store: PageStore) -> None:
@@ -148,7 +147,6 @@ def test_concurrent_push_returns_busy(tmp_path: Path, monkeypatch: pytest.Monkey
         return b"raw"
 
     monkeypatch.setattr(push_module, "render_to_png", slow_render)
-    monkeypatch.setattr(push_module, "quantize_to_png", lambda src, *, dither: FAKE_PNG)
 
     manager, _, _, _, _ = _make_manager(tmp_path)
 
@@ -192,9 +190,8 @@ def test_landscape_rotation_actually_rotates_artifact(
     src = Image.new("RGB", (40, 10), (200, 50, 50))
     buf = io.BytesIO()
     src.save(buf, format="PNG")
-    fake_quantized = buf.getvalue()
-    monkeypatch.setattr(push_module, "render_to_png", lambda req: fake_quantized)
-    monkeypatch.setattr(push_module, "quantize_to_png", lambda src, *, dither: fake_quantized)
+    fake_render = buf.getvalue()
+    monkeypatch.setattr(push_module, "render_to_png", lambda req: fake_render)
 
     bridge = FakeBridge()
     history = HistoryStore(tmp_path / "history.db")
@@ -218,12 +215,13 @@ def test_landscape_rotation_actually_rotates_artifact(
 def test_lru_eviction_drops_oldest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     counter = [0]
 
-    def unique_quantize(src: object, *, dither: str) -> bytes:
+    def unique_render(req: object) -> bytes:
         counter[0] += 1
+        # Each render must produce different bytes so the SHA digests
+        # differ → LRU has distinct artifacts to evict.
         return FAKE_PNG + f":{counter[0]}".encode()
 
-    monkeypatch.setattr(push_module, "render_to_png", lambda req: FAKE_PNG)
-    monkeypatch.setattr(push_module, "quantize_to_png", unique_quantize)
+    monkeypatch.setattr(push_module, "render_to_png", unique_render)
 
     bridge = FakeBridge()
     history = HistoryStore(tmp_path / "history.db")

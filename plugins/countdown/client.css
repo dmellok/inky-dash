@@ -10,7 +10,7 @@
   width: 100%;
   padding: 6cqmin;
   box-sizing: border-box;
-  background: var(--theme-surface);
+  background: var(--theme-bg);
   color: var(--theme-fg);
   text-align: center;
   font-variant-numeric: tabular-nums;

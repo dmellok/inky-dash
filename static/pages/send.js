@@ -27,7 +27,7 @@ class SendPage extends LitElement {
       color: var(--id-fg, #1a1612);
     }
     .container {
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -42,7 +42,7 @@ class SendPage extends LitElement {
       flex-wrap: wrap;
     }
     .source-tabs button {
-      min-height: 44px;
+      min-height: var(--id-control-h, 40px);
       padding: 0 16px;
       border: 0;
       background: transparent;
@@ -102,6 +102,27 @@ class SendPage extends LitElement {
       font: inherit;
       min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
+    }
+    /* Accent-colored focus ring — overrides the browser default blue. */
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--id-accent, #b06750);
+      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    }
+    /* Custom select chevron — disables the native widget so the
+       box matches plain inputs in size, padding, and theme. */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 12px;
+      padding-right: 32px;
     }
 
     /* File drop zone */

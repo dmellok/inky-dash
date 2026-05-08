@@ -4,8 +4,11 @@ A schedule fires a push at a specified cadence. Two types:
 
   - ``interval`` — fires every ``interval_minutes``, optionally bounded to
     a time-of-day window and/or a day-of-week mask.
-  - ``oneshot`` — fires once at ``fires_at``, then ``fired`` is set ``True``
-    and the schedule stays in the store as a record.
+  - ``oneshot`` — fires daily at ``fires_at``'s time-of-day. Despite the
+    name, this is "fire every day at HH:MM"; the date portion of
+    ``fires_at`` is ignored and the days-of-week / window filters are
+    bypassed. The ``fired`` flag is no longer used; firing-today is
+    tracked in the scheduler's last-fired map.
 
 Higher ``priority`` schedules win when two are due at the same tick.
 

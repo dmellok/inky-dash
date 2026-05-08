@@ -16,9 +16,6 @@ FAKE_PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 @pytest.fixture(autouse=True)
 def _stub_render(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(push_module, "render_to_png", lambda req: FAKE_PNG)
-    monkeypatch.setattr(
-        push_module, "quantize_to_png", lambda src, *, dither: FAKE_PNG + dither.encode()
-    )
 
 
 def _real_image_bytes() -> bytes:

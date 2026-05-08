@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Literal
 
 from app.mqtt_bridge import MqttBridge
-from app.quantizer import DitherMode, quantize_to_png, rotate_png
+from app.quantizer import DitherMode, rotate_png
 from app.renderer import RenderRequest, render_to_png
 from app.state.history import HistoryStore
 from app.state.page_store import PageStore
@@ -144,9 +144,13 @@ class PushManager:
                     viewport_h=page.panel.h,
                 )
             )
-            quantized = quantize_to_png(raw, dither=dither)
-            quantized = rotate_png(quantized, quarters=self._rotate_quarters)
-        except Exception as err:  # noqa: BLE001 — surface any renderer/quantizer failure
+            # Wire format: full-color render, post-rotation. The panel
+            # listener owns gamut quantization (it knows the actual ink
+            # primaries for its hardware). Dither argument is preserved on
+            # the API for backward-compat but is a no-op for the bytes —
+            # the listener decides how to dither.
+            quantized = rotate_png(raw, quarters=self._rotate_quarters)
+        except Exception as err:  # noqa: BLE001 — surface any renderer failure
             duration = time.monotonic() - started
             history_id = self._history.record(
                 page_id=page_id,
@@ -347,11 +351,15 @@ class PushManager:
         opts: PushOptions,
         dither: DitherMode,
     ) -> PushResult:
-        """Shared tail end of push_image / push_webpage: quantize → store → publish."""
+        """Shared tail end of push_image / push_webpage: rotate → store → publish.
+
+        We send the full-color image bytes through; the panel listener owns
+        gamut quantization. ``dither`` is kept on the API surface for
+        backward compat but no longer transforms the bytes here.
+        """
         started = time.monotonic()
         try:
-            quantized = quantize_to_png(image_bytes, dither=dither)
-            quantized = rotate_png(quantized, quarters=self._rotate_quarters)
+            quantized = rotate_png(image_bytes, quarters=self._rotate_quarters)
         except Exception as err:  # noqa: BLE001
             duration = time.monotonic() - started
             history_id = self._history.record(
@@ -359,12 +367,12 @@ class PushManager:
                 digest=None,
                 status="failed",
                 duration_s=duration,
-                error=f"quantize: {err}",
+                error=f"rotate: {err}",
                 options=asdict(opts),
             )
             return PushResult(
                 status="failed",
-                error=f"quantize: {err}",
+                error=f"rotate: {err}",
                 duration_s=duration,
                 history_id=history_id,
                 options=asdict(opts),

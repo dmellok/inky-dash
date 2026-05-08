@@ -140,16 +140,24 @@ export class IdNav extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
       border: 0;
       background: transparent;
-      color: var(--id-fg, #1a1612);
+      color: var(--id-fg-soft, #5a4f44);
       cursor: pointer;
-      font-size: 18px;
       padding: 0;
-      border-radius: 8px;
       transition: background 100ms ease, color 100ms ease;
+    }
+    /* Theme toggle: subtle, sits beside the brand. */
+    .theme-toggle {
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover {
+      background: var(--id-surface2, #f5e8d8);
+      color: var(--id-fg, #1a1612);
     }
     .hamburger {
       display: none;
@@ -158,10 +166,9 @@ export class IdNav extends LitElement {
       font-size: 22px;
       border-radius: 6px;
     }
-    .hamburger:hover,
-    .theme-toggle:hover {
+    .hamburger:hover {
       background: var(--id-surface2, #f5e8d8);
-      color: var(--id-accent, #d97757);
+      color: var(--id-fg, #1a1612);
     }
 
     .backdrop {
@@ -270,6 +277,44 @@ export class IdNav extends LitElement {
       .hamburger {
         display: inline-flex;
       }
+      /* On narrow screens the toggle lives inside the drawer footer
+         instead of the nav strip. */
+      .theme-toggle {
+        display: none;
+      }
+    }
+
+    /* Drawer footer: theme toggle pinned to the bottom of the side menu. */
+    .drawer-foot {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--id-divider, #c8b89b);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .drawer-foot button {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      background: transparent;
+      color: var(--id-fg, #1a1612);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 100ms ease, border-color 100ms ease;
+    }
+    .drawer-foot button:hover {
+      background: var(--id-surface2, #f5e8d8);
+      border-color: var(--id-fg-soft, #5a4f44);
+    }
+    .drawer-foot .ph {
+      color: var(--id-accent, #b06750);
+      font-size: 18px;
     }
   `;
 
@@ -511,6 +556,12 @@ export class IdNav extends LitElement {
               </a>
             `
           )}
+        </div>
+        <div class="drawer-foot">
+          <button @click=${this._toggleTheme}>
+            <i class="ph ${this.isDark ? "ph-sun" : "ph-moon"}"></i>
+            <span>${this.isDark ? "Light mode" : "Dark mode"}</span>
+          </button>
         </div>
       </aside>
     `;

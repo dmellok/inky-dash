@@ -105,12 +105,12 @@ def create_app(
     app_settings = app_settings_store.load_or_initialize()
     app.config["APP_SETTINGS_STORE"] = app_settings_store
 
-    # Source of truth: the panel orientation in settings drives every page's
-    # composition orientation. Sweep on boot so a landscape demo page is
-    # auto-aligned if the user previously set the app to portrait.
-    from app.admin import _align_pages_to_orientation
+    # Source of truth: the panel settings (model + orientation) drive every
+    # page's resolution. Sweep on boot so existing dashboards auto-align if
+    # the user previously changed the panel out-of-band.
+    from app.admin import _align_pages_to_panel
 
-    _align_pages_to_orientation(page_store, app_settings.panel.orientation)
+    _align_pages_to_panel(page_store, app_settings.panel)
 
     history = HistoryStore(data_path / "core" / "history.db")
     app.config["HISTORY_STORE"] = history

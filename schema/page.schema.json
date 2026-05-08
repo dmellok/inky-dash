@@ -38,6 +38,17 @@
       "default": 0,
       "description": "Rounded corners on each cell, in pixels."
     },
+    "bleed_color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "default": "#ffffff",
+      "description": "Hex color that bleeds through the gap between cells and behind rounded corners."
+    },
+    "icon": {
+      "type": "string",
+      "pattern": "^ph-[a-z0-9-]+$",
+      "description": "Phosphor icon class (optional)."
+    },
     "cells": {
       "type": "array",
       "items": { "$ref": "#/$defs/cell" }

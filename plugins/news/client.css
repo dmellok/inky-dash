@@ -5,7 +5,7 @@
   height: 100%;
   padding: 4cqmin;
   box-sizing: border-box;
-  background: var(--theme-surface);
+  background: var(--theme-bg);
   color: var(--theme-fg);
   gap: 2cqmin;
 }

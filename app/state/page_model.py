@@ -49,3 +49,8 @@ class Page(BaseModel):
     # Phosphor icon class (e.g. "ph-cube"). Optional; UI falls back to a
     # generic dashboard icon when missing.
     icon: str | None = Field(default=None, pattern=r"^ph-[a-z0-9-]+$")
+    # Background color that "bleeds" through the gap between cells (and
+    # behind cells when corner_radius > 0). Hex (#rrggbb). Default is
+    # white because pure white is a primary on the Spectra 6 panel and
+    # gives the best matting around colored widget cards.
+    bleed_color: str = Field(default="#ffffff", pattern=r"^#[0-9a-fA-F]{6}$")

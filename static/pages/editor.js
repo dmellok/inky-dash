@@ -137,10 +137,11 @@ class IdEditor extends LitElement {
       top: var(--id-nav-height, 51px);
       z-index: 5;
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
       border-bottom: 1px solid var(--id-divider, #c8b89b);
     }
     .toolbar-inner {
-      max-width: 1280px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 10px 16px;
       display: flex;
@@ -149,8 +150,8 @@ class IdEditor extends LitElement {
       flex-wrap: wrap;
     }
     .back-btn {
-      width: 36px;
-      height: 36px;
+      width: var(--id-control-h, 40px);
+      height: var(--id-control-h, 40px);
       border-radius: 6px;
       border: 1px solid var(--id-divider, #c8b89b);
       background: transparent;
@@ -167,8 +168,8 @@ class IdEditor extends LitElement {
       background: var(--id-surface2, #f5e8d8);
     }
     .icon-btn {
-      width: 36px;
-      height: 36px;
+      width: var(--id-control-h, 40px);
+      height: var(--id-control-h, 40px);
       border-radius: 6px;
       border: 1px solid var(--id-divider, #c8b89b);
       background: transparent;
@@ -188,14 +189,16 @@ class IdEditor extends LitElement {
       flex: 1;
       min-width: 200px;
       max-width: 480px;
+      height: var(--id-control-h, 40px);
       font-size: 17px;
       font-weight: 600;
       color: var(--id-fg, #1a1612);
-      padding: 6px 10px;
+      padding: 0 10px;
       border: 1px solid transparent;
       background: transparent;
       border-radius: 6px;
       font-family: inherit;
+      box-sizing: border-box;
     }
     .name-input:hover {
       border-color: var(--id-divider, #c8b89b);
@@ -227,39 +230,38 @@ class IdEditor extends LitElement {
       white-space: nowrap;
     }
     .status-pill.dirty {
-      background: rgba(217, 119, 87, 0.12);
-      color: var(--id-accent-soft, #aa5a3f);
+      background: var(--id-accent-bg, rgb(176 103 80 / 0.12));
+      color: var(--id-accent, #b06750);
     }
     .status-pill.ok {
-      background: rgba(125, 166, 112, 0.16);
-      color: var(--id-ok, #5e8b54);
+      background: color-mix(in srgb, var(--id-ok, #4d8b6c) 16%, transparent);
+      color: var(--id-ok, #4d8b6c);
     }
     .status-pill.error {
-      background: rgba(201, 124, 112, 0.16);
-      color: var(--id-danger, #c97c70);
+      background: color-mix(in srgb, var(--id-danger, #b8534f) 16%, transparent);
+      color: var(--id-danger, #b8534f);
     }
     .status-pill .ph { font-size: 13px; }
 
     /* -- Push result toast ---------------------------------------------- */
     .toast {
-      max-width: 1280px;
-      margin: 12px auto 0;
+      margin: 0 0 12px;
       padding: 10px 14px;
       border-radius: 8px;
-      background: rgba(125, 166, 112, 0.16);
-      color: var(--id-ok, #5e8b54);
-      border: 1px solid rgba(125, 166, 112, 0.4);
+      background: color-mix(in srgb, var(--id-ok, #4d8b6c) 16%, transparent);
+      color: var(--id-ok, #4d8b6c);
+      border: 1px solid color-mix(in srgb, var(--id-ok, #4d8b6c) 35%, transparent);
       font-size: 13px;
     }
     .toast.error {
-      background: rgba(201, 124, 112, 0.16);
-      color: var(--id-danger, #c97c70);
-      border-color: rgba(201, 124, 112, 0.4);
+      background: color-mix(in srgb, var(--id-danger, #b8534f) 16%, transparent);
+      color: var(--id-danger, #b8534f);
+      border-color: color-mix(in srgb, var(--id-danger, #b8534f) 35%, transparent);
     }
 
     /* -- Main 2-column grid --------------------------------------------- */
     .container {
-      max-width: 1280px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 16px;
     }
@@ -332,10 +334,10 @@ class IdEditor extends LitElement {
       transition: border-color 100ms ease;
     }
     .cell-hit:hover {
-      border-color: rgba(217, 119, 87, 0.5);
+      border-color: color-mix(in srgb, var(--id-accent, #b06750) 50%, transparent);
     }
     .cell-hit[data-selected="true"] {
-      border-color: var(--id-accent, #d97757);
+      border-color: var(--id-accent, #b06750);
     }
     .cell-hit-label {
       position: absolute;
@@ -356,13 +358,111 @@ class IdEditor extends LitElement {
       border-radius: 6px;
       font: inherit;
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
       min-height: var(--id-control-h, 40px);
+    }
+    /* Accent-colored focus ring — overrides the browser default blue. */
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--id-accent, #b06750);
+      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    }
+    /* Custom select chevron — disables the native widget so the
+       box matches plain inputs in size, padding, and theme. */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 12px;
+      padding-right: 32px;
     }
     label.checkbox {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       min-height: var(--id-control-h, 40px);
+      cursor: pointer;
+    }
+
+    /* Inline hex color picker — native <input type="color"> wrapped with
+       a swatch + hex label so it visually matches the other form rows. */
+    .color-pick {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      height: var(--id-control-h, 40px);
+      padding: 0 12px;
+      border: 1px solid var(--id-divider, #e2e8f0);
+      border-radius: var(--id-radius, 8px);
+      background: var(--id-bg, #ffffff);
+      cursor: pointer;
+      position: relative;
+    }
+    .color-pick:hover { border-color: var(--id-fg-soft, #64748b); }
+    .color-pick:focus-within {
+      border-color: var(--id-accent, #b06750);
+      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    }
+    .color-pick input[type="color"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .color-pick .swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      border: 1px solid var(--id-divider, #e2e8f0);
+      flex-shrink: 0;
+    }
+    .color-pick .hex {
+      font: 13px ui-monospace, "SF Mono", Menlo, monospace;
+      color: var(--id-fg, #0f172a);
+      letter-spacing: 0.02em;
+    }
+    /* Toggle switch — replaces native checkbox styling. */
+    label.checkbox input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 36px;
+      height: 20px;
+      background: var(--id-divider, #c8b89b);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+    label.checkbox input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+      transition: transform 150ms ease;
+    }
+    label.checkbox input[type="checkbox"]:checked {
+      background: var(--id-accent, #b06750);
+    }
+    label.checkbox input[type="checkbox"]:checked::before {
+      transform: translateX(16px);
+    }
+    label.checkbox input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 2px;
     }
     .empty {
       padding: 16px;
@@ -382,6 +482,7 @@ class IdEditor extends LitElement {
       border-radius: 8px;
       padding: 6px;
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -392,21 +493,21 @@ class IdEditor extends LitElement {
       border-color: var(--id-accent, #d97757);
     }
     .layout-thumb[aria-pressed="true"] {
-      border-color: var(--id-accent, #d97757);
-      background: rgba(217, 119, 87, 0.08);
+      border-color: var(--id-accent, #b06750);
+      background: var(--id-accent-bg, rgb(176 103 80 / 0.1));
     }
     .layout-thumb-shape {
       position: relative;
       width: 100%;
       aspect-ratio: 4 / 3;
-      background: var(--id-surface2, #f5e8d8);
+      background: var(--id-surface2, #f1f5f9);
       border-radius: 4px;
       overflow: hidden;
     }
     .layout-thumb-cell {
       position: absolute;
-      background: rgba(217, 119, 87, 0.6);
-      border: 1px solid rgba(217, 119, 87, 0.85);
+      background: color-mix(in srgb, var(--id-accent, #b06750) 60%, transparent);
+      border: 1px solid color-mix(in srgb, var(--id-accent, #b06750) 85%, transparent);
       box-sizing: border-box;
     }
     .layout-thumb-label {
@@ -766,6 +867,11 @@ class IdEditor extends LitElement {
 
   _setName(name) {
     this.page = { ...this.page, name };
+    this.saved = false;
+  }
+
+  _setPageBleed(hex) {
+    this.page = { ...this.page, bleed_color: hex };
     this.saved = false;
   }
 
@@ -1206,13 +1312,6 @@ class IdEditor extends LitElement {
               <i class="ph ph-paper-plane-tilt"></i>
               ${this.pushing ? "Sending…" : "Send"}
             </id-button>
-            <id-button
-              @click=${() => (this.showHelp = true)}
-              title="Shortcuts (?)"
-              aria-label="Keyboard shortcuts"
-            >
-              <i class="ph ph-keyboard"></i>
-            </id-button>
           </div>
         </div>
       </div>
@@ -1318,36 +1417,21 @@ class IdEditor extends LitElement {
       <link rel="stylesheet" href="/static/icons/phosphor.css">
       <id-nav current="editor"></id-nav>
       ${this._renderToolbar()}
-      ${this.pushResult
-        ? html`<div class="toast ${this.pushResult.ok ? "" : "error"}">
-            ${this.pushResult.ok
-              ? html`<i class="ph ph-check-circle"></i>
-                  Sent to panel · ${this.pushResult.digest} ·
-                  ${this.pushResult.duration_s}s`
-              : html`<i class="ph ph-warning-circle"></i> Send failed:
-                  ${this.pushResult.error || this.pushResult.status}`}
-          </div>`
-        : null}
 
       <div class="container">
+        ${this.pushResult
+          ? html`<div class="toast ${this.pushResult.ok ? "" : "error"}">
+              ${this.pushResult.ok
+                ? html`<i class="ph ph-check-circle"></i>
+                    Sent to panel · ${this.pushResult.digest} ·
+                    ${this.pushResult.duration_s}s`
+                : html`<i class="ph ph-warning-circle"></i> Send failed:
+                    ${this.pushResult.error || this.pushResult.status}`}
+            </div>`
+          : null}
         <div class="grid">
           <div class="sidebar-col">
-            <id-card heading="Page" subheading="Theme + spacing applied to every cell.">
-              <id-form-row label="Theme" hint="Cells can override individually.">
-                <select @change=${(e) => this._setPageTheme(e.target.value)}>
-                  ${this.themes.length === 0
-                    ? html`<option>(no themes loaded)</option>`
-                    : null}
-                  ${this.themes.map(
-                    (t) => html`<option
-                      value=${t.id}
-                      ?selected=${t.id === (this.page.theme || "default")}
-                    >
-                      ${t.name}${t.mode ? ` — ${t.mode}` : ""}
-                    </option>`
-                  )}
-                </select>
-              </id-form-row>
+            <id-card heading="Page" subheading="Font + matting + spacing applied to every cell.">
               <id-form-row label="Font">
                 <select @change=${(e) => this._setPageFont(e.target.value)}>
                   ${this.fonts.length === 0
@@ -1362,6 +1446,17 @@ class IdEditor extends LitElement {
                     </option>`
                   )}
                 </select>
+              </id-form-row>
+              <id-form-row label="Matting" hint="Color that bleeds through the gap between widgets and behind rounded corners.">
+                <label class="color-pick">
+                  <input
+                    type="color"
+                    .value=${this.page.bleed_color || "#ffffff"}
+                    @input=${(e) => this._setPageBleed(e.target.value)}
+                  />
+                  <span class="swatch" style=${`background: ${this.page.bleed_color || "#ffffff"};`}></span>
+                  <span class="hex">${(this.page.bleed_color || "#ffffff").toUpperCase()}</span>
+                </label>
               </id-form-row>
               <id-form-row label="Gap" hint="Pixels between cells + around the panel edge.">
                 <id-slider

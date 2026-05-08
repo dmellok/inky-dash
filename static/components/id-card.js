@@ -9,12 +9,18 @@ export class IdCard extends LitElement {
   static styles = css`
     :host {
       display: block;
+      margin-bottom: 16px;
+    }
+    :host(:last-child) {
+      margin-bottom: 0;
     }
     .card {
       background: var(--id-surface, #ffffff);
-      border: 1px solid var(--id-divider, #c8b89b);
+      color: var(--id-fg, #0f172a);
+      border: 1px solid var(--id-divider, #e2e8f0);
       border-radius: 12px;
       padding: 16px;
+      box-shadow: var(--id-shadow-sm, 0 1px 2px rgb(15 23 42 / 0.06));
     }
     .header {
       margin-bottom: 12px;

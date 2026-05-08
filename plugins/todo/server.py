@@ -49,22 +49,33 @@ def fetch(
 
 _TEMPLATE = """
 <!doctype html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <title>Todo — Inky Dash</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/static/icons/phosphor.css">
+  <link rel="stylesheet" href="/static/style/tokens.css">
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('inky_theme') || 'auto';
+        var accent = localStorage.getItem('inky_accent');
+        var root = document.documentElement;
+        var isDark =
+          theme === 'dark' ||
+          (theme === 'auto' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) root.dataset.theme = 'dark';
+        else root.removeAttribute('data-theme');
+        if (accent) root.style.setProperty('--id-accent', accent);
+      } catch (_) {}
+    })();
+  </script>
   <script type="module" src="/static/dist/_components.js"></script>
   <style>
-    :root {
-      --id-bg: #fbf7f1; --id-fg: #1a1612; --id-fg-soft: #5a4f44;
-      --id-surface: #ffffff; --id-surface2: #f5e8d8; --id-divider: #c8b89b;
-      --id-accent: #d97757; --id-accent-soft: #aa5a3f; --id-danger: #c97c70;
-      --id-ok: #7da670;
-    }
     body {
       font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      margin: 0; background: var(--id-bg); color: var(--id-fg);
     }
     .container { max-width: 540px; margin: 0 auto; padding: 24px 16px 48px; }
     h1 { font-size: 22px; margin: 0 0 16px; }

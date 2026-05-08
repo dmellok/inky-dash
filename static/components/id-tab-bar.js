@@ -23,7 +23,7 @@ export class IdTabBar extends LitElement {
       display: none;
     }
     button {
-      min-height: 44px;
+      min-height: var(--id-control-h, 40px);
       padding: 0 16px;
       border: 0;
       background: transparent;

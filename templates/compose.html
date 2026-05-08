@@ -11,7 +11,7 @@
     html, body { margin: 0; padding: 0; }
     body {
       font-family: '{{ page.font_family }}', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      background: {{ page.palette.bg }};
+      background: {{ page.bleed_color|default('#ffffff') }};
       color: {{ page.palette.fg }};
     }
     .panel {
@@ -19,13 +19,23 @@
       width: {{ page.panel.w }}px;
       height: {{ page.panel.h }}px;
       overflow: hidden;
-      background: {{ page.palette.bg }};
+      /* Background that "bleeds" between cells when there's a gap or
+         rounded corners. Per-page user pick (default white). */
+      background: {{ page.bleed_color|default('#ffffff') }};
     }
     .cell {
       position: absolute;
       box-sizing: border-box;
       overflow: hidden;
       border-radius: {{ page.corner_radius }}px;
+      /* Theme-aware widget boundary. On the Spectra 6 panel, light theme
+         surface (#fff) and bg (#fbf7f1) both quantise to white, so without
+         this border widgets would visually merge into the panel. The
+         outline lives "inside" the cell (outline-offset: -1px) so it
+         doesn't shrink the plugin's render area — plugins still paint
+         pixel-exact at their declared cell w×h. */
+      outline: 1px solid var(--theme-divider);
+      outline-offset: -1px;
       /* Each cell is a sizing container so plugins can use cqw/cqh CSS units
          to auto-scale to their cell dimensions. Avoids overflow at the panel
          level — plugin CSS scales itself, no JS measuring needed. */

@@ -234,20 +234,29 @@ def choices(name: str) -> list[dict[str, Any]]:
 
 _PAGE_TEMPLATE = """
 <!doctype html>
-<html><head>
+<html lang="en"><head>
   <meta charset="utf-8">
   <title>Gallery — Inky Dash</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/static/icons/phosphor.css">
-  <style>
-    :root {
-      --id-bg: #fbf7f1; --id-fg: #1a1612; --id-fg-soft: #5a4f44;
-      --id-surface: #ffffff; --id-surface2: #f5e8d8; --id-divider: #c8b89b;
-      --id-accent: #d97757; --id-accent-soft: #aa5a3f; --id-danger: #c97c70;
-      --id-ok: #7da670;
-    }
-    body { margin: 0; background: var(--id-bg); color: var(--id-fg); }
-  </style>
+  <link rel="stylesheet" href="/static/style/tokens.css">
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('inky_theme') || 'auto';
+        var accent = localStorage.getItem('inky_accent');
+        var root = document.documentElement;
+        var isDark =
+          theme === 'dark' ||
+          (theme === 'auto' &&
+            window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) root.dataset.theme = 'dark';
+        else root.removeAttribute('data-theme');
+        if (accent) root.style.setProperty('--id-accent', accent);
+      } catch (_) {}
+    })();
+  </script>
 </head><body>
   <script type="module" src="/static/dist/gallery-admin.js"></script>
 </body></html>

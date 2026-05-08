@@ -18,7 +18,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 DEFAULT_BASE_URL = "http://localhost:5555"
-DEFAULT_ACCENT = "#4f46e5"  # indigo-600 — modern, neutral, brand-agnostic
+DEFAULT_ACCENT = "#b06750"  # warm dusty terracotta
 
 Orientation = Literal["portrait", "landscape"]
 Theme = Literal["light", "dark", "auto"]

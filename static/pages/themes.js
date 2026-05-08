@@ -44,6 +44,7 @@ class ThemesPage extends LitElement {
   static properties = {
     themes: { state: true },
     fonts: { state: true },
+    selectedFontId: { state: true },
     selectedId: { state: true },
     error: { state: true },
     editing: { state: true },
@@ -387,6 +388,18 @@ class ThemesPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 8px;
       background: var(--id-surface, #ffffff);
+      color: var(--id-fg, #0f172a);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 100ms ease, background 100ms ease;
+    }
+    .font-card:hover {
+      border-color: var(--id-accent, #b06750);
+    }
+    .font-card.active {
+      border-color: var(--id-accent, #b06750);
+      background: var(--id-accent-bg, rgb(176 103 80 / 0.1));
     }
     .font-card h3 { margin: 0 0 8px; font-size: 14px; }
     .font-sample { font-size: 28px; line-height: 1.1; margin-bottom: 4px; }
@@ -397,6 +410,7 @@ class ThemesPage extends LitElement {
     this.themes = null;
     this.fonts = null;
     this.selectedId = null;
+    this.selectedFontId = "default";
     this.error = null;
     this.editing = false;
     this.editingId = "";
@@ -549,7 +563,9 @@ class ThemesPage extends LitElement {
     }
     const p = theme.palette;
     const fontFamily =
-      (this.fonts && this.fonts.find((f) => f.id === "default"))?.name || "Inter";
+      (this.fonts && this.fonts.find((f) => f.id === this.selectedFontId))?.name ||
+      (this.fonts && this.fonts.find((f) => f.id === "default"))?.name ||
+      "Inter";
     const mockStyle = `
       --mock-bg: ${p.bg};
       --mock-fg: ${p.fg};
@@ -762,7 +778,13 @@ class ThemesPage extends LitElement {
           <div class="fonts-row">
             ${this.fonts.map(
               (font) => html`
-                <div class="font-card">
+                <button
+                  type="button"
+                  class="font-card ${this.selectedFontId === font.id ? "active" : ""}"
+                  @click=${() => (this.selectedFontId = font.id)}
+                  aria-pressed=${this.selectedFontId === font.id ? "true" : "false"}
+                  title="Use ${font.name} in the preview"
+                >
                   <h3>${font.name} <span style="color: var(--id-fg-soft); font-weight: normal;">— ${font.category || "?"}</span></h3>
                   <div class="font-sample" style="font-family: '${font.name}';">
                     The quick brown fox.
@@ -770,7 +792,7 @@ class ThemesPage extends LitElement {
                   <div style="font-family: '${font.name}'; font-size: 13px;">
                     0123456789 — ${font.weights.join(", ")}
                   </div>
-                </div>
+                </button>
               `
             )}
           </div>

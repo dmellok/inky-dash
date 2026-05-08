@@ -176,3 +176,46 @@ def test_put_panel_rejects_unknown_orientation(client: FlaskClient) -> None:
         "/api/app/settings", json={"panel": {"orientation": "diagonal"}}
     )
     assert res.status_code == 400
+
+
+def test_panel_model_change_resizes_existing_pages(
+    client: FlaskClient, app: object
+) -> None:
+    """Switching panel model rescales every dashboard so it matches the
+    new resolution — cells stay in the same proportional spots."""
+    # Start: default 13.3" landscape (1600×1200). Demo seeded at full bleed.
+    client.put(
+        "/api/app/settings",
+        json={"panel": {"model": "spectra_6_13_3", "orientation": "landscape"}},
+    )
+    before = client.get("/api/pages/_demo").get_json()
+    assert before["panel"] == {"w": 1600, "h": 1200}
+    # Switch to 7.3" landscape (800×480).
+    client.put(
+        "/api/app/settings",
+        json={"panel": {"model": "impression_7_3", "orientation": "landscape"}},
+    )
+    after = client.get("/api/pages/_demo").get_json()
+    assert after["panel"] == {"w": 800, "h": 480}
+    # Cells scaled proportionally (full-bleed cell stays full-bleed).
+    full_bleed = after["cells"][0]
+    assert full_bleed["x"] == 0 and full_bleed["y"] == 0
+    assert full_bleed["w"] == 800 and full_bleed["h"] == 480
+
+
+def test_panel_orientation_and_model_change_in_one_call(
+    client: FlaskClient, app: object
+) -> None:
+    """Combined orientation flip + model swap: rotate, then rescale."""
+    client.put(
+        "/api/app/settings",
+        json={"panel": {"model": "spectra_6_13_3", "orientation": "landscape"}},
+    )
+    # Demo at 1600×1200 landscape.
+    client.put(
+        "/api/app/settings",
+        json={"panel": {"model": "impression_7_3", "orientation": "portrait"}},
+    )
+    after = client.get("/api/pages/_demo").get_json()
+    # 7.3" portrait is 480×800.
+    assert after["panel"] == {"w": 480, "h": 800}

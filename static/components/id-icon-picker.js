@@ -1,52 +1,26 @@
 import { LitElement, html, css } from "lit";
 
-// A curated subset of Phosphor icons that fit dashboard naming. Listed by
-// theme so the search experience surfaces relevant matches first. The icon
-// names match the .ph-* class on the Phosphor web font.
-const ICON_LIBRARY = [
-  // Generic
-  "ph-cube", "ph-square", "ph-circle", "ph-grid-four", "ph-squares-four",
-  "ph-stack", "ph-layout", "ph-sparkle", "ph-star", "ph-heart",
-  // Time + scheduling
-  "ph-clock", "ph-clock-clockwise", "ph-clock-countdown", "ph-alarm",
-  "ph-calendar", "ph-calendar-blank", "ph-hourglass", "ph-timer",
-  // Home + spaces
-  "ph-house", "ph-house-line", "ph-buildings", "ph-bed", "ph-couch",
-  "ph-armchair", "ph-bathtub", "ph-cooking-pot", "ph-fork-knife", "ph-coffee",
-  "ph-tree", "ph-plant", "ph-leaf", "ph-flower", "ph-tree-palm",
-  // Weather
-  "ph-sun", "ph-moon", "ph-cloud", "ph-cloud-rain", "ph-cloud-snow",
-  "ph-cloud-sun", "ph-cloud-moon", "ph-lightning", "ph-rainbow", "ph-thermometer",
-  "ph-snowflake", "ph-wind", "ph-umbrella",
-  // Media + photos
-  "ph-image", "ph-images", "ph-camera", "ph-film-strip", "ph-music-notes",
-  "ph-headphones", "ph-microphone", "ph-play-circle", "ph-vinyl-record",
-  // Devices
-  "ph-monitor", "ph-monitor-play", "ph-television", "ph-laptop", "ph-desktop",
-  "ph-device-mobile", "ph-device-tablet", "ph-keyboard", "ph-mouse",
-  "ph-printer", "ph-router", "ph-broadcast", "ph-wifi-high",
-  // Productivity
-  "ph-list", "ph-list-checks", "ph-check-square", "ph-note", "ph-notebook",
-  "ph-bookmark", "ph-target", "ph-trophy", "ph-flag", "ph-pencil-simple",
-  "ph-paperclip", "ph-lightbulb", "ph-magnifying-glass",
-  // Travel + places
-  "ph-airplane", "ph-train", "ph-car", "ph-bicycle", "ph-map-pin",
-  "ph-compass", "ph-globe", "ph-globe-hemisphere-east",
-  // Shopping + finance
-  "ph-shopping-cart", "ph-shopping-bag", "ph-wallet", "ph-coin", "ph-currency-dollar",
-  "ph-gift", "ph-package",
-  // Comms + social
-  "ph-chat", "ph-chat-circle", "ph-envelope", "ph-paper-plane", "ph-phone",
-  "ph-users", "ph-user", "ph-user-circle",
-  // News + reading
-  "ph-newspaper", "ph-book", "ph-book-open", "ph-rss",
-  // Health + body
-  "ph-pulse", "ph-heartbeat", "ph-barbell", "ph-person-simple-run", "ph-bicycle",
-  // Misc
-  "ph-puzzle-piece", "ph-paint-brush", "ph-palette", "ph-fire", "ph-rocket",
-  "ph-anchor", "ph-key", "ph-gear", "ph-toolbox", "ph-wrench",
-  "ph-graduation-cap", "ph-medal", "ph-cake",
-];
+// All Phosphor icons available in the bundled font. Loaded once on demand
+// from the same /static/icons/phosphor.css the rest of the app already
+// uses; cached at module scope so multiple pickers share the work.
+let _iconsPromise = null;
+function loadAllIcons() {
+  if (_iconsPromise) return _iconsPromise;
+  _iconsPromise = fetch("/static/icons/phosphor.css")
+    .then((r) => r.text())
+    .then((css) => {
+      const names = new Set();
+      // Match `.ph-<slug>:before` (regular weight, fill is `.ph-fill .ph-...`).
+      // Skip the `ph-fill` modifier which isn't a real icon.
+      for (const m of css.matchAll(/\.ph-([a-z0-9-]+):before/g)) {
+        if (m[1] === "fill") continue;
+        names.add("ph-" + m[1]);
+      }
+      return [...names].sort();
+    })
+    .catch(() => []);
+  return _iconsPromise;
+}
 
 // Cheap searchable label: drop "ph-" and split hyphens into words.
 function labelFor(icon) {
@@ -58,6 +32,7 @@ export class IdIconPicker extends LitElement {
     open: { type: Boolean, reflect: true },
     value: { type: String },
     query: { state: true },
+    icons: { state: true },
   };
 
   static styles = css`
@@ -114,14 +89,13 @@ export class IdIconPicker extends LitElement {
     }
     .search {
       position: relative;
-      padding: 0 16px 12px;
+      padding: 12px 16px;
     }
     .search i {
       position: absolute;
       left: 26px;
       top: 50%;
       transform: translateY(-50%);
-      margin-top: -6px;
       color: var(--id-fg-soft, #5a4f44);
       pointer-events: none;
     }
@@ -158,6 +132,10 @@ export class IdIconPicker extends LitElement {
       color: var(--id-fg, #1a1612);
       cursor: pointer;
       font-size: 22px;
+      /* Skip rendering off-screen icons for free virtualization with 1500
+         buttons in the grid. */
+      content-visibility: auto;
+      contain-intrinsic-size: 56px 56px;
       transition: background 100ms ease, border-color 100ms ease, color 100ms ease;
     }
     .icon-btn:hover {
@@ -205,12 +183,17 @@ export class IdIconPicker extends LitElement {
     this.open = false;
     this.value = null;
     this.query = "";
+    this.icons = [];
     this._onKeydown = this._onKeydown.bind(this);
   }
 
   connectedCallback() {
     super.connectedCallback();
     document.addEventListener("keydown", this._onKeydown);
+    // Kick off icon-list load now so the popover opens with results ready.
+    loadAllIcons().then((icons) => {
+      this.icons = icons;
+    });
   }
 
   disconnectedCallback() {
@@ -241,8 +224,21 @@ export class IdIconPicker extends LitElement {
 
   _filtered() {
     const q = this.query.trim().toLowerCase();
-    if (!q) return ICON_LIBRARY;
-    return ICON_LIBRARY.filter((icon) => labelFor(icon).includes(q));
+    if (!q) return this.icons;
+    // Score so substring matches at the start of a word rank above
+    // mid-string matches (e.g. "ph-house" before "ph-clubhouse" for "house").
+    const scored = [];
+    for (const icon of this.icons) {
+      const label = labelFor(icon);
+      const idx = label.indexOf(q);
+      if (idx < 0) continue;
+      // Lower score = better match.
+      const score =
+        label === q ? 0 : label.startsWith(q) ? 1 : / \b/.test(" " + label.slice(0, idx)) ? 2 : 3;
+      scored.push({ icon, score });
+    }
+    scored.sort((a, b) => a.score - b.score || a.icon.localeCompare(b.icon));
+    return scored.map((s) => s.icon);
   }
 
   render() {
@@ -269,21 +265,23 @@ export class IdIconPicker extends LitElement {
             />
           </div>
           <div class="grid">
-            ${filtered.length === 0
-              ? html`<div class="empty">No icons match "${this.query}".</div>`
-              : filtered.map(
-                  (icon) => html`
-                    <button
-                      type="button"
-                      class="icon-btn ${this.value === icon ? "active" : ""}"
-                      title=${labelFor(icon)}
-                      aria-label=${labelFor(icon)}
-                      @click=${() => this._pick(icon)}
-                    >
-                      <i class="ph ${icon}"></i>
-                    </button>
-                  `
-                )}
+            ${this.icons.length === 0
+              ? html`<div class="empty">Loading icons…</div>`
+              : filtered.length === 0
+                ? html`<div class="empty">No icons match "${this.query}".</div>`
+                : filtered.map(
+                    (icon) => html`
+                      <button
+                        type="button"
+                        class="icon-btn ${this.value === icon ? "active" : ""}"
+                        title=${labelFor(icon)}
+                        aria-label=${labelFor(icon)}
+                        @click=${() => this._pick(icon)}
+                      >
+                        <i class="ph ${icon}"></i>
+                      </button>
+                    `
+                  )}
           </div>
           <div class="footer">
             <span style="font-size: 12px; color: var(--id-fg-soft);">

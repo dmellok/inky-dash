@@ -29,6 +29,7 @@ from app.state import (
     Page,
     PageStore,
     Panel,
+    PanelSettings,
     Schedule,
     ScheduleStore,
     SettingsStore,
@@ -198,27 +199,80 @@ def _rotate_page(page: Page, *, direction: str = "cw") -> Page:
         gap=page.gap,
         corner_radius=page.corner_radius,
         cells=rotated_cells,
+        icon=page.icon,
     )
 
 
-def _align_pages_to_orientation(store: PageStore, orientation: str) -> int:
-    """Rotate every page whose dims don't match the target orientation.
+def _scale_page(page: Page, target_w: int, target_h: int) -> Page:
+    """Scale a Page's panel + cells to ``target_w × target_h``.
 
-    Returns count of pages migrated. Idempotent — pages already at the right
-    orientation are skipped.
+    Preserves layout proportionally — cells stay in the same relative spots
+    and keep the same fractional sizes. Used when the user picks a panel
+    with different native dimensions in settings.
     """
-    target_landscape = orientation == "landscape"
+    if page.panel.w == target_w and page.panel.h == target_h:
+        return page
+    sx = target_w / page.panel.w
+    sy = target_h / page.panel.h
+    scaled_cells: list[Cell] = []
+    for c in page.cells:
+        scaled_cells.append(
+            Cell(
+                id=c.id,
+                x=max(0, round(c.x * sx)),
+                y=max(0, round(c.y * sy)),
+                w=max(1, round(c.w * sx)),
+                h=max(1, round(c.h * sy)),
+                plugin=c.plugin,
+                options=c.options,
+                theme=c.theme,
+                font=c.font,
+            )
+        )
+    return Page(
+        id=page.id,
+        name=page.name,
+        panel=Panel(w=target_w, h=target_h),
+        theme=page.theme,
+        font=page.font,
+        gap=page.gap,
+        corner_radius=page.corner_radius,
+        cells=scaled_cells,
+        icon=page.icon,
+    )
+
+
+def _align_pages_to_panel(store: PageStore, panel: PanelSettings) -> int:
+    """Reshape every page so its panel + cells match the active panel
+    settings. Handles both orientation flips (rotate cells 90°) and
+    resolution changes (scale cells proportionally) — including both at
+    once if the user switched from a 7.3" landscape to a 13.3" portrait
+    in one settings save.
+
+    Returns the count of pages migrated. Idempotent — pages already at
+    the target dims are skipped.
+    """
+    target_w, target_h = panel.render_dimensions()
+    target_landscape = target_w > target_h
     migrated = 0
     for page in store.all():
-        page_landscape = page.panel.w > page.panel.h
-        if page_landscape == target_landscape:
+        if page.panel.w == target_w and page.panel.h == target_h:
             continue
-        # CW for landscape→portrait, CCW for portrait→landscape so the
-        # rotations are inverses (toggling settings round-trips coords).
-        direction = "cw" if target_landscape is False else "ccw"
-        store.upsert(_rotate_page(page, direction=direction))
+        new_page = page
+        # Step 1: rotate first if orientation differs, so the subsequent
+        # scale operates on the right axis-aligned cells.
+        page_landscape = new_page.panel.w > new_page.panel.h
+        if page_landscape != target_landscape:
+            direction = "cw" if not target_landscape else "ccw"
+            new_page = _rotate_page(new_page, direction=direction)
+        # Step 2: proportionally rescale cells to the target resolution.
+        if (new_page.panel.w, new_page.panel.h) != (target_w, target_h):
+            new_page = _scale_page(new_page, target_w, target_h)
+        store.upsert(new_page)
         migrated += 1
     return migrated
+
+
 
 
 @bp.post("/api/pages/<page_id>/rotate")
@@ -1019,10 +1073,15 @@ def api_save_app_settings() -> tuple[Response, int] | Response:
     pm.set_topic(new_settings.mqtt.topic_update)
     pm.set_rotate_quarters(new_settings.panel.rotate_quarters())
 
-    # When the panel orientation flips, every page must follow — the panel
-    # setting is the source of truth, dashboards never override it.
-    if existing.panel.orientation != new_settings.panel.orientation:
-        _align_pages_to_orientation(_store(), new_settings.panel.orientation)
+    # When the panel changes (orientation OR model — i.e. the active
+    # resolution changed), every page must follow. The panel setting is
+    # the source of truth; dashboards never override it.
+    panel_changed = (
+        existing.panel.orientation != new_settings.panel.orientation
+        or existing.panel.model != new_settings.panel.model
+    )
+    if panel_changed:
+        _align_pages_to_panel(_store(), new_settings.panel)
         # Drop any stale preview drafts that were keyed to the old dims.
         current_app.config.get("PREVIEW_CACHE", {}).clear()
 

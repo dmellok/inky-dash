@@ -17,7 +17,7 @@
   height: 100%;
   width: 100%;
   font-family: inherit;
-  background: var(--theme-surface);
+  background: var(--theme-bg);
   color: var(--theme-fg);
   text-align: center;
   font-variant-numeric: tabular-nums;

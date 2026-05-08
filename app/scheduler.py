@@ -101,24 +101,38 @@ class Scheduler:
         for s in self._store.all():
             if not s.enabled:
                 continue
-            if not _matches_dow(s, now):
-                continue
-            if not _matches_window(s, now):
-                continue
-            if s.type == "oneshot":
-                if s.fired or s.fires_at is None:
+            # oneshot is now "fire daily at this time" — bypass the dow +
+            # window filters entirely. interval schedules still respect them.
+            if s.type == "interval":
+                if not _matches_dow(s, now):
                     continue
-                fires = s.fires_at if s.fires_at.tzinfo else s.fires_at.replace(tzinfo=UTC)
-                if now < fires:
+                if not _matches_window(s, now):
                     continue
-                candidates.append(s)
-            else:  # interval
                 if s.interval_minutes is None:
                     continue
                 with self._lock:
                     last = self._last_fired.get(s.id)
                 if last is None or (now.timestamp() - last) >= s.interval_minutes * 60:
                     candidates.append(s)
+            elif s.type == "oneshot":
+                if s.fires_at is None:
+                    continue
+                # Today's "fires_at" — only the time-of-day matters.
+                target = now.replace(
+                    hour=s.fires_at.hour,
+                    minute=s.fires_at.minute,
+                    second=0,
+                    microsecond=0,
+                )
+                if now < target:
+                    continue
+                with self._lock:
+                    last = self._last_fired.get(s.id)
+                if last is not None:
+                    last_dt = datetime.fromtimestamp(last, tz=UTC)
+                    if last_dt.date() == now.date():
+                        continue  # already fired today
+                candidates.append(s)
         candidates.sort(key=lambda s: (-s.priority, s.id))
         return candidates
 
@@ -130,10 +144,10 @@ class Scheduler:
         logger.info("Firing schedule %s → page %s", schedule.id, schedule.page_id)
         result = self._push.push(schedule.page_id, dither=schedule.dither)
         if result.status == "sent":
+            # last_fired tracks "did we already fire today" for oneshot/daily
+            # and "interval cooldown" for interval. Same source of truth.
             with self._lock:
                 self._last_fired[schedule.id] = now.timestamp()
-            if schedule.type == "oneshot":
-                self._store.upsert(schedule.model_copy(update={"fired": True}))
         return result
 
     # -- helpers for tests / manual fire ----------------------------------

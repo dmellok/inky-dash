@@ -20,7 +20,7 @@ class IndexPage extends LitElement {
       color: var(--id-fg, #1a1612);
     }
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -219,6 +219,7 @@ class IndexPage extends LitElement {
     }
     .payload-meta code {
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
       padding: 1px 5px;
       border-radius: 3px;
       font-family: ui-monospace, "SF Mono", Menlo, monospace;

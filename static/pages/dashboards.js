@@ -17,7 +17,7 @@ class DashboardsPage extends LitElement {
       color: var(--id-fg, #1a1612);
     }
     .container {
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -44,6 +44,7 @@ class DashboardsPage extends LitElement {
       border-radius: 6px;
       font: inherit;
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
     }
 
     .section-head {

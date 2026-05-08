@@ -57,7 +57,7 @@ class SchedulesPage extends LitElement {
       color: var(--id-fg, #1a1612);
     }
     .container {
-      max-width: 980px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 24px 16px 48px;
     }
@@ -109,10 +109,46 @@ class SchedulesPage extends LitElement {
     .toggle {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
       cursor: pointer;
       font-size: 12px;
       color: var(--id-fg-soft, #5a4f44);
+    }
+    /* Toggle switch — replaces native checkbox styling. */
+    .toggle input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 36px;
+      height: 20px;
+      background: var(--id-divider, #c8b89b);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+    .toggle input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+      transition: transform 150ms ease;
+    }
+    .toggle input[type="checkbox"]:checked {
+      background: var(--id-accent, #b06750);
+    }
+    .toggle input[type="checkbox"]:checked::before {
+      transform: translateX(16px);
+    }
+    .toggle input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 2px;
     }
     .form {
       display: grid;
@@ -142,6 +178,27 @@ class SchedulesPage extends LitElement {
       font: inherit;
       min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
+      color: var(--id-fg, #1a1612);
+    }
+    /* Accent-colored focus ring — overrides the browser default blue. */
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--id-accent, #b06750);
+      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    }
+    /* Custom select chevron — disables the native widget so the
+       box matches plain inputs in size, padding, and theme. */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 12px;
+      padding-right: 32px;
     }
     .day-picker {
       display: flex;
@@ -671,8 +728,8 @@ class SchedulesPage extends LitElement {
             <select
               @change=${(ev) => (this.editing = { ...e, type: ev.target.value })}
             >
-              <option value="interval" ?selected=${e.type === "interval"}>Interval (recurring)</option>
-              <option value="oneshot" ?selected=${e.type === "oneshot"}>One-shot (single fire)</option>
+              <option value="interval" ?selected=${e.type === "interval"}>Interval (every N minutes)</option>
+              <option value="oneshot" ?selected=${e.type === "oneshot"}>Daily (once a day at this time)</option>
             </select>
           </div>
           ${e.type === "interval"
@@ -688,52 +745,63 @@ class SchedulesPage extends LitElement {
                       (this.editing = { ...e, interval_minutes: Number(ev.target.value) })}
                   />
                 </div>
+                <div class="form-row">
+                  <label class="field">Days of week</label>
+                  <div class="day-picker">
+                    ${DAYS.map(
+                      (d) => html`
+                        <button
+                          type="button"
+                          aria-pressed=${(e.days_of_week || []).includes(d.id) ? "true" : "false"}
+                          @click=${() => toggleDay(d.id)}
+                        >
+                          ${d.short}
+                        </button>
+                      `
+                    )}
+                  </div>
+                </div>
+                <div class="form-row">
+                  <label class="field">Time-of-day window</label>
+                  <div style="display:flex;gap:8px;align-items:center;">
+                    <input
+                      type="time"
+                      .value=${e.time_of_day_start || ""}
+                      @input=${(ev) =>
+                        (this.editing = { ...e, time_of_day_start: ev.target.value || null })}
+                      style="flex:1;"
+                    />
+                    <span style="color:var(--id-fg-soft);">to</span>
+                    <input
+                      type="time"
+                      .value=${e.time_of_day_end || ""}
+                      @input=${(ev) =>
+                        (this.editing = { ...e, time_of_day_end: ev.target.value || null })}
+                      style="flex:1;"
+                    />
+                  </div>
+                </div>
               `
             : html`
                 <div class="form-row">
                   <label class="field">Fires at</label>
-                  <id-date-time
-                    .value=${(e.fires_at || "").slice(0, 16)}
-                    @change=${(ev) => (this.editing = { ...e, fires_at: ev.detail.value })}
-                  ></id-date-time>
+                  <input
+                    type="time"
+                    .value=${(e.fires_at || "").slice(11, 16)}
+                    @input=${(ev) => {
+                      // Build a datetime with today's date; only the time
+                      // portion matters for daily schedules.
+                      const t = ev.target.value;
+                      if (!t) return;
+                      const today = new Date();
+                      const yyyy = today.getFullYear();
+                      const mm = String(today.getMonth() + 1).padStart(2, "0");
+                      const dd = String(today.getDate()).padStart(2, "0");
+                      this.editing = { ...e, fires_at: `${yyyy}-${mm}-${dd}T${t}` };
+                    }}
+                  />
                 </div>
               `}
-          <div class="form-row">
-            <label class="field">Days of week</label>
-            <div class="day-picker">
-              ${DAYS.map(
-                (d) => html`
-                  <button
-                    type="button"
-                    aria-pressed=${(e.days_of_week || []).includes(d.id) ? "true" : "false"}
-                    @click=${() => toggleDay(d.id)}
-                  >
-                    ${d.short}
-                  </button>
-                `
-              )}
-            </div>
-          </div>
-          <div class="form-row">
-            <label class="field">Time-of-day window</label>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <input
-                type="time"
-                .value=${e.time_of_day_start || ""}
-                @input=${(ev) =>
-                  (this.editing = { ...e, time_of_day_start: ev.target.value || null })}
-                style="flex:1;"
-              />
-              <span style="color:var(--id-fg-soft);">to</span>
-              <input
-                type="time"
-                .value=${e.time_of_day_end || ""}
-                @input=${(ev) =>
-                  (this.editing = { ...e, time_of_day_end: ev.target.value || null })}
-                style="flex:1;"
-              />
-            </div>
-          </div>
           <div class="form-row">
             <label class="field">Priority</label>
             <input

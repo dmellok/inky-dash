@@ -1,60 +1,62 @@
 /* Inky Dash design tokens.
  *
- * Linked by every page template. Components reference the same names via
- * var(--id-*); fallbacks stay in the components for offline-style robustness
- * but the source of truth is here.
+ * Linked by every page template. Components reference these via var(--id-*);
+ * fallbacks stay in components for offline-style robustness but the source
+ * of truth is here.
  *
- * Light mode is the default (:root). Dark mode overrides cascade from
- * [data-theme="dark"] on <html>, which the inline appearance bootstrap in
- * each template applies before first paint to avoid a flash. Accent is also
- * applied at first paint when the user has stored a preference.
+ * Palette: cool slate base (light) → tinted dark slate (dark). Accent is
+ * applied at first paint via the inline appearance bootstrap; defaults to
+ * a warm dusty terracotta that feels less corporate than indigo.
  */
 
 :root {
-  /* Surfaces — neutral grays. */
-  --id-bg: #ffffff;
+  /* Surfaces — cool slate. The page background is slightly off-white so
+     cards (which use the lighter --id-surface) sit visibly atop it. */
+  --id-bg: #f8fafc;            /* slate-50 */
   --id-surface: #ffffff;
-  --id-surface2: #f4f4f5;     /* zinc-100 */
-  --id-divider: #e4e4e7;       /* zinc-200 */
+  --id-surface2: #f1f5f9;     /* slate-100 */
+  --id-divider: #e2e8f0;       /* slate-200 */
 
-  /* Foreground. */
-  --id-fg: #18181b;            /* zinc-900 */
-  --id-fg-soft: #71717a;       /* zinc-500 */
+  /* Foreground — slate-900/500 is bluer/cooler than zinc. */
+  --id-fg: #0f172a;            /* slate-900 */
+  --id-fg-soft: #64748b;       /* slate-500 */
 
-  /* Accent (default = indigo-600). Overridden via inline style by the
+  /* Accent (default = warm dusty terracotta). Overridden inline by the
      appearance bootstrap when the user has picked a color. */
-  --id-accent: #4f46e5;
+  --id-accent: #b06750;
   --id-accent-soft: color-mix(in srgb, var(--id-accent), black 12%);
   --id-accent-bg: color-mix(in srgb, var(--id-accent) 12%, transparent);
-  --id-accent-fg: #ffffff;     /* foreground color on accent backgrounds */
+  --id-accent-fg: #ffffff;
 
   /* Semantic. */
-  --id-ok: #16a34a;
-  --id-warn: #ea580c;
-  --id-danger: #dc2626;
+  --id-ok: #4d8b6c;
+  --id-warn: #c47d3d;
+  --id-danger: #b8534f;
 
-  /* Sizing. Every form control should pick this so heights stay aligned. */
+  /* Sizing. */
   --id-control-h: 40px;
   --id-radius: 8px;
   --id-radius-sm: 6px;
 
   /* Shadow. */
-  --id-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
-  --id-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
-  --id-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.15);
+  --id-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.06);
+  --id-shadow: 0 4px 12px rgb(15 23 42 / 0.08);
+  --id-shadow-lg: 0 12px 32px rgb(15 23 42 / 0.15);
 }
 
 [data-theme="dark"] {
-  --id-bg: #09090b;            /* zinc-950 */
-  --id-surface: #18181b;       /* zinc-900 */
-  --id-surface2: #27272a;      /* zinc-800 */
-  --id-divider: #3f3f46;       /* zinc-700 */
+  /* Stone scale (Tailwind `stone-*`) — neutral grey with a hint of warm
+     sepia, never blue. Three surface tiers (bg < surface < surface2)
+     keep cards + hover states legible. */
+  --id-bg: #1c1917;            /* stone-900 */
+  --id-surface: #292524;       /* stone-800 — cards */
+  --id-surface2: #36322e;      /* hover / elevated rows */
+  --id-divider: #44403c;       /* stone-700 — visible against bg */
 
-  --id-fg: #fafafa;
-  --id-fg-soft: #a1a1aa;       /* zinc-400 */
+  --id-fg: #fafaf9;            /* stone-50 */
+  --id-fg-soft: #a8a29e;       /* stone-400 */
 
-  /* Accent stays the same in dark mode but the tinted backgrounds need to
-     work against the dark surface, so we mix more aggressively. */
+  /* Accent backdrops need to read against the darker surfaces. */
   --id-accent-bg: color-mix(in srgb, var(--id-accent) 22%, transparent);
 
   --id-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
@@ -67,9 +69,12 @@ html, body {
   background: var(--id-bg);
   color: var(--id-fg);
 }
-
-/* Smooth (subtle) transitions on the global theme switch so toggling dark
-   mode doesn't feel jarring. Component-level transitions stay snappy. */
 html {
   transition: background-color 200ms ease, color 200ms ease;
+  /* Match the page chrome (scrollbars, native form controls) to the
+     active theme. */
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
 }

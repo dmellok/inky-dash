@@ -134,20 +134,20 @@ class PahoBridge:
 
     def publish(self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False) -> None:
         info = self._client.publish(topic, payload, qos=qos, retain=retain)
-        # Paho's queue-while-disconnected behaviour: ``info.rc`` captures
-        # only the *initial* call's return code, which is MQTT_ERR_NO_CONN
-        # whenever the publish races the (re)connect handshake. The message
-        # gets queued and delivered for real once the network thread
-        # reconnects, but ``info.rc`` is never updated.
-        #
-        # ``wait_for_publish`` is no good here either — it raises eagerly on
-        # non-zero ``info.rc`` even when the message would have been
-        # delivered. So poll ``is_published()`` ourselves: it reflects the
-        # actual outcome and is set true after paho's background thread acks.
+        # Paho's queue-while-disconnected behaviour creates a thorny
+        # rc/published mismatch:
+        #   1. publish() is called; client isn't connected yet.
+        #   2. Message gets queued, info.rc set to MQTT_ERR_NO_CONN.
+        #   3. Network thread reconnects, flushes the queue, broker acks.
+        #   4. Paho sets info._published = True but NEVER updates info.rc.
+        # So `info.is_published()` and `info.wait_for_publish()` both raise
+        # "The client is not currently connected" off that stale rc, even
+        # though the message actually made it. Read the underlying
+        # `_published` flag directly to get the real outcome.
         deadline = time.monotonic() + 10
-        while not info.is_published() and time.monotonic() < deadline:
+        while not info._published and time.monotonic() < deadline:
             time.sleep(0.05)
-        if not info.is_published():
+        if not info._published:
             raise RuntimeError(
                 f"MQTT publish timed out after 10s "
                 f"(initial rc={info.rc}: {mqtt.error_string(info.rc)})"

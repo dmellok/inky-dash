@@ -12,7 +12,7 @@
       "name": "Default (Linen)",
       "mode": "light",
       "palette": {
-        "bg": "#fbf7f1",
+        "bg": "#e8d8be",
         "surface": "#ffffff",
         "surface2": "#f5e8d8",
         "fg": "#1a1612",
@@ -20,7 +20,7 @@
         "muted": "#8b7e70",
         "accent": "#d97757",
         "accentSoft": "#aa5a3f",
-        "divider": "#d8c8a8",
+        "divider": "#c8b89b",
         "danger": "#c97c70",
         "warn": "#d4a957",
         "ok": "#7da670"
@@ -69,7 +69,7 @@
       "name": "Sage",
       "mode": "light",
       "palette": {
-        "bg": "#f3f5ee",
+        "bg": "#d4dec0",
         "surface": "#ffffff",
         "surface2": "#e7ecdb",
         "fg": "#1f2a1d",
@@ -77,7 +77,7 @@
         "muted": "#7f8b73",
         "accent": "#5b8a5f",
         "accentSoft": "#3f6b43",
-        "divider": "#cfd9bd",
+        "divider": "#b8c4a3",
         "danger": "#a6584a",
         "warn": "#c4a352",
         "ok": "#5b8a5f"
@@ -107,7 +107,7 @@
       "name": "Coral",
       "mode": "light",
       "palette": {
-        "bg": "#fff5f0",
+        "bg": "#f4cfb6",
         "surface": "#ffffff",
         "surface2": "#ffe5d6",
         "fg": "#3a1f15",
@@ -115,7 +115,7 @@
         "muted": "#9a705c",
         "accent": "#e85f3a",
         "accentSoft": "#b84528",
-        "divider": "#f4cdb6",
+        "divider": "#dca890",
         "danger": "#c33a25",
         "warn": "#d4a01c",
         "ok": "#5f9e60"
@@ -126,7 +126,7 @@
       "name": "Pulp",
       "mode": "light",
       "palette": {
-        "bg": "#fffbe8",
+        "bg": "#f8e89c",
         "surface": "#ffffff",
         "surface2": "#fff1bf",
         "fg": "#2a230d",
@@ -134,7 +134,7 @@
         "muted": "#8a7a3c",
         "accent": "#e0a51f",
         "accentSoft": "#a87a0e",
-        "divider": "#ead995",
+        "divider": "#dcc77a",
         "danger": "#c8513a",
         "warn": "#d4831f",
         "ok": "#638a3a"
@@ -164,7 +164,7 @@
       "name": "Mint",
       "mode": "light",
       "palette": {
-        "bg": "#eff8f3",
+        "bg": "#bcdcc6",
         "surface": "#ffffff",
         "surface2": "#d8eedf",
         "fg": "#0f2a1d",
@@ -172,7 +172,7 @@
         "muted": "#6a8579",
         "accent": "#10b981",
         "accentSoft": "#0a8059",
-        "divider": "#bcdcc6",
+        "divider": "#9bc6a8",
         "danger": "#c44a3e",
         "warn": "#d09921",
         "ok": "#10b981"
@@ -202,7 +202,7 @@
       "name": "Goldenrod",
       "mode": "light",
       "palette": {
-        "bg": "#fbf3df",
+        "bg": "#e8d094",
         "surface": "#ffffff",
         "surface2": "#f3e0a8",
         "fg": "#2c2208",
@@ -210,7 +210,7 @@
         "muted": "#8d7a3a",
         "accent": "#c08a1f",
         "accentSoft": "#8a6010",
-        "divider": "#dcc88a",
+        "divider": "#c2a85f",
         "danger": "#b54a35",
         "warn": "#d4a01c",
         "ok": "#6e9a3a"

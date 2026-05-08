@@ -111,19 +111,23 @@ def test_wrap_around_window(tmp_path: Path) -> None:
     assert sched.find_due(datetime(2026, 5, 8, 12, 0, tzinfo=UTC)) == []
 
 
-def test_oneshot_fires_then_marks_fired(tmp_path: Path) -> None:
+def test_oneshot_fires_daily_at_time_of_day(tmp_path: Path) -> None:
+    """oneshot is now 'fire daily at HH:MM' — date portion of fires_at is
+    ignored; the schedule fires once per day after its time-of-day passes
+    and won't re-fire on the same day."""
     sched, store, pusher = _scheduler(tmp_path)
     fires = datetime(2026, 5, 8, 12, 0, tzinfo=UTC)
     store.upsert(_oneshot_schedule(fires))
-    # Before time: not due
+    # Before today's HH:MM: not due
     assert sched.find_due(fires - timedelta(seconds=1)) == []
     sched.run_due_once(fires + timedelta(seconds=1))
     assert len(pusher.pushes) == 1
-    # On disk: fired flag is True
-    assert store.get("once").fired is True
-    # Won't fire again
+    # Same day, after firing: not due again
     sched.run_due_once(fires + timedelta(minutes=10))
     assert len(pusher.pushes) == 1
+    # Next day at the same time: due again
+    sched.run_due_once(fires + timedelta(days=1, seconds=1))
+    assert len(pusher.pushes) == 2
 
 
 def test_priority_orders_concurrent_fires(tmp_path: Path) -> None:

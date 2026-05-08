@@ -5,7 +5,7 @@
   height: 100%;
   padding: 5cqmin;
   box-sizing: border-box;
-  background: var(--theme-surface);
+  background: var(--theme-bg);
   color: var(--theme-fg);
   gap: 2cqmin;
   font-variant-numeric: tabular-nums;
@@ -70,7 +70,7 @@
   gap: 0.2em;
   padding: 1.5cqmin;
   border-radius: 6px;
-  background: var(--theme-surface2);
+  background: var(--theme-surface);
 }
 .day { font-size: min(3.5cqw, 6cqh); color: var(--theme-fgSoft); text-transform: uppercase; letter-spacing: 0.06em; }
 .icon { font-size: min(8cqw, 14cqh); color: var(--theme-fg); }
