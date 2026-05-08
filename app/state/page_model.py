@@ -46,3 +46,6 @@ class Page(BaseModel):
     gap: int = Field(default=0, ge=0, le=200)
     corner_radius: int = Field(default=0, ge=0, le=200)
     cells: list[Cell] = Field(default_factory=list)
+    # Phosphor icon class (e.g. "ph-cube"). Optional; UI falls back to a
+    # generic dashboard icon when missing.
+    icon: str | None = Field(default=None, pattern=r"^ph-[a-z0-9-]+$")

@@ -4,22 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inky Dash</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='icons/phosphor.css') }}">
-  <style>
-    :root {
-      --id-bg: #fbf7f1;
-      --id-fg: #1a1612;
-      --id-fg-soft: #5a4f44;
-      --id-surface: #ffffff;
-      --id-surface2: #f5e8d8;
-      --id-divider: #c8b89b;
-      --id-accent: #d97757;
-      --id-accent-soft: #aa5a3f;
-      --id-danger: #c97c70;
-      --id-ok: #7da670;
-    }
-    body { margin: 0; background: var(--id-bg); color: var(--id-fg); }
-  </style>
+  {% include "_appearance.html" %}
 </head>
 <body>
   <script type="module" src="{{ url_for('static', filename='dist/index.js') }}"></script>

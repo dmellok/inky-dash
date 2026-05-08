@@ -53,7 +53,7 @@ class GalleryAdminPage extends LitElement {
       max-width: 720px;
     }
     .new-form input {
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       padding: 8px 10px;
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;

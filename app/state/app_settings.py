@@ -18,8 +18,29 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 DEFAULT_BASE_URL = "http://localhost:5555"
+DEFAULT_ACCENT = "#4f46e5"  # indigo-600 — modern, neutral, brand-agnostic
 
 Orientation = Literal["portrait", "landscape"]
+Theme = Literal["light", "dark", "auto"]
+
+
+class AppearanceSettings(BaseModel):
+    """User-pickable look-and-feel.
+
+    ``theme="auto"`` follows the OS's prefers-color-scheme. ``accent`` is a
+    hex color (``#rrggbb``) used as the primary brand accent across the app.
+    Both are applied client-side via inline JS in the appearance bootstrap
+    so they take effect before first paint (no flash).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    theme: Theme = "auto"
+    accent: str = Field(
+        default=DEFAULT_ACCENT,
+        pattern=r"^#[0-9a-fA-F]{6}$",
+        description="Primary accent color, hex (#rrggbb).",
+    )
 
 
 class PanelModelSpec(BaseModel):
@@ -111,6 +132,7 @@ class AppSettings(BaseModel):
     mqtt: MqttSettings = Field(default_factory=MqttSettings)
     base_url: str = DEFAULT_BASE_URL
     panel: PanelSettings = Field(default_factory=PanelSettings)
+    appearance: AppearanceSettings = Field(default_factory=AppearanceSettings)
 
 
 def initial_from_env() -> AppSettings:

@@ -1,0 +1,24 @@
+{# Loads icons + design tokens + applies the user's stored theme/accent
+   before first paint, so dark mode + custom accent don't flash on
+   navigation. Templates include this in <head>. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='icons/phosphor.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style/tokens.css') }}">
+<script>
+  (function () {
+    try {
+      var theme = localStorage.getItem('inky_theme') || 'auto';
+      var accent = localStorage.getItem('inky_accent');
+      var root = document.documentElement;
+      var isDark =
+        theme === 'dark' ||
+        (theme === 'auto' &&
+          window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) root.dataset.theme = 'dark';
+      else root.removeAttribute('data-theme');
+      if (accent) root.style.setProperty('--id-accent', accent);
+    } catch (_) {
+      /* localStorage may be disabled — fall back to defaults */
+    }
+  })();
+</script>

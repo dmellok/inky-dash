@@ -995,6 +995,11 @@ def api_save_app_settings() -> tuple[Response, int] | Response:
     if isinstance(panel_in, dict):
         body["panel"] = {**existing.panel.model_dump(), **panel_in}
 
+    # Same for appearance (theme + accent often updated independently).
+    appearance_in = body.get("appearance")
+    if isinstance(appearance_in, dict):
+        body["appearance"] = {**existing.appearance.model_dump(), **appearance_in}
+
     merged = {**existing.model_dump(), **body}
 
     try:

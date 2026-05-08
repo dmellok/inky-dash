@@ -140,7 +140,7 @@ class SchedulesPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;
       font: inherit;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
     }
     .day-picker {
@@ -150,7 +150,7 @@ class SchedulesPage extends LitElement {
     }
     .day-picker button {
       min-width: 38px;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;
       background: transparent;
@@ -692,11 +692,10 @@ class SchedulesPage extends LitElement {
             : html`
                 <div class="form-row">
                   <label class="field">Fires at</label>
-                  <input
-                    type="datetime-local"
+                  <id-date-time
                     .value=${(e.fires_at || "").slice(0, 16)}
-                    @input=${(ev) => (this.editing = { ...e, fires_at: ev.target.value })}
-                  />
+                    @change=${(ev) => (this.editing = { ...e, fires_at: ev.detail.value })}
+                  ></id-date-time>
                 </div>
               `}
           <div class="form-row">

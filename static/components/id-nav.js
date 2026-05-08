@@ -17,6 +17,7 @@ export class IdNav extends LitElement {
     open: { state: true },
     pluginsOpen: { state: true },
     adminPages: { state: true },
+    isDark: { state: true },
   };
 
   static styles = css`
@@ -134,22 +135,33 @@ export class IdNav extends LitElement {
       font-size: 16px;
     }
 
-    .hamburger {
-      display: none;
+    .hamburger,
+    .theme-toggle {
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border: 0;
       background: transparent;
       color: var(--id-fg, #1a1612);
       cursor: pointer;
-      font-size: 22px;
+      font-size: 18px;
       padding: 0;
+      border-radius: 8px;
+      transition: background 100ms ease, color 100ms ease;
+    }
+    .hamburger {
+      display: none;
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
       border-radius: 6px;
     }
-    .hamburger:hover {
+    .hamburger:hover,
+    .theme-toggle:hover {
       background: var(--id-surface2, #f5e8d8);
+      color: var(--id-accent, #d97757);
     }
 
     .backdrop {
@@ -267,14 +279,21 @@ export class IdNav extends LitElement {
     this.open = false;
     this.pluginsOpen = false;
     this.adminPages = [];
+    this.isDark = document.documentElement.dataset.theme === "dark";
     this._onKeydown = this._onKeydown.bind(this);
     this._onDocClick = this._onDocClick.bind(this);
+    this._onThemeChange = this._onThemeChange.bind(this);
   }
 
   async connectedCallback() {
     super.connectedCallback();
     document.addEventListener("keydown", this._onKeydown);
     document.addEventListener("click", this._onDocClick);
+    // Sync if some other tab toggled the theme via storage event, or if
+    // another component flips data-theme directly.
+    window.addEventListener("storage", this._onThemeChange);
+    this._mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    this._mediaQuery.addEventListener?.("change", this._onThemeChange);
     try {
       const res = await fetch("/api/plugins/admin-pages");
       this.adminPages = await res.json();
@@ -287,6 +306,36 @@ export class IdNav extends LitElement {
     super.disconnectedCallback();
     document.removeEventListener("keydown", this._onKeydown);
     document.removeEventListener("click", this._onDocClick);
+    window.removeEventListener("storage", this._onThemeChange);
+    this._mediaQuery?.removeEventListener?.("change", this._onThemeChange);
+  }
+
+  _onThemeChange() {
+    this.isDark = document.documentElement.dataset.theme === "dark";
+  }
+
+  _toggleTheme() {
+    // Cycle: any current state → opposite. Persist explicitly (so picking
+    // dark on a system that's set to light overrides "auto").
+    const next = this.isDark ? "light" : "dark";
+    try {
+      localStorage.setItem("inky_theme", next);
+    } catch {
+      /* ignore */
+    }
+    if (next === "dark") {
+      document.documentElement.dataset.theme = "dark";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+    this.isDark = next === "dark";
+    // Best-effort cross-device persistence (settings page is the canonical
+    // sync surface; this is a convenience).
+    fetch("/api/app/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ appearance: { theme: next } }),
+    }).catch(() => {});
   }
 
   _onKeydown(event) {
@@ -384,6 +433,14 @@ export class IdNav extends LitElement {
           )}
         </div>
         <span class="spacer"></span>
+        <button
+          class="theme-toggle"
+          @click=${this._toggleTheme}
+          aria-label=${this.isDark ? "Switch to light mode" : "Switch to dark mode"}
+          title=${this.isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <i class="ph ${this.isDark ? "ph-sun" : "ph-moon"}"></i>
+        </button>
         <button
           class="hamburger"
           @click=${this._toggleDrawer}

@@ -1,0 +1,75 @@
+/* Inky Dash design tokens.
+ *
+ * Linked by every page template. Components reference the same names via
+ * var(--id-*); fallbacks stay in the components for offline-style robustness
+ * but the source of truth is here.
+ *
+ * Light mode is the default (:root). Dark mode overrides cascade from
+ * [data-theme="dark"] on <html>, which the inline appearance bootstrap in
+ * each template applies before first paint to avoid a flash. Accent is also
+ * applied at first paint when the user has stored a preference.
+ */
+
+:root {
+  /* Surfaces — neutral grays. */
+  --id-bg: #ffffff;
+  --id-surface: #ffffff;
+  --id-surface2: #f4f4f5;     /* zinc-100 */
+  --id-divider: #e4e4e7;       /* zinc-200 */
+
+  /* Foreground. */
+  --id-fg: #18181b;            /* zinc-900 */
+  --id-fg-soft: #71717a;       /* zinc-500 */
+
+  /* Accent (default = indigo-600). Overridden via inline style by the
+     appearance bootstrap when the user has picked a color. */
+  --id-accent: #4f46e5;
+  --id-accent-soft: color-mix(in srgb, var(--id-accent), black 12%);
+  --id-accent-bg: color-mix(in srgb, var(--id-accent) 12%, transparent);
+  --id-accent-fg: #ffffff;     /* foreground color on accent backgrounds */
+
+  /* Semantic. */
+  --id-ok: #16a34a;
+  --id-warn: #ea580c;
+  --id-danger: #dc2626;
+
+  /* Sizing. Every form control should pick this so heights stay aligned. */
+  --id-control-h: 40px;
+  --id-radius: 8px;
+  --id-radius-sm: 6px;
+
+  /* Shadow. */
+  --id-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  --id-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+  --id-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.15);
+}
+
+[data-theme="dark"] {
+  --id-bg: #09090b;            /* zinc-950 */
+  --id-surface: #18181b;       /* zinc-900 */
+  --id-surface2: #27272a;      /* zinc-800 */
+  --id-divider: #3f3f46;       /* zinc-700 */
+
+  --id-fg: #fafafa;
+  --id-fg-soft: #a1a1aa;       /* zinc-400 */
+
+  /* Accent stays the same in dark mode but the tinted backgrounds need to
+     work against the dark surface, so we mix more aggressively. */
+  --id-accent-bg: color-mix(in srgb, var(--id-accent) 22%, transparent);
+
+  --id-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --id-shadow: 0 4px 12px rgb(0 0 0 / 0.5);
+  --id-shadow-lg: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
+html, body {
+  margin: 0;
+  background: var(--id-bg);
+  color: var(--id-fg);
+}
+
+/* Smooth (subtle) transitions on the global theme switch so toggling dark
+   mode doesn't feel jarring. Component-level transitions stay snappy. */
+html {
+  transition: background-color 200ms ease, color 200ms ease;
+}

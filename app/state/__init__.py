@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from app.state.app_settings import (
     PANEL_MODELS,
+    AppearanceSettings,
     AppSettings,
     AppSettingsStore,
     MqttSettings,
@@ -24,6 +25,7 @@ __all__ = [
     "PANEL_MODELS",
     "AppSettings",
     "AppSettingsStore",
+    "AppearanceSettings",
     "Cell",
     "HistoryRecord",
     "HistoryStore",

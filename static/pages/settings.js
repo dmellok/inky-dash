@@ -54,14 +54,14 @@ class SettingsPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;
       font: inherit;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
     }
     label.checkbox {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       font-size: 14px;
     }
     .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
@@ -92,6 +92,79 @@ class SettingsPage extends LitElement {
     }
     .save-status.error { color: var(--id-danger, #c97c70); }
     .save-status.ok { color: var(--id-ok, #7da670); }
+
+    /* Appearance card */
+    .theme-picks {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .theme-pick {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 14px;
+      height: var(--id-control-h, 40px);
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: var(--id-radius, 8px);
+      background: transparent;
+      color: var(--id-fg, #1a1612);
+      font: inherit;
+      cursor: pointer;
+      transition: border-color 100ms ease, background 100ms ease;
+    }
+    .theme-pick:hover {
+      border-color: var(--id-accent, #4f46e5);
+    }
+    .theme-pick.active {
+      border-color: var(--id-accent, #4f46e5);
+      background: var(--id-accent-bg, rgba(79, 70, 229, 0.1));
+      color: var(--id-accent, #4f46e5);
+    }
+    .accent-swatches {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .accent-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--swatch);
+      border: 2px solid var(--id-bg, #ffffff);
+      box-shadow: 0 0 0 1px var(--id-divider, #c8b89b);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 100ms ease, box-shadow 100ms ease;
+    }
+    .accent-swatch:hover {
+      transform: scale(1.08);
+    }
+    .accent-swatch.active {
+      box-shadow: 0 0 0 2px var(--swatch);
+    }
+    .accent-custom {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px dashed var(--id-divider, #c8b89b);
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .accent-custom:hover {
+      border-color: var(--id-accent, #4f46e5);
+      color: var(--id-accent, #4f46e5);
+    }
+    .accent-custom input[type="color"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
   `;
 
   constructor() {
@@ -295,6 +368,124 @@ class SettingsPage extends LitElement {
     } finally {
       this.saving = { ...this.saving, app: false };
     }
+  }
+
+  // Apply user-selected appearance to the live document so the change is
+  // visible immediately. Also write to localStorage so the appearance
+  // bootstrap picks it up on the next page load (no flash).
+  _applyAppearance(theme, accent) {
+    try {
+      const root = document.documentElement;
+      const isDark =
+        theme === "dark" ||
+        (theme === "auto" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches);
+      if (isDark) root.dataset.theme = "dark";
+      else root.removeAttribute("data-theme");
+      if (accent) root.style.setProperty("--id-accent", accent);
+      localStorage.setItem("inky_theme", theme || "auto");
+      if (accent) localStorage.setItem("inky_accent", accent);
+    } catch {
+      /* localStorage may be disabled */
+    }
+    // Tell id-nav (and anything else listening) that the theme flipped.
+    window.dispatchEvent(new Event("storage"));
+  }
+
+  _renderAppearanceCard() {
+    if (!this.appDraft) return null;
+    const draft = this.appDraft;
+    const appearance =
+      draft.appearance || { theme: "auto", accent: "#4f46e5" };
+    const presets = [
+      { value: "#4f46e5", label: "Indigo" },
+      { value: "#0ea5e9", label: "Sky" },
+      { value: "#10b981", label: "Emerald" },
+      { value: "#f59e0b", label: "Amber" },
+      { value: "#ef4444", label: "Red" },
+      { value: "#a855f7", label: "Purple" },
+      { value: "#ec4899", label: "Pink" },
+      { value: "#64748b", label: "Slate" },
+    ];
+    const isSaving = this.saving.app;
+    const isSaved = this.saved.app;
+    const err = this.error.app;
+    return html`
+      <id-card heading="Appearance" subheading="Theme + accent. Applies to every page.">
+        <div class="form-row">
+          <label class="field">Theme</label>
+          <div class="theme-picks">
+            ${[
+              { id: "light", icon: "ph-sun", label: "Light" },
+              { id: "dark", icon: "ph-moon", label: "Dark" },
+              { id: "auto", icon: "ph-monitor", label: "Auto" },
+            ].map(
+              (t) => html`
+                <button
+                  type="button"
+                  class="theme-pick ${appearance.theme === t.id ? "active" : ""}"
+                  @click=${() => {
+                    this._setApp("appearance.theme", t.id);
+                    this._applyAppearance(t.id, appearance.accent);
+                  }}
+                >
+                  <i class="ph ${t.icon}"></i>
+                  <span>${t.label}</span>
+                </button>
+              `
+            )}
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field">Accent</label>
+          <div>
+            <div class="accent-swatches">
+              ${presets.map(
+                (p) => html`
+                  <button
+                    type="button"
+                    class="accent-swatch ${appearance.accent === p.value ? "active" : ""}"
+                    style="--swatch: ${p.value};"
+                    title=${p.label}
+                    aria-label=${p.label}
+                    @click=${() => {
+                      this._setApp("appearance.accent", p.value);
+                      this._applyAppearance(appearance.theme, p.value);
+                    }}
+                  ></button>
+                `
+              )}
+              <label class="accent-custom" title="Custom color">
+                <input
+                  type="color"
+                  .value=${appearance.accent || "#4f46e5"}
+                  @input=${(e) => {
+                    this._setApp("appearance.accent", e.target.value);
+                    this._applyAppearance(appearance.theme, e.target.value);
+                  }}
+                />
+                <i class="ph ph-eyedropper"></i>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <id-button
+            variant="primary"
+            ?disabled=${isSaving}
+            @click=${() => this._saveApp()}
+          >
+            <i class="ph ph-floppy-disk"></i>
+            ${isSaving ? "Saving…" : "Save appearance"}
+          </id-button>
+          ${err
+            ? html`<span class="save-status error">${err}</span>`
+            : isSaved
+              ? html`<span class="save-status ok"><i class="ph ph-check-circle"></i> saved</span>`
+              : null}
+        </div>
+      </id-card>
+    `;
   }
 
   _renderPanelCard() {
@@ -513,6 +704,7 @@ class SettingsPage extends LitElement {
         App-level config (MQTT broker, companion URL) and per-plugin
         configuration in one place.
       </p>
+      ${this._renderAppearanceCard()}
       ${this._renderPanelCard()}
       ${this._renderAppSettings()}
       <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--id-fg-soft); margin: 24px 0 12px;">

@@ -100,7 +100,7 @@ class SendPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;
       font: inherit;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       background: var(--id-bg, #ffffff);
     }
 

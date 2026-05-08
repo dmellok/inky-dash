@@ -38,7 +38,7 @@ class DashboardsPage extends LitElement {
     .create-card input {
       flex: 1;
       min-width: 200px;
-      min-height: 38px;
+      min-height: var(--id-control-h, 40px);
       padding: 8px 12px;
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 6px;
@@ -226,7 +226,7 @@ class DashboardsPage extends LitElement {
     const h = page.panel?.h ?? 0;
     return html`
       <div class="row">
-        <i class="ph ph-cube icon"></i>
+        <i class="ph ${page.icon || "ph-cube"} icon"></i>
         <div class="name">
           <a href=${`/editor/${encodeURIComponent(page.id)}`}>${page.name}</a>
           <span class="meta">

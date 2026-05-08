@@ -121,6 +121,7 @@ class IdEditor extends LitElement {
     previewMode: { state: true },
     previewKey: { state: true },
     appPanel: { state: true },
+    iconPickerOpen: { state: true },
   };
 
   static styles = css`
@@ -164,6 +165,24 @@ class IdEditor extends LitElement {
     .back-btn:hover {
       color: var(--id-fg, #1a1612);
       background: var(--id-surface2, #f5e8d8);
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      background: transparent;
+      color: var(--id-accent, #4f46e5);
+      cursor: pointer;
+      font-size: 18px;
+      display: inline-grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: border-color 100ms ease, background 100ms ease;
+    }
+    .icon-btn:hover {
+      border-color: var(--id-accent, #4f46e5);
+      background: var(--id-accent-bg, rgb(79 70 229 / 0.1));
     }
     .name-input {
       flex: 1;
@@ -337,13 +356,13 @@ class IdEditor extends LitElement {
       border-radius: 6px;
       font: inherit;
       background: var(--id-bg, #ffffff);
-      min-height: 44px;
+      min-height: var(--id-control-h, 40px);
     }
     label.checkbox {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      min-height: 44px;
+      min-height: var(--id-control-h, 40px);
     }
     .empty {
       padding: 16px;
@@ -537,8 +556,14 @@ class IdEditor extends LitElement {
       typeof localStorage !== "undefined" &&
       localStorage.getItem("inky_onboarded_v1") !== "yes";
     this.appPanel = null; // { model, orientation, width, height }
+    this.iconPickerOpen = false;
     this._onKeydown = this._onKeydown.bind(this);
     this._onBeforeUnload = this._onBeforeUnload.bind(this);
+  }
+
+  _setPageIcon(icon) {
+    this.page = { ...this.page, icon: icon || undefined };
+    this.saved = false;
   }
 
   _onBeforeUnload(event) {
@@ -1145,6 +1170,14 @@ class IdEditor extends LitElement {
           <a href="/editor" class="back-btn" title="All dashboards" aria-label="All dashboards">
             <i class="ph ph-arrow-left"></i>
           </a>
+          <button
+            class="icon-btn"
+            @click=${() => (this.iconPickerOpen = true)}
+            title="Pick an icon"
+            aria-label="Pick an icon"
+          >
+            <i class="ph ${this.page.icon || "ph-cube"}"></i>
+          </button>
           <input
             class="name-input"
             type="text"
@@ -1364,6 +1397,12 @@ class IdEditor extends LitElement {
       </div>
       ${this.showOnboarding ? this._renderOnboarding() : null}
       ${this.showHelp ? this._renderHelp() : null}
+      <id-icon-picker
+        ?open=${this.iconPickerOpen}
+        .value=${this.page?.icon || null}
+        @change=${(e) => this._setPageIcon(e.detail.value)}
+        @close=${() => (this.iconPickerOpen = false)}
+      ></id-icon-picker>
     `;
   }
 
