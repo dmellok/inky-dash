@@ -1,0 +1,32 @@
+{
+  "manifest_version": 1,
+  "id": "calibration",
+  "name": "Calibration",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Spectra-6 colour calibration card. Renders an 8×6 hue×lightness grid of labelled swatches; pair with the Calibration page to mark which colours render acceptably on your panel.",
+  "icon": "ph-eyedropper-sample",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "calibration_id",
+      "type": "string",
+      "label": "Calibration (blank = active)",
+      "default": ""
+    },
+    {
+      "name": "saturation",
+      "type": "select",
+      "label": "Saturation tier to render",
+      "default": "",
+      "choices": [
+        { "value": "", "label": "Active tier" },
+        { "value": "30", "label": "30% (muted)" },
+        { "value": "60", "label": "60% (moderate)" },
+        { "value": "80", "label": "80% (saturated)" },
+        { "value": "100", "label": "100% (vivid)" }
+      ]
+    }
+  ],
+  "render": { "dither": "none", "full_bleed": true }
+}

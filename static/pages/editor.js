@@ -350,7 +350,7 @@ class IdEditor extends LitElement {
       color: white;
       pointer-events: none;
     }
-    input[type="text"], select {
+    input[type="text"], select, textarea {
       width: 100%;
       padding: 10px;
       box-sizing: border-box;
@@ -360,6 +360,11 @@ class IdEditor extends LitElement {
       background: var(--id-bg, #ffffff);
       color: var(--id-fg, #1a1612);
       min-height: var(--id-control-h, 40px);
+    }
+    textarea {
+      resize: vertical;
+      min-height: 96px;
+      line-height: 1.4;
     }
     /* Accent-colored focus ring — overrides the browser default blue. */
     input:focus,
@@ -1239,6 +1244,28 @@ class IdEditor extends LitElement {
           />
           ${value === true ? "On" : "Off"}
         </label>
+      </id-form-row>`;
+    }
+    if (opt.type === "color") {
+      return html`<id-form-row label=${opt.label}>
+        <label class="color-pick">
+          <input
+            type="color"
+            .value=${String(value || "#ffffff")}
+            @input=${(e) => this._setCellOption(this.selectedCell, opt.name, e.target.value)}
+          />
+          <span class="swatch" style=${`background: ${value || "#ffffff"};`}></span>
+          <span class="hex">${String(value || "#ffffff").toUpperCase()}</span>
+        </label>
+      </id-form-row>`;
+    }
+    if (opt.type === "textarea") {
+      return html`<id-form-row label=${opt.label}>
+        <textarea
+          rows="4"
+          .value=${String(value)}
+          @input=${(e) => this._setCellOption(this.selectedCell, opt.name, e.target.value)}
+        ></textarea>
       </id-form-row>`;
     }
     return html`<id-form-row label=${opt.label}>

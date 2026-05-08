@@ -1,0 +1,36 @@
+{
+  "manifest_version": 1,
+  "id": "xkcd",
+  "name": "xkcd",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Latest xkcd comic, or a specific number. Public JSON API, no key required.",
+  "icon": "ph-smiley",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "comic",
+      "type": "select",
+      "label": "Comic",
+      "default": "latest",
+      "choices": [
+        { "value": "latest", "label": "Latest" },
+        { "value": "random", "label": "Random" },
+        { "value": "specific", "label": "Specific number" }
+      ]
+    },
+    {
+      "name": "number",
+      "type": "number",
+      "label": "Number (when 'specific')",
+      "default": 1
+    },
+    {
+      "name": "show_title",
+      "type": "boolean",
+      "label": "Show title bar",
+      "default": true
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "needs_network": true, "full_bleed": true }
+}

@@ -1,0 +1,74 @@
+:host { display: block; height: 100%; }
+.xkcd {
+  height: 100%;
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  container-type: size;
+  padding: 2cqmin 3cqmin;
+  box-sizing: border-box;
+  gap: 1.5cqmin;
+}
+.xkcd .title {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqmin;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  justify-content: center;
+}
+.title .num {
+  font-weight: 700;
+  font-size: min(3.5cqw, 6cqh);
+}
+.title .name {
+  font-weight: 600;
+  font-size: min(3.5cqw, 6cqh);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.title .date {
+  font-size: min(2.8cqw, 4.5cqh);
+}
+.frame {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  min-height: 0;
+}
+.frame img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.alt {
+  font-size: min(2.6cqw, 4.2cqh);
+  font-style: italic;
+  line-height: 1.35;
+  text-align: center;
+  max-height: 30cqh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.xkcd.error {
+  grid-template-rows: 1fr;
+  place-items: center;
+  text-align: center;
+  padding: 4cqmin;
+}
+.xkcd.error .ph {
+  font-size: min(20cqw, 30cqh);
+  margin-bottom: 1cqh;
+}
+.xkcd.error .message {
+  font-size: min(3.5cqw, 6cqh);
+  line-height: 1.4;
+}

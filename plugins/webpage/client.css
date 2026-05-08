@@ -1,0 +1,32 @@
+:host { display: block; height: 100%; }
+.page {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  overflow: hidden;
+}
+.page iframe {
+  border: 0;
+  display: block;
+}
+.page.error {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: var(--theme-surface);
+  color: var(--theme-fgSoft);
+  padding: 4cqmin;
+  container-type: size;
+}
+.page.error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-accent);
+  margin-bottom: 1cqh;
+}
+.page.error .message {
+  font-size: min(3.5cqw, 6cqh);
+  line-height: 1.4;
+  max-width: 80%;
+  margin: 0 auto;
+}

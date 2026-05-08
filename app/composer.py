@@ -151,6 +151,10 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
         cell_font = _resolve_font(cell["font"], registry) if cell.get("font") else page_font
         cell_font_family = cell_font.name if cell_font else page_font_family
         resolved_options = _resolved_options(cell["plugin"], cell.get("options", {}))
+        plugin = registry.get(cell["plugin"])
+        full_bleed = bool(
+            plugin and plugin.manifest.get("render", {}).get("full_bleed")
+        )
         cells_out.append(
             {
                 **cell,
@@ -164,6 +168,7 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
                 ),
                 "palette": cell_palette,
                 "font_family": cell_font_family,
+                "full_bleed": full_bleed,
             }
         )
 

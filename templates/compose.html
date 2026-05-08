@@ -41,6 +41,10 @@
          level — plugin CSS scales itself, no JS measuring needed. */
       container-type: size;
     }
+    /* full_bleed widgets paint edge-to-edge — kill the chrome outline. */
+    .cell.full-bleed {
+      outline: 0;
+    }
     .cell.error {
       outline: 2px solid {{ page.palette.danger }};
     }
@@ -49,7 +53,7 @@
 <body data-for-push="{{ '1' if for_push else '0' }}">
   <div class="panel">
     {% for cell in page.cells %}
-    <div class="cell"
+    <div class="cell{% if cell.full_bleed %} full-bleed{% endif %}"
          data-cell-id="{{ cell.id }}"
          data-plugin="{{ cell.plugin }}"
          data-options='{{ cell.options|tojson }}'

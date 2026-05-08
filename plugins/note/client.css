@@ -1,0 +1,60 @@
+:host { display: block; height: 100%; }
+
+.note {
+  height: 100%;
+  width: 100%;
+  background: var(--note-bg);
+  color: var(--note-fg);
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: 6cqmin;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle paper-fold corner so it reads as a sticky note rather than a flat block. */
+.note::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8cqmin;
+  height: 8cqmin;
+  background: linear-gradient(225deg,
+    rgba(0, 0, 0, 0.18) 0%,
+    rgba(0, 0, 0, 0.06) 45%,
+    transparent 50%);
+  pointer-events: none;
+}
+
+.inner {
+  width: 100%;
+  max-height: 100%;
+  text-align: var(--note-align);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.title {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  opacity: 0.85;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 0.15em;
+  margin-bottom: 0.1em;
+  word-break: break-word;
+}
+
+.body {
+  font-weight: var(--note-weight);
+  line-height: 1.25;
+  white-space: pre-wrap;
+  word-break: break-word;
+  letter-spacing: -0.01em;
+}

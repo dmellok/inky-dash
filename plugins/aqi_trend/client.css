@@ -1,0 +1,99 @@
+:host { display: block; height: 100%; }
+.aqi {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  gap: 2cqmin;
+  font-variant-numeric: tabular-nums;
+  container-type: size;
+}
+.aqi.error {
+  grid-template-rows: 1fr;
+  place-items: center;
+  text-align: center;
+  color: var(--theme-danger);
+}
+.aqi.error .ph { font-size: min(20cqw, 30cqh); margin-bottom: 1cqh; }
+.aqi.error .message { font-size: min(3.5cqw, 6cqh); }
+
+/* Band-colored accent on the AQI number + chart line. */
+.aqi { --band: var(--theme-fg); }
+.aqi.band-ok { --band: var(--theme-ok); }
+.aqi.band-warn { --band: var(--theme-warn); }
+.aqi.band-danger { --band: var(--theme-danger); }
+.aqi.band-muted { --band: var(--theme-muted); }
+
+.head { display: flex; align-items: center; }
+.hero { display: flex; align-items: baseline; gap: 3cqmin; flex: 1; }
+.aqi-num {
+  font-weight: 700;
+  font-size: min(22cqw, 36cqh);
+  line-height: 1;
+  color: var(--band);
+  letter-spacing: -0.02em;
+}
+.label { display: grid; gap: 0.2em; }
+.band {
+  font-size: min(5cqw, 8cqh);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--band);
+}
+.place {
+  font-size: min(2.8cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chart {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0.5cqmin;
+}
+.chart svg { width: 100%; height: 100%; display: block; }
+.chart svg .fill { fill: var(--band); fill-opacity: 0.18; }
+.chart svg .line {
+  fill: none;
+  stroke: var(--band);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: min(2.4cqw, 4cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 500;
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5cqmin;
+}
+.tile {
+  display: grid;
+  gap: 0.2em;
+  padding: 1.2cqmin 1cqmin;
+  background: var(--theme-surface);
+  border-radius: 6px;
+  text-align: center;
+}
+.tile .k {
+  font-size: min(2.4cqw, 4cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 600;
+}
+.tile .v {
+  font-size: min(4.5cqw, 7cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+}

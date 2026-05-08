@@ -1,0 +1,110 @@
+:host { display: block; height: 100%; }
+.wx-chart {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  gap: 2cqmin;
+  font-variant-numeric: tabular-nums;
+  container-type: size;
+}
+.wx-chart.error {
+  grid-template-rows: 1fr;
+  place-items: center;
+  text-align: center;
+  color: var(--theme-danger);
+}
+.wx-chart.error .ph { font-size: min(20cqw, 30cqh); margin-bottom: 1cqh; }
+.wx-chart.error .message { font-size: min(3.5cqw, 6cqh); }
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 4cqmin;
+  justify-content: space-between;
+}
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 2cqmin;
+}
+.hero-icon {
+  font-size: min(20cqw, 30cqh);
+  line-height: 1;
+  color: var(--theme-accent);
+}
+.hero-temp {
+  font-weight: 700;
+  font-size: min(18cqw, 32cqh);
+  line-height: 1;
+  color: var(--theme-accent);
+  letter-spacing: -0.02em;
+}
+.hero-temp .unit { font-size: 0.55em; opacity: 0.7; margin-left: 0.05em; }
+
+.meta {
+  text-align: right;
+  display: grid;
+  gap: 0.4em;
+}
+.place {
+  font-size: min(3cqw, 5cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.condition {
+  font-size: min(4cqw, 6.5cqh);
+  font-weight: 600;
+}
+.stats {
+  display: flex;
+  gap: 2cqmin;
+  justify-content: flex-end;
+  font-size: min(3cqw, 5cqh);
+  color: var(--theme-fgSoft);
+}
+.stats .ph { margin-right: 0.25em; color: var(--theme-accent); }
+
+.chart {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 1cqmin;
+}
+.chart svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.chart svg .fill {
+  fill: var(--theme-accent);
+  fill-opacity: 0.18;
+}
+.chart svg .line {
+  fill: none;
+  stroke: var(--theme-accent);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: min(2.5cqw, 4cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 500;
+}
+.bounds {
+  display: flex;
+  justify-content: space-between;
+  font-size: min(2.5cqw, 4cqh);
+  color: var(--theme-muted);
+  border-top: 1px solid var(--theme-divider);
+  padding-top: 0.5cqh;
+}

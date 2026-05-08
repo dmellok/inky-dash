@@ -57,7 +57,7 @@
         "required": ["name", "type", "label"],
         "properties": {
           "name": { "type": "string" },
-          "type": { "enum": ["string", "number", "select", "boolean", "color"] },
+          "type": { "enum": ["string", "textarea", "number", "select", "boolean", "color"] },
           "label": { "type": "string" },
           "default": {},
           "choices": {

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 1,
+  "id": "webpage",
+  "name": "Webpage",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Embeds any HTTP(S) page as a full-bleed iframe in the cell. Note: many sites block iframe embedding via X-Frame-Options or CSP — pick pages you control or those that allow embedding.",
+  "icon": "ph-globe",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "url",
+      "type": "string",
+      "label": "URL",
+      "default": ""
+    },
+    {
+      "name": "zoom",
+      "type": "number",
+      "label": "Zoom (%)",
+      "default": 100
+    },
+    {
+      "name": "scroll_x",
+      "type": "number",
+      "label": "Scroll X (px)",
+      "default": 0
+    },
+    {
+      "name": "scroll_y",
+      "type": "number",
+      "label": "Scroll Y (px)",
+      "default": 0
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "needs_network": true, "full_bleed": true }
+}

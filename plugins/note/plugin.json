@@ -1,0 +1,61 @@
+{
+  "manifest_version": 1,
+  "id": "note",
+  "name": "Sticky note",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "A free-text note. Pick the background + text colors and write whatever you want — auto-scales to the cell.",
+  "icon": "ph-note",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "text",
+      "type": "textarea",
+      "label": "Note text",
+      "default": "Write your note here.\nUse line breaks for paragraphs."
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title (optional)",
+      "default": ""
+    },
+    {
+      "name": "align",
+      "type": "select",
+      "label": "Alignment",
+      "default": "center",
+      "choices": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ]
+    },
+    {
+      "name": "weight",
+      "type": "select",
+      "label": "Weight",
+      "default": "600",
+      "choices": [
+        { "value": "400", "label": "Regular" },
+        { "value": "500", "label": "Medium" },
+        { "value": "600", "label": "Semibold" },
+        { "value": "700", "label": "Bold" },
+        { "value": "900", "label": "Black" }
+      ]
+    },
+    {
+      "name": "bg_color",
+      "type": "color",
+      "label": "Background",
+      "default": "#fff8b0"
+    },
+    {
+      "name": "fg_color",
+      "type": "color",
+      "label": "Text color",
+      "default": "#1a1612"
+    }
+  ],
+  "render": { "dither": "none" }
+}
