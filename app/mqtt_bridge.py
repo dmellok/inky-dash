@@ -10,9 +10,11 @@ clear "MQTT not configured" error instead of silently dropping.
 
 from __future__ import annotations
 
+import collections
 import json
 import logging
 import threading
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
@@ -21,6 +23,9 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
 logger = logging.getLogger(__name__)
+
+# How many recent inky/status messages to keep around for the debug log.
+STATUS_LOG_CAPACITY = 50
 
 
 @dataclass(frozen=True)
@@ -41,6 +46,10 @@ class MqttBridge(Protocol):
     @property
     def listener_status(self) -> ListenerStatus | None: ...
 
+    def status_log(self) -> list[ListenerStatus]:
+        """Recent inky/status messages, newest-first. Bounded ring buffer."""
+        ...
+
     def disconnect(self) -> None: ...
 
 
@@ -53,6 +62,9 @@ class NullBridge:
     @property
     def listener_status(self) -> ListenerStatus | None:
         return None
+
+    def status_log(self) -> list[ListenerStatus]:
+        return []
 
     def disconnect(self) -> None:
         pass
@@ -76,6 +88,9 @@ class PahoBridge:
         self._status_topic = status_topic
         self._lock = threading.Lock()
         self._latest_status: ListenerStatus | None = None
+        self._status_log: collections.deque[ListenerStatus] = collections.deque(
+            maxlen=STATUS_LOG_CAPACITY
+        )
 
         self._client = mqtt.Client(
             callback_api_version=CallbackAPIVersion.VERSION2,
@@ -108,23 +123,44 @@ class PahoBridge:
         if not isinstance(raw, dict):
             return
         state = str(raw.get("state", "unknown"))
+        status = ListenerStatus(
+            state=state,
+            raw=raw,
+            received_at=datetime.now(UTC),
+        )
         with self._lock:
-            self._latest_status = ListenerStatus(
-                state=state,
-                raw=raw,
-                received_at=datetime.now(UTC),
-            )
+            self._latest_status = status
+            self._status_log.appendleft(status)
 
     def publish(self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False) -> None:
         info = self._client.publish(topic, payload, qos=qos, retain=retain)
-        info.wait_for_publish(timeout=10)
-        if info.rc != mqtt.MQTT_ERR_SUCCESS:
-            raise RuntimeError(f"MQTT publish failed: rc={info.rc}")
+        # Paho's queue-while-disconnected behaviour: ``info.rc`` captures
+        # only the *initial* call's return code, which is MQTT_ERR_NO_CONN
+        # whenever the publish races the (re)connect handshake. The message
+        # gets queued and delivered for real once the network thread
+        # reconnects, but ``info.rc`` is never updated.
+        #
+        # ``wait_for_publish`` is no good here either — it raises eagerly on
+        # non-zero ``info.rc`` even when the message would have been
+        # delivered. So poll ``is_published()`` ourselves: it reflects the
+        # actual outcome and is set true after paho's background thread acks.
+        deadline = time.monotonic() + 10
+        while not info.is_published() and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if not info.is_published():
+            raise RuntimeError(
+                f"MQTT publish timed out after 10s "
+                f"(initial rc={info.rc}: {mqtt.error_string(info.rc)})"
+            )
 
     @property
     def listener_status(self) -> ListenerStatus | None:
         with self._lock:
             return self._latest_status
+
+    def status_log(self) -> list[ListenerStatus]:
+        with self._lock:
+            return list(self._status_log)
 
     def disconnect(self) -> None:
         self._client.loop_stop()

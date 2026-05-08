@@ -74,3 +74,17 @@ def quantize_to_png(
     out = io.BytesIO()
     quantize(src, dither=dither, palette=palette).save(out, format="PNG", optimize=True)
     return out.getvalue()
+
+
+def rotate_png(png_bytes: bytes, *, quarters: int) -> bytes:
+    """Rotate a PNG by N 90° clockwise turns. ``quarters=0`` is a no-op pass-through."""
+    n = quarters % 4
+    if n == 0:
+        return png_bytes
+    img = Image.open(io.BytesIO(png_bytes))
+    # PIL.Image.rotate() with expand=True keeps every pixel; angle is CCW so
+    # we negate to get clockwise.
+    rotated = img.rotate(-90 * n, expand=True)
+    out = io.BytesIO()
+    rotated.save(out, format="PNG", optimize=True)
+    return out.getvalue()

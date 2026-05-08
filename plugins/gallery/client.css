@@ -1,15 +1,51 @@
 :host { display: block; height: 100%; }
 .gallery {
+  position: relative;
   height: 100%;
   width: 100%;
   background: var(--theme-bg);
+  overflow: hidden;
 }
-.gallery img {
+.gallery .single {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
+
+/* -- Scale modes ----------------------------------------------------- */
+/* fit (default): letterboxed; preserves aspect ratio. */
+.gallery.scale-fit .single { object-fit: contain; }
+/* fill: cover the cell, may crop. */
+.gallery.scale-fill .single { object-fit: cover; }
+/* stretch: distort to fill the cell. */
+.gallery.scale-stretch .single { object-fit: fill; }
+/* center: original pixel size, centered, no scaling. */
+.gallery.scale-center .single {
+  object-fit: none;
+  object-position: center;
+}
+
+/* blurred: zoomed/blurred backdrop + fit foreground. */
+.gallery.scale-blurred .bg,
+.gallery.scale-blurred .fg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.gallery.scale-blurred .bg {
+  object-fit: cover;
+  /* Slight zoom so the blur edges don't show the underlying letterbox. */
+  transform: scale(1.1);
+  filter: blur(24px);
+  z-index: 0;
+}
+.gallery.scale-blurred .fg {
+  object-fit: contain;
+  z-index: 1;
+}
+
 .gallery.empty {
   display: grid;
   place-items: center;

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-from flask import Flask, abort, send_from_directory
+from flask import Flask, abort, render_template, send_from_directory
 from werkzeug.wrappers import Response
 
 from app import admin, composer, plugin_loader
@@ -11,6 +10,8 @@ from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
 from app.push import PushManager
 from app.scheduler import Scheduler
 from app.state import (
+    AppSettings,
+    AppSettingsStore,
     Cell,
     HistoryStore,
     Page,
@@ -46,19 +47,21 @@ _DEMO_PAGE = Page(
 )
 
 
-def _build_bridge() -> MqttBridge:
-    """Construct the MQTT bridge from env vars. Falls back to NullBridge if
-    MQTT_HOST is unset — the app boots fine, push attempts raise loudly."""
-    host = os.environ.get("MQTT_HOST")
-    if not host:
+def build_bridge_from_settings(settings: AppSettings) -> MqttBridge:
+    """Construct an MQTT bridge from app settings. NullBridge if no host."""
+    if not settings.mqtt.host:
         return NullBridge()
-    return PahoBridge(
-        host=host,
-        port=int(os.environ.get("MQTT_PORT", "1883")),
-        username=os.environ.get("MQTT_USERNAME") or None,
-        password=os.environ.get("MQTT_PASSWORD") or None,
-        status_topic=os.environ.get("MQTT_TOPIC_STATUS", "inky/status"),
-    )
+    try:
+        return PahoBridge(
+            host=settings.mqtt.host,
+            port=settings.mqtt.port,
+            username=settings.mqtt.username or None,
+            password=settings.mqtt.password or None,
+            status_topic=settings.mqtt.topic_status,
+            client_id=settings.mqtt.client_id,
+        )
+    except Exception:  # noqa: BLE001 — fall back so the app stays bootable
+        return NullBridge()
 
 
 def create_app(
@@ -94,6 +97,21 @@ def create_app(
         page_store.upsert(_DEMO_PAGE)
     app.config["PAGE_STORE"] = page_store
 
+    # In-memory cache for editor live-preview: PUT /api/pages/<id>/preview
+    # writes here, the composer reads from it before falling back to disk.
+    app.config["PREVIEW_CACHE"] = {}
+
+    app_settings_store = AppSettingsStore(data_path / "core" / "settings.json")
+    app_settings = app_settings_store.load_or_initialize()
+    app.config["APP_SETTINGS_STORE"] = app_settings_store
+
+    # Source of truth: the panel orientation in settings drives every page's
+    # composition orientation. Sweep on boot so a landscape demo page is
+    # auto-aligned if the user previously set the app to portrait.
+    from app.admin import _align_pages_to_orientation
+
+    _align_pages_to_orientation(page_store, app_settings.panel.orientation)
+
     history = HistoryStore(data_path / "core" / "history.db")
     app.config["HISTORY_STORE"] = history
 
@@ -103,7 +121,7 @@ def create_app(
     renders_dir = data_path / "core" / "renders"
     app.config["RENDERS_DIR"] = renders_dir
 
-    bridge_impl = bridge if bridge is not None else _build_bridge()
+    bridge_impl = bridge if bridge is not None else build_bridge_from_settings(app_settings)
     app.config["MQTT_BRIDGE"] = bridge_impl
 
     push_manager = PushManager(
@@ -111,8 +129,9 @@ def create_app(
         history=history,
         page_store=page_store,
         renders_dir=renders_dir,
-        base_url=os.environ.get("COMPANION_BASE_URL", DEFAULT_BASE_URL),
-        topic=os.environ.get("MQTT_TOPIC_UPDATE", "inky/update"),
+        base_url=app_settings.base_url,
+        topic=app_settings.mqtt.topic_update,
+        rotate_quarters=app_settings.panel.rotate_quarters(),
     )
     app.config["PUSH_MANAGER"] = push_manager
 
@@ -139,12 +158,7 @@ def create_app(
 
     @app.get("/")
     def index() -> str:
-        widgets = len(registry.widgets())
-        errors = len(registry.errors)
-        bridge_state = "connected" if not isinstance(bridge_impl, NullBridge) else "off"
-        return f"Inky Dash v{VERSION} — {widgets} widget plugin(s) loaded, MQTT {bridge_state}" + (
-            f", {errors} plugin error(s)" if errors else ""
-        )
+        return render_template("index.html")
 
     @app.get("/healthz")
     def healthz() -> dict[str, object]:

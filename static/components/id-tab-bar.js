@@ -15,6 +15,12 @@ export class IdTabBar extends LitElement {
       gap: 4px;
       border-bottom: 1px solid var(--id-divider, #c8b89b);
       overflow-x: auto;
+      /* Hide the persistent macOS-style scrollbar; tabs still scroll if they
+         overflow. */
+      scrollbar-width: none;
+    }
+    .bar::-webkit-scrollbar {
+      display: none;
     }
     button {
       min-height: 44px;

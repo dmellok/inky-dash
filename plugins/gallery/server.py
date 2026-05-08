@@ -1,45 +1,195 @@
-"""Gallery — picks an image from data_dir and serves it via a blueprint route."""
+"""Gallery — folder-based image rotation.
+
+A "folder" can be either:
+  - **Internal** — a subdirectory under ``data/plugins/gallery/`` that we own.
+    Images are uploaded via the admin UI's drop zone.
+  - **External** — a pointer to any directory on the host (``/Users/me/Pictures/Vacation``,
+    a network mount, etc.). The plugin reads + serves the images but never
+    writes to that directory; uploads to external folders are rejected.
+
+Folder metadata (display label, type, external path) lives in
+``data/plugins/gallery/.folders.json``. Internal folders get a directory on
+disk; external folders are entries in this file pointing at an absolute path.
+
+The plugin's ``fetch()`` honours ``options.folder``; ``choices("folders")``
+returns the list of available folders so the editor can populate the
+dropdown for ``cell_options.folder``.
+"""
 
 from __future__ import annotations
 
 import contextlib
+import json
+import os
 import random
+import re
+import shutil
 from pathlib import Path
 from typing import Any
 
-from flask import Blueprint, abort, current_app, send_from_directory
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    jsonify,
+    render_template_string,
+    request,
+    send_file,
+    send_from_directory,
+)
+from PIL import Image, ImageOps
+from werkzeug.utils import secure_filename
 
 ALLOWED_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".webp", ".gif"})
+MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB per file
+_FOLDER_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+ROOT_FOLDER_VALUE = "_root"  # encodes the data_dir root
+META_FILE = ".folders.json"
+THUMB_DIR = ".thumb_cache"
+THUMB_SIZE = (320, 240)  # bounding box for thumbnails
 
 
-def _list_images(data_dir: Path) -> list[Path]:
+def _data_dir() -> Path:
+    return current_app.config["PLUGIN_REGISTRY"].plugins["gallery"].data_dir
+
+
+# -- Metadata: folder labels + external paths --------------------------------
+
+
+def _meta_path(data_dir: Path) -> Path:
+    return data_dir / META_FILE
+
+
+def _load_meta(data_dir: Path) -> dict[str, dict[str, Any]]:
+    path = _meta_path(data_dir)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _save_meta(data_dir: Path, meta: dict[str, dict[str, Any]]) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
+    tmp = _meta_path(data_dir).with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(meta, indent=2, sort_keys=True))
+    os.replace(tmp, _meta_path(data_dir))
+
+
+def _folder_path(folder_name: str, data_dir: Path) -> Path | None:
+    """Resolve a folder identifier to the directory that holds its images.
+
+    Returns None for invalid names. Returns the external path for external
+    folders, or the internal subdirectory otherwise.
+    """
+    if not folder_name or folder_name == ROOT_FOLDER_VALUE:
+        return data_dir
+    if not _FOLDER_NAME_RE.match(folder_name):
+        return None
+    meta = _load_meta(data_dir).get(folder_name, {})
+    if meta.get("external_path"):
+        try:
+            return Path(meta["external_path"]).expanduser().resolve()
+        except OSError:
+            return None
+    return data_dir / folder_name
+
+
+def _is_external(folder_name: str, data_dir: Path) -> bool:
+    if not folder_name or folder_name == ROOT_FOLDER_VALUE:
+        return False
+    return bool(_load_meta(data_dir).get(folder_name, {}).get("external_path"))
+
+
+def _list_images(folder: Path | None) -> list[Path]:
+    if folder is None or not folder.exists() or not folder.is_dir():
+        return []
+    try:
+        return sorted(
+            p for p in folder.iterdir() if p.is_file() and p.suffix.lower() in ALLOWED_SUFFIXES
+        )
+    except (PermissionError, OSError):
+        return []
+
+
+def _list_internal_folders(data_dir: Path) -> list[str]:
     if not data_dir.exists():
         return []
     return sorted(
-        p for p in data_dir.iterdir() if p.is_file() and p.suffix.lower() in ALLOWED_SUFFIXES
+        p.name
+        for p in data_dir.iterdir()
+        if p.is_dir() and _FOLDER_NAME_RE.match(p.name) and not p.name.startswith(".")
     )
 
 
-def _index_path(data_dir: Path) -> Path:
-    return data_dir / ".sequential_index"
+# -- Thumbnails: disk-cached, lazy-generated --------------------------------
+
+
+def _thumb_cache_dir(data_dir: Path) -> Path:
+    return data_dir / THUMB_DIR
+
+
+def _thumb_path(data_dir: Path, folder_name: str, filename: str, source: Path) -> Path:
+    """Cached-thumbnail path. Keyed by folder + filename + source mtime so a
+    re-uploaded image (same name, new bytes) gets a fresh thumbnail."""
+    try:
+        mtime = int(source.stat().st_mtime)
+    except OSError:
+        mtime = 0
+    safe = re.sub(r"[^a-zA-Z0-9._-]", "_", filename)
+    return _thumb_cache_dir(data_dir) / f"{folder_name}__{safe}__{mtime}.jpg"
+
+
+def _ensure_thumbnail(source: Path, dest: Path) -> Path | None:
+    """Generate a JPEG thumbnail if missing. Returns dest path or None on failure."""
+    if dest.exists():
+        return dest
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        with Image.open(source) as img:
+            # EXIF transpose so phone photos land right-way-up.
+            img = ImageOps.exif_transpose(img)
+            img.thumbnail(THUMB_SIZE, Image.Resampling.LANCZOS)
+            if img.mode not in ("RGB", "L"):
+                img = img.convert("RGB")
+            tmp = dest.with_suffix(dest.suffix + ".tmp")
+            img.save(tmp, format="JPEG", quality=78, optimize=True)
+            os.replace(tmp, dest)
+        return dest
+    except (OSError, Image.UnidentifiedImageError, ValueError):
+        return None
+
+
+def _all_folder_names(data_dir: Path) -> list[str]:
+    """Internal-on-disk folders ∪ external folders declared in metadata."""
+    internal = set(_list_internal_folders(data_dir))
+    meta = _load_meta(data_dir)
+    external = {n for n, m in meta.items() if m.get("external_path")}
+    return sorted(internal | external)
+
+
+# -- Plugin contract: fetch + choices ---------------------------------------
 
 
 def fetch(
     options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]
 ) -> dict[str, Any]:
     data_dir = Path(ctx["data_dir"])
-    images = _list_images(data_dir)
+    folder_name = options.get("folder", "")
+    folder = _folder_path(folder_name, data_dir)
+    images = _list_images(folder)
     if not images:
-        return {
-            "error": (
-                f"No images found. Drop JPG / PNG / WEBP files into {data_dir} and re-render."
-            ),
-            "url": None,
-        }
+        msg = (
+            f"No images in '{folder_name or ROOT_FOLDER_VALUE}'. "
+            f"Add some via /plugins/gallery/."
+        )
+        return {"error": msg, "url": None}
 
     mode = options.get("mode", "random")
     if mode == "sequential":
-        idx_file = _index_path(data_dir)
+        idx_file = data_dir / f".sequential_index_{folder_name or ROOT_FOLDER_VALUE}"
         try:
             current = int(idx_file.read_text())
         except (FileNotFoundError, ValueError):
@@ -51,47 +201,280 @@ def fetch(
     else:
         chosen = random.choice(images)
 
+    folder_segment = folder_name if folder_name else ROOT_FOLDER_VALUE
     return {
-        "url": f"/plugins/gallery/images/{chosen.name}",
+        "url": f"/plugins/gallery/folders/{folder_segment}/{chosen.name}",
         "filename": chosen.name,
+        "folder": folder_segment,
         "count": len(images),
+    }
+
+
+def choices(name: str) -> list[dict[str, Any]]:
+    if name != "folders":
+        return []
+    data_dir = _data_dir()
+    out: list[dict[str, Any]] = []
+    # Root pseudo-folder: only if there are images directly under data_dir.
+    if any(
+        p.is_file() and p.suffix.lower() in ALLOWED_SUFFIXES
+        for p in (data_dir.iterdir() if data_dir.exists() else [])
+    ):
+        out.append({"value": ROOT_FOLDER_VALUE, "label": "(root)"})
+    meta = _load_meta(data_dir)
+    for folder_name in _all_folder_names(data_dir):
+        ext = meta.get(folder_name, {}).get("external_path")
+        count = len(_list_images(_folder_path(folder_name, data_dir)))
+        suffix = " ↗" if ext else ""
+        out.append({"value": folder_name, "label": f"{folder_name} ({count}){suffix}"})
+    if not out:
+        out.append({"value": "", "label": "(no folders yet)"})
+    return out
+
+
+_PAGE_TEMPLATE = """
+<!doctype html>
+<html><head>
+  <meta charset="utf-8">
+  <title>Gallery — Inky Dash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/icons/phosphor.css">
+  <style>
+    :root {
+      --id-bg: #fbf7f1; --id-fg: #1a1612; --id-fg-soft: #5a4f44;
+      --id-surface: #ffffff; --id-surface2: #f5e8d8; --id-divider: #c8b89b;
+      --id-accent: #d97757; --id-accent-soft: #aa5a3f; --id-danger: #c97c70;
+      --id-ok: #7da670;
+    }
+    body { margin: 0; background: var(--id-bg); color: var(--id-fg); }
+  </style>
+</head><body>
+  <script type="module" src="/static/dist/gallery-admin.js"></script>
+</body></html>
+"""
+
+
+def _folder_summary(folder_name: str, data_dir: Path) -> dict[str, Any]:
+    """Build the JSON record the admin UI consumes for one folder."""
+    meta = _load_meta(data_dir).get(folder_name, {})
+    label = meta.get("label", folder_name)
+    external_path = meta.get("external_path")
+    folder_path = _folder_path(folder_name, data_dir)
+    images = _list_images(folder_path)
+    return {
+        "name": folder_name,
+        "label": label,
+        "external_path": external_path,
+        "image_count": len(images),
+        "images": [
+            {
+                "name": p.name,
+                "url": f"/plugins/gallery/folders/{folder_name}/{p.name}",
+                "thumb_url": f"/plugins/gallery/folders/{folder_name}/{p.name}/thumb",
+            }
+            for p in images
+        ],
     }
 
 
 def blueprint() -> Blueprint:
     bp = Blueprint("gallery_admin", __name__)
 
-    @bp.get("/images/<path:filename>")
-    def serve_image(filename: str) -> Any:
-        plugin = current_app.config["PLUGIN_REGISTRY"].plugins.get("gallery")
-        if plugin is None:
-            abort(404)
-        return send_from_directory(plugin.data_dir, filename)
-
     @bp.get("/")
     def index() -> str:
-        plugin = current_app.config["PLUGIN_REGISTRY"].plugins["gallery"]
-        images = _list_images(plugin.data_dir)
-        rows = "\n".join(
-            f'<li><img src="/plugins/gallery/images/{p.name}" alt=""><span>{p.name}</span></li>'
-            for p in images
-        )
-        return f"""
-        <!doctype html><html><head><meta charset="utf-8"><title>Gallery</title>
-        <style>
-          body {{ font: 14px/1.5 system-ui, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 16px; }}
-          ul {{ list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }}
-          li {{ border: 1px solid #c8b89b; border-radius: 6px; overflow: hidden; }}
-          li img {{ display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; }}
-          li span {{ display: block; padding: 6px 8px; font-size: 12px; color: #5a4f44; word-break: break-all; }}
-          .empty {{ padding: 24px; color: #5a4f44; }}
-          a {{ color: #5a4f44; text-decoration: none; font-size: 13px; }}
-        </style></head><body>
-        <a href="/editor">← back to editor</a>
-        <h1 style="font-size:20px;">Gallery — {len(images)} image(s)</h1>
-        <p>Drop JPG / PNG / WEBP files into <code>{plugin.data_dir}</code> then refresh.</p>
-        {f"<ul>{rows}</ul>" if images else '<p class="empty">No images yet.</p>'}
-        </body></html>
-        """
+        return render_template_string(_PAGE_TEMPLATE)
+
+    # ---- Image serving ------------------------------------------------------
+
+    @bp.get("/folders/<folder>/<path:filename>")
+    def serve_image(folder: str, filename: str) -> Any:
+        data_dir = _data_dir()
+        target_dir = _folder_path(folder, data_dir)
+        if target_dir is None or not target_dir.exists() or not target_dir.is_dir():
+            abort(404)
+        return send_from_directory(target_dir, filename)
+
+    @bp.get("/folders/<folder>/<path:filename>/thumb")
+    def serve_thumbnail(folder: str, filename: str) -> Any:
+        """Serve (and lazily generate) a JPEG thumbnail. Long Cache-Control
+        means the browser only re-fetches when the cache key changes."""
+        data_dir = _data_dir()
+        target_dir = _folder_path(folder, data_dir)
+        if target_dir is None or not target_dir.exists() or not target_dir.is_dir():
+            abort(404)
+        safe = secure_filename(filename)
+        if not safe:
+            abort(404)
+        source = target_dir / safe
+        if not source.is_file() or source.suffix.lower() not in ALLOWED_SUFFIXES:
+            abort(404)
+        thumb = _thumb_path(data_dir, folder, safe, source)
+        result = _ensure_thumbnail(source, thumb)
+        if result is None:
+            # Fallback: serve the original. Slower, but never breaks the UI.
+            return send_from_directory(target_dir, safe)
+        response = send_file(result, mimetype="image/jpeg", conditional=True)
+        # Browser caches for a year — the URL embeds the source mtime, so a
+        # re-upload busts the cache automatically.
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+    # ---- Folder CRUD --------------------------------------------------------
+
+    @bp.get("/api/folders")
+    def api_folders() -> Any:
+        data_dir = _data_dir()
+        out: list[dict[str, Any]] = []
+        # Root pseudo-folder
+        root_imgs = [
+            p
+            for p in (data_dir.iterdir() if data_dir.exists() else [])
+            if p.is_file() and p.suffix.lower() in ALLOWED_SUFFIXES
+        ]
+        if root_imgs:
+            out.append(
+                {
+                    "name": ROOT_FOLDER_VALUE,
+                    "label": "(root)",
+                    "external_path": None,
+                    "image_count": len(root_imgs),
+                    "images": [
+                        {
+                            "name": p.name,
+                            "url": f"/plugins/gallery/folders/{ROOT_FOLDER_VALUE}/{p.name}",
+                            "thumb_url": f"/plugins/gallery/folders/{ROOT_FOLDER_VALUE}/{p.name}/thumb",
+                        }
+                        for p in sorted(root_imgs)
+                    ],
+                }
+            )
+        for folder_name in _all_folder_names(data_dir):
+            out.append(_folder_summary(folder_name, data_dir))
+        return jsonify(out)
+
+    @bp.post("/api/folders")
+    def api_create_folder() -> Any:
+        body = request.get_json(silent=True) or {}
+        name = (body.get("name") or "").strip().lower()
+        if not _FOLDER_NAME_RE.match(name):
+            return (
+                jsonify({"error": "name must be lowercase letters / digits / - / _"}),
+                400,
+            )
+        data_dir = _data_dir()
+        external_path_raw = (body.get("external_path") or "").strip()
+        meta = _load_meta(data_dir)
+        if name in meta or (data_dir / name).exists():
+            return jsonify({"error": "folder already exists"}), 409
+
+        if external_path_raw:
+            ext = Path(external_path_raw).expanduser()
+            try:
+                ext_resolved = ext.resolve()
+            except OSError:
+                return jsonify({"error": "could not resolve external path"}), 400
+            if not ext_resolved.exists():
+                return jsonify({"error": f"path does not exist: {ext_resolved}"}), 400
+            if not ext_resolved.is_dir():
+                return jsonify({"error": f"path is not a directory: {ext_resolved}"}), 400
+            meta[name] = {"label": name, "external_path": str(ext_resolved)}
+            _save_meta(data_dir, meta)
+        else:
+            (data_dir / name).mkdir(parents=True)
+            meta[name] = {"label": name, "external_path": None}
+            _save_meta(data_dir, meta)
+
+        return jsonify(_folder_summary(name, data_dir))
+
+    @bp.delete("/api/folders/<folder>")
+    def api_delete_folder(folder: str) -> Any:
+        data_dir = _data_dir()
+        if folder == ROOT_FOLDER_VALUE:
+            return jsonify({"error": "cannot delete the root pseudo-folder"}), 403
+        meta = _load_meta(data_dir)
+        if folder in meta and meta[folder].get("external_path"):
+            # External: just drop the entry; never touch the user's directory.
+            del meta[folder]
+            _save_meta(data_dir, meta)
+            return ("", 204)
+        target = data_dir / folder
+        if not target.exists() or not target.is_dir() or target == data_dir:
+            # Maybe the meta entry exists but the directory was deleted out of band — clean it up.
+            if folder in meta:
+                del meta[folder]
+                _save_meta(data_dir, meta)
+                return ("", 204)
+            return ("", 404)
+        shutil.rmtree(target, ignore_errors=True)
+        if folder in meta:
+            del meta[folder]
+            _save_meta(data_dir, meta)
+        return ("", 204)
+
+    # ---- Image upload + delete ---------------------------------------------
+
+    @bp.post("/api/folders/<folder>/images")
+    def api_upload(folder: str) -> Any:
+        data_dir = _data_dir()
+        if folder != ROOT_FOLDER_VALUE and _is_external(folder, data_dir):
+            return (
+                jsonify({"error": "uploads to external folders aren't allowed"}),
+                403,
+            )
+        target_dir = _folder_path(folder, data_dir)
+        # Auto-create internal folder if missing
+        if folder != ROOT_FOLDER_VALUE and (target_dir is None or not target_dir.exists()):
+            if not _FOLDER_NAME_RE.match(folder):
+                return jsonify({"error": "invalid folder name"}), 400
+            target_dir = data_dir / folder
+            target_dir.mkdir(parents=True, exist_ok=True)
+            meta = _load_meta(data_dir)
+            meta.setdefault(folder, {"label": folder, "external_path": None})
+            _save_meta(data_dir, meta)
+        if target_dir is None or not target_dir.exists() or not target_dir.is_dir():
+            return ("", 404)
+        files = request.files.getlist("file")
+        if not files:
+            return jsonify({"error": "no files in upload"}), 400
+        saved: list[str] = []
+        skipped: list[str] = []
+        for upload in files:
+            if not upload or not upload.filename:
+                continue
+            safe_name = secure_filename(upload.filename)
+            if not safe_name:
+                skipped.append(upload.filename)
+                continue
+            ext_suffix = Path(safe_name).suffix.lower()
+            if ext_suffix not in ALLOWED_SUFFIXES:
+                skipped.append(safe_name)
+                continue
+            blob = upload.read(MAX_UPLOAD_BYTES + 1)
+            if len(blob) > MAX_UPLOAD_BYTES:
+                skipped.append(f"{safe_name} (too large)")
+                continue
+            (target_dir / safe_name).write_bytes(blob)
+            saved.append(safe_name)
+        return jsonify({"saved": saved, "skipped": skipped})
+
+    @bp.delete("/api/folders/<folder>/images/<path:filename>")
+    def api_delete_image(folder: str, filename: str) -> Any:
+        data_dir = _data_dir()
+        if folder != ROOT_FOLDER_VALUE and _is_external(folder, data_dir):
+            return (
+                jsonify({"error": "deletes to external folders aren't allowed"}),
+                403,
+            )
+        target_dir = _folder_path(folder, data_dir)
+        if target_dir is None:
+            return ("", 404)
+        safe = secure_filename(filename)
+        if not safe:
+            return ("", 404)
+        path = target_dir / safe
+        if not path.exists() or not path.is_file():
+            return ("", 404)
+        path.unlink()
+        return ("", 204)
 
     return bp

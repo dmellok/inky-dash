@@ -1,6 +1,9 @@
 import { LitElement, html, css } from "lit";
 import "../components/index.js";
 
+// Fallback panel dims (Spectra 6 13.3" landscape native). Real panel dims
+// come from /api/app/settings on connectedCallback; these only matter if the
+// fetch fails (offline-ish / API broken) so the editor still mounts.
 const PANEL_W = 1600;
 const PANEL_H = 1200;
 
@@ -29,38 +32,40 @@ const LAYOUTS = {
       { x: 1, y: 1, w: 1, h: 1 },
     ],
   },
-  // Hero layouts use a 2-col × 3-row grid: hero spans 2×2, two side cells are 1×1.
+  // Hero layouts use a 2-col × 5-row grid: hero spans 2×3 (60% of one
+  // dimension), two side cells span 1×2 each (40%, split across both cols).
   "hero-top": {
     label: "Hero top",
     cells: [
-      { x: 0, y: 0, w: 2, h: 2 },
-      { x: 0, y: 2, w: 1, h: 1 },
-      { x: 1, y: 2, w: 1, h: 1 },
+      { x: 0, y: 0, w: 2, h: 3 },
+      { x: 0, y: 3, w: 1, h: 2 },
+      { x: 1, y: 3, w: 1, h: 2 },
     ],
   },
   "hero-bottom": {
     label: "Hero bottom",
     cells: [
-      { x: 0, y: 0, w: 1, h: 1 },
-      { x: 1, y: 0, w: 1, h: 1 },
-      { x: 0, y: 1, w: 2, h: 2 },
+      { x: 0, y: 0, w: 1, h: 2 },
+      { x: 1, y: 0, w: 1, h: 2 },
+      { x: 0, y: 2, w: 2, h: 3 },
     ],
   },
-  // Hero left/right use 3-col × 2-row: hero spans 2×2, two stacked cells are 1×1.
+  // Hero left/right use 5-col × 2-row: hero spans 3×2 (60% width), two
+  // stacked cells span 2×1 each (40% width).
   "hero-left": {
     label: "Hero left",
     cells: [
-      { x: 0, y: 0, w: 2, h: 2 },
-      { x: 2, y: 0, w: 1, h: 1 },
-      { x: 2, y: 1, w: 1, h: 1 },
+      { x: 0, y: 0, w: 3, h: 2 },
+      { x: 3, y: 0, w: 2, h: 1 },
+      { x: 3, y: 1, w: 2, h: 1 },
     ],
   },
   "hero-right": {
     label: "Hero right",
     cells: [
-      { x: 0, y: 0, w: 1, h: 1 },
-      { x: 0, y: 1, w: 1, h: 1 },
-      { x: 1, y: 0, w: 2, h: 2 },
+      { x: 0, y: 0, w: 2, h: 1 },
+      { x: 0, y: 1, w: 2, h: 1 },
+      { x: 2, y: 0, w: 3, h: 2 },
     ],
   },
 };
@@ -102,6 +107,7 @@ class IdEditor extends LitElement {
     widgets: { state: true },
     themes: { state: true },
     fonts: { state: true },
+    dynChoices: { state: true },
     saving: { state: true },
     saved: { state: true },
     error: { state: true },
@@ -112,50 +118,172 @@ class IdEditor extends LitElement {
     previewLoading: { state: true },
     pushing: { state: true },
     pushResult: { state: true },
+    previewMode: { state: true },
+    previewKey: { state: true },
+    appPanel: { state: true },
   };
 
   static styles = css`
     :host {
       display: block;
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 24px 16px;
       font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       color: var(--id-fg, #1a1612);
     }
-    .header {
+
+    /* -- Sticky toolbar (sits beneath id-nav, which is sticky at top: 0) - */
+    .toolbar {
+      position: sticky;
+      top: var(--id-nav-height, 51px);
+      z-index: 5;
+      background: var(--id-bg, #ffffff);
+      border-bottom: 1px solid var(--id-divider, #c8b89b);
+    }
+    .toolbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
+      gap: 10px;
       flex-wrap: wrap;
     }
-    h1 {
-      margin: 0;
-      font-size: 20px;
-    }
-    .status {
-      font-size: 13px;
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      background: transparent;
       color: var(--id-fg-soft, #5a4f44);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      flex-shrink: 0;
     }
-    .status.error {
+    .back-btn:hover {
+      color: var(--id-fg, #1a1612);
+      background: var(--id-surface2, #f5e8d8);
+    }
+    .name-input {
+      flex: 1;
+      min-width: 200px;
+      max-width: 480px;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--id-fg, #1a1612);
+      padding: 6px 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+    .name-input:hover {
+      border-color: var(--id-divider, #c8b89b);
+    }
+    .name-input:focus {
+      outline: none;
+      border-color: var(--id-accent, #d97757);
+      background: var(--id-bg, #ffffff);
+    }
+    .toolbar-spacer { flex: 1; min-width: 0; }
+    .toolbar-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* -- Status pill ----------------------------------------------------- */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--id-surface2, #f5e8d8);
+      color: var(--id-fg-soft, #5a4f44);
+      white-space: nowrap;
+    }
+    .status-pill.dirty {
+      background: rgba(217, 119, 87, 0.12);
+      color: var(--id-accent-soft, #aa5a3f);
+    }
+    .status-pill.ok {
+      background: rgba(125, 166, 112, 0.16);
+      color: var(--id-ok, #5e8b54);
+    }
+    .status-pill.error {
+      background: rgba(201, 124, 112, 0.16);
       color: var(--id-danger, #c97c70);
+    }
+    .status-pill .ph { font-size: 13px; }
+
+    /* -- Push result toast ---------------------------------------------- */
+    .toast {
+      max-width: 1280px;
+      margin: 12px auto 0;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(125, 166, 112, 0.16);
+      color: var(--id-ok, #5e8b54);
+      border: 1px solid rgba(125, 166, 112, 0.4);
+      font-size: 13px;
+    }
+    .toast.error {
+      background: rgba(201, 124, 112, 0.16);
+      color: var(--id-danger, #c97c70);
+      border-color: rgba(201, 124, 112, 0.4);
+    }
+
+    /* -- Main 2-column grid --------------------------------------------- */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px;
     }
     .grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
+      align-items: start;
     }
-    @media (min-width: 900px) {
+    @media (min-width: 1000px) {
       .grid {
-        grid-template-columns: 1fr 1fr;
+        /* Sidebar on the left, preview on the right. */
+        grid-template-columns: minmax(360px, 1fr) minmax(0, 1.1fr);
+      }
+      .preview-col {
+        /* Pin preview below the nav + toolbar (~51 + 60 = 111px). */
+        position: sticky;
+        top: 124px;
       }
     }
+    .preview-col,
+    .sidebar-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+    .preview-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      padding: 0 4px;
+      flex-wrap: wrap;
+    }
+
+    /* -- Preview frames -------------------------------------------------- */
     .picker-frame {
       position: relative;
       width: 100%;
-      aspect-ratio: ${PANEL_W} / ${PANEL_H};
+      aspect-ratio: var(--panel-w, ${PANEL_W}) / var(--panel-h, ${PANEL_H});
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 8px;
       overflow: hidden;
@@ -165,8 +293,8 @@ class IdEditor extends LitElement {
       position: absolute;
       top: 0;
       left: 0;
-      width: ${PANEL_W}px;
-      height: ${PANEL_H}px;
+      width: calc(var(--panel-w, ${PANEL_W}) * 1px);
+      height: calc(var(--panel-h, ${PANEL_H}) * 1px);
       border: 0;
       transform-origin: top left;
       pointer-events: none;
@@ -182,15 +310,13 @@ class IdEditor extends LitElement {
       border: 2px solid transparent;
       cursor: pointer;
       pointer-events: auto;
-      transition: background 100ms ease, border-color 100ms ease;
+      transition: border-color 100ms ease;
     }
     .cell-hit:hover {
-      background: rgba(0, 0, 0, 0.06);
-      border-color: rgba(0, 0, 0, 0.2);
+      border-color: rgba(217, 119, 87, 0.5);
     }
     .cell-hit[data-selected="true"] {
       border-color: var(--id-accent, #d97757);
-      background: rgba(217, 119, 87, 0.12);
     }
     .cell-hit-label {
       position: absolute;
@@ -219,74 +345,108 @@ class IdEditor extends LitElement {
       gap: 8px;
       min-height: 44px;
     }
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
     .empty {
       padding: 16px;
       color: var(--id-fg-soft, #5a4f44);
       font-style: italic;
     }
-    .preview-grid {
+
+    /* -- Layout picker thumbnails -------------------------------------- */
+    .layout-grid {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+      gap: 8px;
     }
-    @media (min-width: 700px) {
-      .preview-grid {
-        grid-template-columns: 1fr 1fr;
-      }
+    .layout-thumb {
+      cursor: pointer;
+      border: 1.5px solid var(--id-divider, #c8b89b);
+      border-radius: 8px;
+      padding: 6px;
+      background: var(--id-bg, #ffffff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: border-color 100ms ease, background 100ms ease;
     }
-    .preview-tile {
+    .layout-thumb:hover {
+      border-color: var(--id-accent, #d97757);
+    }
+    .layout-thumb[aria-pressed="true"] {
+      border-color: var(--id-accent, #d97757);
+      background: rgba(217, 119, 87, 0.08);
+    }
+    .layout-thumb-shape {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--id-surface2, #f5e8d8);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .layout-thumb-cell {
+      position: absolute;
+      background: rgba(217, 119, 87, 0.6);
+      border: 1px solid rgba(217, 119, 87, 0.85);
+      box-sizing: border-box;
+    }
+    .layout-thumb-label {
+      font-size: 10px;
+      color: var(--id-fg-soft, #5a4f44);
+      line-height: 1.2;
+      text-align: center;
+    }
+    .layout-thumb[aria-pressed="true"] .layout-thumb-label {
+      color: var(--id-accent-soft, #aa5a3f);
+      font-weight: 600;
+    }
+
+    /* -- Cell badge in card heading ----------------------------------- */
+    .cell-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .cell-heading h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--id-fg, #1a1612);
+    }
+    .cell-heading .cell-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--id-accent, #d97757);
+      color: white;
+      flex-shrink: 0;
+    }
+    .cell-heading .plugin-tag {
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      font-weight: 500;
+    }
+
+    .quantized-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: var(--panel-w, ${PANEL_W}) / var(--panel-h, ${PANEL_H});
+      background: var(--id-surface2, #f5e8d8);
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 8px;
       overflow: hidden;
-      background: var(--id-bg, #ffffff);
     }
-    .preview-tile-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 8px 12px;
-      color: var(--id-fg-soft, #5a4f44);
-      border-bottom: 1px solid var(--id-divider, #c8b89b);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .preview-tile-frame {
-      position: relative;
-      width: 100%;
-      aspect-ratio: ${PANEL_W} / ${PANEL_H};
-      background: var(--id-surface2, #f5e8d8);
-      overflow: hidden;
-    }
-    .preview-tile-frame iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: ${PANEL_W}px;
-      height: ${PANEL_H}px;
-      border: 0;
-      transform-origin: top left;
-    }
-    .preview-tile-frame img {
+    .quantized-frame img {
       display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
-    }
-    .preview-tile-empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: var(--id-fg-soft, #5a4f44);
-      font-size: 13px;
-      text-align: center;
-      padding: 16px;
     }
     .preview-spinner {
       width: 16px;
@@ -346,10 +506,9 @@ class IdEditor extends LitElement {
       margin-top: 16px;
       gap: 8px;
     }
-    .actions { gap: 8px; flex-wrap: wrap; }
-    @media (max-width: 700px) {
-      :host { padding: 16px 12px; }
-      .actions id-button { flex: 1; min-width: 110px; }
+    @media (max-width: 600px) {
+      .toolbar-inner { padding: 8px 12px; gap: 6px; }
+      .name-input { font-size: 16px; min-width: 140px; }
     }
   `;
 
@@ -360,6 +519,7 @@ class IdEditor extends LitElement {
     this.widgets = [];
     this.themes = [];
     this.fonts = [];
+    this.dynChoices = {};
     this.saving = false;
     this.saved = false;
     this.error = null;
@@ -367,34 +527,112 @@ class IdEditor extends LitElement {
     this.layoutKey = "1x1";
     this.lastSavedAt = 0;
     this.dither = "floyd-steinberg";
+    this.previewMode = "live";
     this.previewLoading = false;
+    this.previewKey = 0;
     this.pushing = false;
     this.pushResult = null;
     this.showHelp = false;
     this.showOnboarding =
       typeof localStorage !== "undefined" &&
       localStorage.getItem("inky_onboarded_v1") !== "yes";
+    this.appPanel = null; // { model, orientation, width, height }
     this._onKeydown = this._onKeydown.bind(this);
+    this._onBeforeUnload = this._onBeforeUnload.bind(this);
+  }
+
+  _onBeforeUnload(event) {
+    // Prompt the browser's native "leave this site?" dialog when there are
+    // unsaved edits. Returning a string (or setting returnValue) is the
+    // legacy contract; modern browsers ignore the actual text but show their
+    // own generic message.
+    if (this.page && !this.saved && !this.saving) {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    }
+  }
+
+  // Dimensions for new-page defaults: derived from app panel settings,
+  // honouring orientation (landscape native, portrait swaps).
+  _defaultPanelDims() {
+    const p = this.appPanel;
+    if (!p) return { w: PANEL_W, h: PANEL_H };
+    return p.orientation === "landscape"
+      ? { w: p.width, h: p.height }
+      : { w: p.height, h: p.width };
   }
 
   async connectedCallback() {
     super.connectedCallback();
     window.addEventListener("keydown", this._onKeydown);
+    window.addEventListener("beforeunload", this._onBeforeUnload);
     try {
-      const [widgetsRes, themesRes, fontsRes] = await Promise.all([
-        fetch("/api/widgets"),
-        fetch("/api/themes"),
-        fetch("/api/fonts"),
-      ]);
+      const [widgetsRes, themesRes, fontsRes, appRes, panelsRes] =
+        await Promise.all([
+          fetch("/api/widgets"),
+          fetch("/api/themes"),
+          fetch("/api/fonts"),
+          fetch("/api/app/settings"),
+          fetch("/api/app/panels"),
+        ]);
       this.widgets = await widgetsRes.json();
       this.themes = await themesRes.json();
       this.fonts = await fontsRes.json();
+      try {
+        const app = await appRes.json();
+        const panels = await panelsRes.json();
+        const spec = panels.find((p) => p.id === app?.panel?.model);
+        if (spec) {
+          this.appPanel = {
+            model: app.panel.model,
+            orientation: app.panel.orientation,
+            width: spec.width,
+            height: spec.height,
+          };
+        }
+      } catch {
+        /* leave appPanel null; falls back to PANEL_W/PANEL_H */
+      }
+      // Pre-fetch dynamic choices for any cell_option declaring choices_from.
+      const dyn = {};
+      const tasks = [];
+      for (const w of this.widgets) {
+        for (const opt of w.cell_options || []) {
+          if (!opt.choices_from) continue;
+          tasks.push(
+            fetch(
+              `/api/plugins/${encodeURIComponent(w.id)}/choices/${encodeURIComponent(opt.choices_from)}`
+            )
+              .then((r) => r.json())
+              .then((list) => {
+                dyn[`${w.id}:${opt.name}`] = Array.isArray(list) ? list : [];
+              })
+              .catch(() => {
+                dyn[`${w.id}:${opt.name}`] = [];
+              })
+          );
+        }
+      }
+      await Promise.all(tasks);
+      this.dynChoices = dyn;
       if (this.pageId) {
         const pageRes = await fetch(`/api/pages/${encodeURIComponent(this.pageId)}`);
         if (pageRes.ok) {
           this.page = await pageRes.json();
           this.layoutKey =
             detectLayout(this.page.cells, this.page.panel) || "custom";
+          // Backfill any choices_from option that was saved empty (e.g. an
+          // older page where gallery folder was never picked) with the
+          // first available choice. If anything changed, mark as dirty so
+          // the next save persists the fix.
+          const backfilled = this._backfillCellOptions(this.page.cells);
+          if (backfilled !== this.page.cells) {
+            this.page = { ...this.page, cells: backfilled };
+            this.saved = false;
+          } else {
+            this.saved = true;
+          }
           return;
         }
       }
@@ -405,13 +643,14 @@ class IdEditor extends LitElement {
   }
 
   _newPage(id) {
+    const dims = this._defaultPanelDims();
     return {
       id,
       name: id === "untitled" ? "Untitled" : id,
-      panel: { w: PANEL_W, h: PANEL_H },
+      panel: { w: dims.w, h: dims.h },
       theme: "default",
       font: "default",
-      cells: pixelize("1x1", { w: PANEL_W, h: PANEL_H }),
+      cells: pixelize("1x1", dims),
     };
   }
 
@@ -426,15 +665,68 @@ class IdEditor extends LitElement {
     this.layoutKey = key;
     if (this.selectedCell >= newCells.length) this.selectedCell = 0;
     this.saved = false;
-    this._scheduleAutoSave();
+  }
+
+  // Compute initial cell.options for a freshly-picked plugin. Honours the
+  // manifest's defaults AND auto-selects the first dynamic choice for any
+  // ``choices_from`` option whose default is empty. Without this, a select
+  // like gallery's "folder" stores "" while the browser visually shows the
+  // first folder — clicking that visible option doesn't fire @change, so
+  // the cell stays unconfigured and renders the "_root" empty-folder error.
+  _defaultsForPlugin(pluginId) {
+    const widget = this.widgets.find((w) => w.id === pluginId);
+    if (!widget) return {};
+    const opts = {};
+    for (const opt of widget.cell_options || []) {
+      if (opt.default !== undefined) opts[opt.name] = opt.default;
+      const empty = opts[opt.name] === undefined || opts[opt.name] === "";
+      if (opt.type === "select" && opt.choices_from && empty) {
+        const choices = this.dynChoices?.[`${pluginId}:${opt.name}`] || [];
+        const firstReal = choices.find((c) => c.value !== "");
+        if (firstReal) opts[opt.name] = firstReal.value;
+      }
+    }
+    return opts;
   }
 
   _setCellPlugin(index, pluginId) {
     const newCells = this.page.cells.slice();
-    newCells[index] = { ...newCells[index], plugin: pluginId, options: {} };
+    newCells[index] = {
+      ...newCells[index],
+      plugin: pluginId,
+      options: this._defaultsForPlugin(pluginId),
+    };
     this.page = { ...this.page, cells: newCells };
     this.saved = false;
-    this._scheduleAutoSave();
+  }
+
+  // Sweep a list of cells; for each ``choices_from`` option still empty,
+  // fill in the first real choice. Returns the same list when nothing
+  // needed filling so the caller can keep the existing reference.
+  _backfillCellOptions(cells) {
+    let changed = false;
+    const out = cells.map((cell) => {
+      const widget = this.widgets.find((w) => w.id === cell.plugin);
+      if (!widget) return cell;
+      const newOpts = { ...(cell.options || {}) };
+      let cellChanged = false;
+      for (const opt of widget.cell_options || []) {
+        if (opt.type !== "select" || !opt.choices_from) continue;
+        if (newOpts[opt.name] !== undefined && newOpts[opt.name] !== "") continue;
+        const choices = this.dynChoices?.[`${cell.plugin}:${opt.name}`] || [];
+        const first = choices.find((c) => c.value !== "");
+        if (first) {
+          newOpts[opt.name] = first.value;
+          cellChanged = true;
+        }
+      }
+      if (cellChanged) {
+        changed = true;
+        return { ...cell, options: newOpts };
+      }
+      return cell;
+    });
+    return changed ? out : cells;
   }
 
   _setCellOption(index, optName, value) {
@@ -445,37 +737,31 @@ class IdEditor extends LitElement {
     };
     this.page = { ...this.page, cells: newCells };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setName(name) {
     this.page = { ...this.page, name };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setPageTheme(themeId) {
     this.page = { ...this.page, theme: themeId };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setPageFont(fontId) {
     this.page = { ...this.page, font: fontId };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setPageGap(value) {
     this.page = { ...this.page, gap: Number(value) || 0 };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setPageCornerRadius(value) {
     this.page = { ...this.page, corner_radius: Number(value) || 0 };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   _setCellOverride(index, field, value) {
@@ -489,7 +775,6 @@ class IdEditor extends LitElement {
     newCells[index] = cell;
     this.page = { ...this.page, cells: newCells };
     this.saved = false;
-    this._scheduleAutoSave();
   }
 
   async _save() {
@@ -515,27 +800,43 @@ class IdEditor extends LitElement {
     }
   }
 
-  // Debounced auto-save: every edit triggers a save 250ms after the last
-  // change, then the iframe URL's cache-bust forces a reload.
-  _scheduleAutoSave() {
-    if (this._saveTimer) clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => {
-      if (this.page) this._save();
-    }, 250);
+  // Debounced live preview: stage the in-memory page in the server's preview
+  // cache so the iframe at /compose/<id> reflects unsaved edits.
+  _schedulePreview() {
+    if (this._previewTimer) clearTimeout(this._previewTimer);
+    this._previewTimer = setTimeout(() => this._stagePreview(), 200);
   }
 
-  async _push() {
+  async _stagePreview() {
+    if (!this.page) return;
+    try {
+      const res = await fetch(
+        `/api/pages/${encodeURIComponent(this.page.id)}/preview`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(this.page),
+        }
+      );
+      if (!res.ok) return;
+      this.previewKey = Date.now();
+    } catch {
+      /* ignore — saved state still renders, just not the live edit */
+    }
+  }
+
+  async _send() {
+    // Push the in-memory draft state to the panel WITHOUT persisting it
+    // back to the page store. Server stages the page under a transient id,
+    // pushes, then deletes it.
     this.pushing = true;
     this.pushResult = null;
     try {
-      const res = await fetch(
-        `/api/pages/${encodeURIComponent(this.page.id)}/push`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ dither: this.dither }),
-        }
-      );
+      const res = await fetch("/api/pages/push-inline", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ page: this.page, dither: this.dither }),
+      });
       const body = await res.json();
       this.pushResult = { ok: res.ok, ...body };
     } catch (err) {
@@ -548,10 +849,11 @@ class IdEditor extends LitElement {
   _scaleIframes() {
     const wraps = this.shadowRoot?.querySelectorAll(".iframe-wrap");
     if (!wraps) return;
+    const w = this.page?.panel?.w || PANEL_W;
     for (const wrap of wraps) {
       const iframe = wrap.querySelector("iframe");
       if (!iframe) continue;
-      const scale = wrap.clientWidth / PANEL_W;
+      const scale = wrap.clientWidth / w;
       iframe.style.transform = `scale(${scale})`;
     }
   }
@@ -563,17 +865,44 @@ class IdEditor extends LitElement {
     this._scaleIframes();
   }
 
-  updated() {
+  updated(changed) {
     this._scaleIframes();
     // Watch any newly-added iframe-wraps (e.g. quantized preview tile appearing).
     const wraps = this.shadowRoot?.querySelectorAll(".iframe-wrap");
     wraps?.forEach((w) => this._resizeObserver?.observe(w));
+    // Whenever the page state mutates and there are unsaved edits, push them
+    // to the server's preview cache so the iframe reflects them live.
+    if (changed.has("page") && this.page && !this.saved) {
+      this._schedulePreview();
+    }
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     this._resizeObserver?.disconnect();
     window.removeEventListener("keydown", this._onKeydown);
+    window.removeEventListener("beforeunload", this._onBeforeUnload);
+    if (this._previewTimer) clearTimeout(this._previewTimer);
+    // Best-effort cleanup so abandoned previews don't shadow saved data.
+    if (this.page) {
+      try {
+        navigator.sendBeacon?.(
+          `/api/pages/${encodeURIComponent(this.page.id)}/preview`
+        );
+      } catch {
+        /* ignore */
+      }
+      // sendBeacon is POST-only; fall back to fetch DELETE for cleanup
+      // (fire-and-forget; ignore failures).
+      try {
+        fetch(`/api/pages/${encodeURIComponent(this.page.id)}/preview`, {
+          method: "DELETE",
+          keepalive: true,
+        });
+      } catch {
+        /* ignore */
+      }
+    }
   }
 
   _onKeydown(event) {
@@ -589,7 +918,7 @@ class IdEditor extends LitElement {
     }
     if (meta && event.key === "Enter") {
       event.preventDefault();
-      this._push();
+      this._send();
       return;
     }
     if (event.key === "Escape" && (this.showHelp || this.showOnboarding)) {
@@ -620,53 +949,47 @@ class IdEditor extends LitElement {
     }
   }
 
-  _renderQuantizedPreview() {
-    if (!this.page) return null;
+  _renderQuantizedFrame() {
     const id = encodeURIComponent(this.page.id);
-    const cacheBust = this.lastSavedAt || "initial";
+    // Use the most-recent of (preview stage / save) as the cache-bust so the
+    // iframe + quantized image refresh after every live edit, not just saves.
+    const cacheBust = this.previewKey || this.lastSavedAt || "initial";
     const previewUrl = `/api/pages/${id}/preview.png?dither=${this.dither}&t=${cacheBust}`;
+    // Frame matches the page's composition dims — preview is "what you see
+    // looking at the panel face-on", upright. The push pipeline rotates the
+    // bytes separately for the panel's landscape-native pixel grid.
     return html`
-      <id-card heading="Panel paint" subheading="The same render projected to the Spectra 6 gamut — what the panel will actually paint.">
-        <id-form-row label="Dither">
-          <select
-            .value=${this.dither}
-            @change=${(e) => {
-              this.dither = e.target.value;
-              this.lastSavedAt = Date.now();
-            }}
-          >
-            <option value="floyd-steinberg">Floyd–Steinberg (default)</option>
-            <option value="none">None (nearest colour)</option>
-          </select>
-        </id-form-row>
-        <div class="preview-tile">
-          <div class="preview-tile-label">
-            <span>Quantized</span>
-            ${this.previewLoading ? html`<span class="preview-spinner"></span>` : null}
-          </div>
-          <div class="preview-tile-frame">
-            <img
-              src=${previewUrl}
-              alt="Quantized preview"
-              loading="lazy"
-              @load=${() => (this.previewLoading = false)}
-              @loadstart=${() => (this.previewLoading = true)}
-            />
-          </div>
-        </div>
-      </id-card>
+      <div
+        class="quantized-frame"
+        style="--panel-w: ${this.page.panel.w}; --panel-h: ${this.page.panel.h};"
+      >
+        <img
+          src=${previewUrl}
+          alt="Quantized preview"
+          loading="lazy"
+          @load=${() => (this.previewLoading = false)}
+          @loadstart=${() => (this.previewLoading = true)}
+        />
+      </div>
     `;
   }
 
   _renderPicker() {
     const cells = this.page.cells;
     const id = encodeURIComponent(this.page.id);
-    const cacheBust = this.lastSavedAt || "initial";
+    // Use the most-recent of (preview stage / save) as the cache-bust so the
+    // iframe + quantized image refresh after every live edit, not just saves.
+    const cacheBust = this.previewKey || this.lastSavedAt || "initial";
     const composeUrl = `/compose/${id}?for_push=1&t=${cacheBust}`;
     // Match the composer's gap inset so the click targets sit on top of the
     // visually-shrunken cells in the iframe.
     const halfGap = (this.page.gap || 0) / 2;
-    return html`<div class="picker-frame iframe-wrap">
+    const panelW = this.page.panel.w;
+    const panelH = this.page.panel.h;
+    return html`<div
+      class="picker-frame iframe-wrap"
+      style="--panel-w: ${panelW}; --panel-h: ${panelH};"
+    >
       <iframe src=${composeUrl} title="Live preview"></iframe>
       <div class="cell-overlay">
         ${cells.map((c, i) => {
@@ -678,10 +1001,10 @@ class IdEditor extends LitElement {
             <div
               class="cell-hit"
               data-selected=${i === this.selectedCell ? "true" : "false"}
-              style="left: ${(x / PANEL_W) * 100}%;
-                     top: ${(y / PANEL_H) * 100}%;
-                     width: ${(w / PANEL_W) * 100}%;
-                     height: ${(h / PANEL_H) * 100}%;"
+              style="left: ${(x / panelW) * 100}%;
+                     top: ${(y / panelH) * 100}%;
+                     width: ${(w / panelW) * 100}%;
+                     height: ${(h / panelH) * 100}%;"
               @click=${() => (this.selectedCell = i)}
             >
               <span class="cell-hit-label">${i + 1} · ${c.plugin}</span>
@@ -697,7 +1020,12 @@ class IdEditor extends LitElement {
     if (!cell) return null;
     const widget = this.widgets.find((w) => w.id === cell.plugin);
     return html`
-      <id-card heading="Cell ${this.selectedCell + 1}">
+      <id-card>
+        <div class="cell-heading">
+          <span class="cell-badge">${this.selectedCell + 1}</span>
+          <h3>Cell ${this.selectedCell + 1}</h3>
+          <span class="plugin-tag">·  ${widget?.name || cell.plugin}</span>
+        </div>
         <id-form-row label="Plugin">
           <select
             @change=${(e) => this._setCellPlugin(this.selectedCell, e.target.value)}
@@ -754,13 +1082,19 @@ class IdEditor extends LitElement {
   _renderOption(cell, opt) {
     const value = cell.options[opt.name] ?? opt.default ?? "";
     if (opt.type === "select") {
+      // Static choices on the manifest, OR dynamic via choices_from
+      const choices = opt.choices_from
+        ? (this.dynChoices && this.dynChoices[`${cell.plugin}:${opt.name}`]) || []
+        : opt.choices || [];
       return html`<id-form-row label=${opt.label}>
         <select
           @change=${(e) => this._setCellOption(this.selectedCell, opt.name, e.target.value)}
         >
-          ${(opt.choices || []).map(
-            (c) => html`<option value=${c.value} ?selected=${c.value === value}>${c.label}</option>`
-          )}
+          ${choices.length === 0
+            ? html`<option value="">(none)</option>`
+            : choices.map(
+                (c) => html`<option value=${c.value} ?selected=${String(c.value) === String(value)}>${c.label}</option>`
+              )}
         </select>
       </id-form-row>`;
     }
@@ -785,160 +1119,249 @@ class IdEditor extends LitElement {
     </id-form-row>`;
   }
 
+  _renderToolbar() {
+    let pill;
+    if (this.error) {
+      pill = html`<span class="status-pill error"
+        ><i class="ph ph-warning-circle"></i> ${this.error}</span
+      >`;
+    } else if (this.saving) {
+      pill = html`<span class="status-pill"
+        ><span class="preview-spinner" style="width:10px;height:10px;border-width:1.5px;"></span>
+        Saving…</span
+      >`;
+    } else if (this.saved) {
+      pill = html`<span class="status-pill ok"
+        ><i class="ph ph-check-circle"></i> Saved</span
+      >`;
+    } else {
+      pill = html`<span class="status-pill dirty"
+        ><i class="ph ph-circle-dashed"></i> Unsaved</span
+      >`;
+    }
+    return html`
+      <div class="toolbar">
+        <div class="toolbar-inner">
+          <a href="/editor" class="back-btn" title="All dashboards" aria-label="All dashboards">
+            <i class="ph ph-arrow-left"></i>
+          </a>
+          <input
+            class="name-input"
+            type="text"
+            .value=${this.page.name}
+            placeholder="Untitled dashboard"
+            aria-label="Dashboard name"
+            @input=${(e) => this._setName(e.target.value)}
+          />
+          ${pill}
+          <span class="toolbar-spacer"></span>
+          <div class="toolbar-actions">
+            <id-button
+              variant="primary"
+              ?disabled=${this.saving || this.pushing || this.saved}
+              @click=${() => this._save()}
+              title="Save (⌘S)"
+            >
+              <i class="ph ph-floppy-disk"></i>
+              ${this.saving ? "Saving…" : this.saved ? "Saved" : "Save"}
+            </id-button>
+            <id-button
+              ?disabled=${this.pushing || this.saving}
+              @click=${() => this._send()}
+              title="Send to panel without saving (⌘↵)"
+            >
+              <i class="ph ph-paper-plane-tilt"></i>
+              ${this.pushing ? "Sending…" : "Send"}
+            </id-button>
+            <id-button
+              @click=${() => (this.showHelp = true)}
+              title="Shortcuts (?)"
+              aria-label="Keyboard shortcuts"
+            >
+              <i class="ph ph-keyboard"></i>
+            </id-button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderLayoutPicker() {
+    return html`
+      <div class="layout-grid">
+        ${Object.entries(LAYOUTS).map(([key, l]) => {
+          // Compute layout shape on a 0..1 grid for the thumbnail.
+          const cols = Math.max(...l.cells.map((c) => c.x + c.w));
+          const rows = Math.max(...l.cells.map((c) => c.y + c.h));
+          return html`
+            <button
+              type="button"
+              class="layout-thumb"
+              aria-pressed=${this.layoutKey === key ? "true" : "false"}
+              title=${l.label}
+              @click=${() => this._onLayoutChange(key)}
+            >
+              <div class="layout-thumb-shape">
+                ${l.cells.map(
+                  (c) => html`
+                    <div
+                      class="layout-thumb-cell"
+                      style="left: ${(c.x / cols) * 100}%;
+                             top: ${(c.y / rows) * 100}%;
+                             width: ${(c.w / cols) * 100}%;
+                             height: ${(c.h / rows) * 100}%;"
+                    ></div>
+                  `
+                )}
+              </div>
+              <span class="layout-thumb-label">${l.label}</span>
+            </button>
+          `;
+        })}
+        ${this.layoutKey === "custom"
+          ? html`<div
+              class="layout-thumb"
+              aria-pressed="true"
+              style="cursor: default;"
+            >
+              <div class="layout-thumb-shape"></div>
+              <span class="layout-thumb-label">Custom</span>
+            </div>`
+          : null}
+      </div>
+    `;
+  }
+
+  _renderPreviewPane() {
+    return html`
+      <div class="preview-col">
+        <id-tab-bar
+          .tabs=${[
+            { id: "live", label: "Live preview" },
+            { id: "quantized", label: "Panel paint" },
+          ]}
+          .selected=${this.previewMode}
+          @change=${(e) => (this.previewMode = e.detail.selected)}
+        ></id-tab-bar>
+        ${this.previewMode === "quantized"
+          ? this._renderQuantizedFrame()
+          : this._renderPicker()}
+        <div class="preview-meta">
+          <span>
+            ${this.previewMode === "quantized"
+              ? html`Spectra 6 dithered output`
+              : html`<i class="ph ph-cursor-click"></i> Click a cell to edit it`}
+          </span>
+          ${this.previewMode === "quantized"
+            ? html`<label
+                style="display: inline-flex; align-items: center; gap: 6px;"
+              >
+                Dither:
+                <select
+                  .value=${this.dither}
+                  @change=${(e) => {
+                    this.dither = e.target.value;
+                    this.lastSavedAt = Date.now();
+                  }}
+                  style="padding: 4px 6px; border: 1px solid var(--id-divider); border-radius: 4px; min-height: 0; background: var(--id-bg);"
+                >
+                  <option value="floyd-steinberg">Floyd–Steinberg</option>
+                  <option value="none">None (nearest)</option>
+                </select>
+              </label>`
+            : html`<span>${this.page.panel.w}×${this.page.panel.h}</span>`}
+        </div>
+      </div>
+    `;
+  }
+
   render() {
     if (!this.page) {
-      return html`<p>${this.error ? `Error: ${this.error}` : "Loading…"}</p>`;
+      return html`<p style="padding: 24px;">
+        ${this.error ? `Error: ${this.error}` : "Loading…"}
+      </p>`;
     }
     return html`
       <link rel="stylesheet" href="/static/icons/phosphor.css">
-      <div class="header">
-        <h1>Editor — ${this.page.id}</h1>
-        <div>
-          ${this.error
-            ? html`<span class="status error">${this.error}</span>`
-            : this.saving
-              ? html`<span class="status">Saving…</span>`
-              : this.saved
-                ? html`<span class="status">Saved · auto-saves on edit</span>`
-                : html`<span class="status">Auto-saves on edit</span>`}
-        </div>
-      </div>
-
-      <id-card heading="Page">
-        <id-form-row label="Name">
-          <input
-            type="text"
-            .value=${this.page.name}
-            @input=${(e) => this._setName(e.target.value)}
-          />
-        </id-form-row>
-        <id-form-row label="Layout">
-          <select
-            @change=${(e) => this._onLayoutChange(e.target.value)}
-          >
-            ${Object.entries(LAYOUTS).map(
-              ([key, l]) => html`
-                <option value=${key} ?selected=${this.layoutKey === key}>
-                  ${l.label}
-                </option>
-              `
-            )}
-            ${this.layoutKey === "custom"
-              ? html`<option value="custom" selected>Custom (manual)</option>`
-              : null}
-          </select>
-        </id-form-row>
-        <id-form-row label="Theme" hint="Page-wide; cells can override.">
-          <select
-            @change=${(e) => this._setPageTheme(e.target.value)}
-          >
-            ${this.themes.length === 0
-              ? html`<option>(no themes loaded)</option>`
-              : null}
-            ${this.themes.map(
-              (t) => html`
-                <option value=${t.id} ?selected=${t.id === (this.page.theme || "default")}>
-                  ${t.name}${t.mode ? ` — ${t.mode}` : ""}
-                </option>
-              `
-            )}
-          </select>
-        </id-form-row>
-        <id-form-row label="Font">
-          <select
-            @change=${(e) => this._setPageFont(e.target.value)}
-          >
-            ${this.fonts.length === 0
-              ? html`<option>(no fonts loaded)</option>`
-              : null}
-            ${this.fonts.map(
-              (f) => html`
-                <option value=${f.id} ?selected=${f.id === (this.page.font || "default")}>
-                  ${f.name}${f.category ? ` — ${f.category}` : ""}
-                </option>
-              `
-            )}
-          </select>
-        </id-form-row>
-        <id-form-row label="Gap" hint="Pixels between widgets and around the panel edge.">
-          <id-slider
-            min="0"
-            max="120"
-            step="2"
-            value=${this.page.gap || 0}
-            suffix="px"
-            @change=${(e) => this._setPageGap(e.detail.value)}
-          ></id-slider>
-        </id-form-row>
-        <id-form-row label="Corner radius">
-          <id-slider
-            min="0"
-            max="120"
-            step="2"
-            value=${this.page.corner_radius || 0}
-            suffix="px"
-            @change=${(e) => this._setPageCornerRadius(e.detail.value)}
-          ></id-slider>
-        </id-form-row>
-      </id-card>
-
-      <div style="height: 16px"></div>
-
-      <div class="grid">
-        <div>
-          <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--id-fg-soft); margin: 0 0 8px;">
-            Live preview · ${PANEL_W}×${PANEL_H} · click a region to edit it
-          </h2>
-          ${this._renderPicker()}
-        </div>
-        <div>${this._renderCellOptions()}</div>
-      </div>
-
-      <div style="height: 16px"></div>
-
-      <div class="actions">
-        <id-button
-          variant="primary"
-          ?disabled=${this.pushing || this.saving}
-          @click=${() => this._push()}
-          title="Push (⌘↵)"
-        >
-          <i class="ph ph-paper-plane-tilt"></i>
-          ${this.pushing ? "Pushing…" : "Push to panel"}
-        </id-button>
-        <id-button @click=${() => (window.location.href = "/send")}>
-          <i class="ph ph-paper-plane"></i> Send
-        </id-button>
-        <id-button @click=${() => (window.location.href = "/schedules")}>
-          <i class="ph ph-clock-clockwise"></i> Schedules
-        </id-button>
-        <id-button @click=${() => (window.location.href = "/themes")}>
-          <i class="ph ph-palette"></i> Themes
-        </id-button>
-        <id-button @click=${() => (window.location.href = "/settings")}>
-          <i class="ph ph-gear"></i> Settings
-        </id-button>
-        <id-button @click=${() => (this.showHelp = true)} title="Shortcuts (?)">
-          <i class="ph ph-keyboard"></i>
-        </id-button>
-        <id-button
-          @click=${() =>
-            window.open(`/compose/${encodeURIComponent(this.page.id)}`, "_blank")}
-        >
-          <i class="ph ph-arrow-square-out"></i> Compose
-        </id-button>
-      </div>
+      <id-nav current="editor"></id-nav>
+      ${this._renderToolbar()}
       ${this.pushResult
-        ? html`<div class="status ${this.pushResult.ok ? "" : "error"}" style="margin-top: 8px;">
+        ? html`<div class="toast ${this.pushResult.ok ? "" : "error"}">
             ${this.pushResult.ok
-              ? `Sent (${this.pushResult.digest}, ${this.pushResult.duration_s}s)`
-              : `Push failed: ${this.pushResult.error || this.pushResult.status}`}
+              ? html`<i class="ph ph-check-circle"></i>
+                  Sent to panel · ${this.pushResult.digest} ·
+                  ${this.pushResult.duration_s}s`
+              : html`<i class="ph ph-warning-circle"></i> Send failed:
+                  ${this.pushResult.error || this.pushResult.status}`}
           </div>`
         : null}
 
-      <div style="height: 16px"></div>
+      <div class="container">
+        <div class="grid">
+          <div class="sidebar-col">
+            <id-card heading="Page" subheading="Theme + spacing applied to every cell.">
+              <id-form-row label="Theme" hint="Cells can override individually.">
+                <select @change=${(e) => this._setPageTheme(e.target.value)}>
+                  ${this.themes.length === 0
+                    ? html`<option>(no themes loaded)</option>`
+                    : null}
+                  ${this.themes.map(
+                    (t) => html`<option
+                      value=${t.id}
+                      ?selected=${t.id === (this.page.theme || "default")}
+                    >
+                      ${t.name}${t.mode ? ` — ${t.mode}` : ""}
+                    </option>`
+                  )}
+                </select>
+              </id-form-row>
+              <id-form-row label="Font">
+                <select @change=${(e) => this._setPageFont(e.target.value)}>
+                  ${this.fonts.length === 0
+                    ? html`<option>(no fonts loaded)</option>`
+                    : null}
+                  ${this.fonts.map(
+                    (f) => html`<option
+                      value=${f.id}
+                      ?selected=${f.id === (this.page.font || "default")}
+                    >
+                      ${f.name}${f.category ? ` — ${f.category}` : ""}
+                    </option>`
+                  )}
+                </select>
+              </id-form-row>
+              <id-form-row label="Gap" hint="Pixels between cells + around the panel edge.">
+                <id-slider
+                  min="0"
+                  max="120"
+                  step="2"
+                  value=${this.page.gap || 0}
+                  suffix="px"
+                  @change=${(e) => this._setPageGap(e.detail.value)}
+                ></id-slider>
+              </id-form-row>
+              <id-form-row label="Corner radius">
+                <id-slider
+                  min="0"
+                  max="120"
+                  step="2"
+                  value=${this.page.corner_radius || 0}
+                  suffix="px"
+                  @change=${(e) => this._setPageCornerRadius(e.detail.value)}
+                ></id-slider>
+              </id-form-row>
+            </id-card>
 
-      ${this._renderQuantizedPreview()}
+            <id-card heading="Layout" subheading="Pick a layout to split the panel into cells.">
+              ${this._renderLayoutPicker()}
+            </id-card>
+
+            ${this._renderCellOptions()}
+          </div>
+
+          ${this._renderPreviewPane()}
+        </div>
+      </div>
       ${this.showOnboarding ? this._renderOnboarding() : null}
       ${this.showHelp ? this._renderHelp() : null}
     `;
@@ -956,7 +1379,7 @@ class IdEditor extends LitElement {
             <li>Pick a <strong>layout</strong> (top of the page) to split the panel into cells.</li>
             <li>Click any cell in the live preview to <strong>edit it</strong> on the right.</li>
             <li>Set <strong>theme</strong>, <strong>font</strong>, <strong>gap</strong>, <strong>radius</strong> per page.</li>
-            <li><strong>Push to panel</strong> renders, dithers, publishes via MQTT.</li>
+            <li><strong>Save</strong> persists your edits. <strong>Send without saving</strong> pushes the current draft to the panel without committing.</li>
           </ol>
           <p style="color: var(--id-fg-soft); font-size: 13px; margin: 0 0 8px;">
             Press <kbd>?</kbd> any time to see all shortcuts.
@@ -981,14 +1404,14 @@ class IdEditor extends LitElement {
         <div class="overlay-card" @click=${(e) => e.stopPropagation()}>
           <h3>Keyboard shortcuts</h3>
           <div class="overlay-shortcuts">
-            <span><kbd>${platform}</kbd>+<kbd>S</kbd></span><span>Save now</span>
-            <span><kbd>${platform}</kbd>+<kbd>↵</kbd></span><span>Push to panel</span>
+            <span><kbd>${platform}</kbd>+<kbd>S</kbd></span><span>Save changes</span>
+            <span><kbd>${platform}</kbd>+<kbd>↵</kbd></span><span>Send draft to panel (without saving)</span>
             <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Select cell N</span>
             <span><kbd>?</kbd></span><span>Toggle this help</span>
             <span><kbd>Esc</kbd></span><span>Close overlays</span>
           </div>
           <p style="color: var(--id-fg-soft); font-size: 12px; margin: 12px 0 0;">
-            Edits auto-save 250 ms after you stop changing things.
+            Edits stay local until you click <strong>Save</strong>.
           </p>
           <div class="overlay-actions">
             <id-button @click=${() => (this.showHelp = false)}>

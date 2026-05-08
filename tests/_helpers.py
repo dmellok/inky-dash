@@ -15,6 +15,7 @@ class FakeBridge:
 
     published: list[dict[str, Any]] = field(default_factory=list)
     _status: ListenerStatus | None = None
+    _status_log: list[ListenerStatus] = field(default_factory=list)
     raise_on_publish: Exception | None = None
 
     def publish(self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False) -> None:
@@ -28,6 +29,11 @@ class FakeBridge:
 
     def set_status(self, status: ListenerStatus | None) -> None:
         self._status = status
+        if status is not None:
+            self._status_log.insert(0, status)
+
+    def status_log(self) -> list[ListenerStatus]:
+        return list(self._status_log)
 
     def disconnect(self) -> None:
         pass

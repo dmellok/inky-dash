@@ -2,11 +2,19 @@
   "manifest_version": 1,
   "id": "gallery",
   "name": "Gallery",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "kind": "widget",
-  "description": "Rotates through images in data/plugins/gallery/. Drop JPG/PNG/WEBP files there.",
+  "description": "Rotates through images in a folder. Manage folders + uploads at /plugins/gallery/.",
+  "icon": "ph-images",
   "supports": { "sizes": ["md", "lg"] },
   "cell_options": [
+    {
+      "name": "folder",
+      "type": "select",
+      "label": "Folder",
+      "default": "",
+      "choices_from": "folders"
+    },
     {
       "name": "mode",
       "type": "select",
@@ -15,6 +23,19 @@
       "choices": [
         { "value": "random", "label": "Random" },
         { "value": "sequential", "label": "Sequential (rotates each render)" }
+      ]
+    },
+    {
+      "name": "scale",
+      "type": "select",
+      "label": "Scale",
+      "default": "fit",
+      "choices": [
+        { "value": "fit", "label": "Fit (letterbox)" },
+        { "value": "fill", "label": "Fill (crop to cover)" },
+        { "value": "stretch", "label": "Stretch (distort to fill)" },
+        { "value": "center", "label": "Center (no scaling)" },
+        { "value": "blurred", "label": "Fit with blurred background" }
       ]
     }
   ],

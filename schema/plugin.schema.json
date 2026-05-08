@@ -29,6 +29,11 @@
     "description": {
       "type": "string"
     },
+    "icon": {
+      "type": "string",
+      "description": "Phosphor icon class (e.g. 'ph-list-checks'). Used in the nav 'Plugins' dropdown.",
+      "pattern": "^ph-[a-z0-9-]+$"
+    },
     "supports": {
       "type": "object",
       "required": ["sizes"],

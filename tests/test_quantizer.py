@@ -7,6 +7,7 @@ from app.quantizer import (
     SPECTRA_6_PALETTE,
     quantize,
     quantize_to_png,
+    rotate_png,
 )
 
 
@@ -71,3 +72,52 @@ def test_quantize_to_png_returns_valid_png_bytes() -> None:
     import io
 
     Image.open(io.BytesIO(png)).load()
+
+
+def test_rotate_png_quarter_turn_swaps_dimensions() -> None:
+    import io
+
+    # Asymmetric input so swap is observable.
+    src = Image.new("RGB", (40, 10), (255, 0, 0))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    rotated = rotate_png(buf.getvalue(), quarters=1)
+    out = Image.open(io.BytesIO(rotated))
+    assert out.size == (10, 40)
+
+
+def test_rotate_png_zero_quarters_is_no_op() -> None:
+    import io
+
+    src = Image.new("RGB", (12, 8), (0, 0, 255))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = rotate_png(buf.getvalue(), quarters=0)
+    # Same bytes returned (pass-through, not re-encoded).
+    assert out is buf.getvalue() or out == buf.getvalue()
+
+
+def test_rotate_png_full_revolution_returns_original_dims() -> None:
+    import io
+
+    src = Image.new("RGB", (12, 8), (0, 0, 255))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = rotate_png(buf.getvalue(), quarters=4)
+    img = Image.open(io.BytesIO(out))
+    assert img.size == (12, 8)
+
+
+def test_rotate_png_pixel_position_after_clockwise_quarter() -> None:
+    """A red pixel at top-left should land at top-right after a 90° clockwise turn."""
+    import io
+
+    src = Image.new("RGB", (4, 4), (255, 255, 255))
+    src.putpixel((0, 0), (255, 0, 0))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = rotate_png(buf.getvalue(), quarters=1)
+    img = Image.open(io.BytesIO(out)).convert("RGB")
+    # Source (0,0) → after 90° CW on a 4×4 image → (3, 0).
+    assert img.getpixel((3, 0)) == (255, 0, 0)
+    assert img.getpixel((0, 0)) != (255, 0, 0)

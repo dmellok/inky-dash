@@ -8,7 +8,8 @@ from app import VERSION
 def test_index_responds(client: FlaskClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert VERSION in response.get_data(as_text=True)
+    # The index page is a Lit bundle shell; assert the bundle is referenced.
+    assert b"dist/index.js" in response.data
 
 
 def test_healthz(client: FlaskClient) -> None:

@@ -169,6 +169,52 @@ def test_concurrent_push_returns_busy(tmp_path: Path, monkeypatch: pytest.Monkey
     assert getattr(first_result[0], "status", None) == "sent"
 
 
+def test_set_rotate_quarters_normalises_modulo_four(tmp_path: Path) -> None:
+    manager, *_ = _make_manager(tmp_path)
+    manager.set_rotate_quarters(5)
+    assert manager._rotate_quarters == 1
+    manager.set_rotate_quarters(-1)
+    assert manager._rotate_quarters == 3
+    manager.set_rotate_quarters(0)
+    assert manager._rotate_quarters == 0
+
+
+def test_landscape_rotation_actually_rotates_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """End-to-end: when rotate_quarters=1, the on-disk artifact has swapped dims."""
+    import io
+
+    from PIL import Image
+
+    # Real renderer/quantizer would be slow; use a real (small, asymmetric) PNG
+    # so the rotation can actually be observed dimensionally.
+    src = Image.new("RGB", (40, 10), (200, 50, 50))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    fake_quantized = buf.getvalue()
+    monkeypatch.setattr(push_module, "render_to_png", lambda req: fake_quantized)
+    monkeypatch.setattr(push_module, "quantize_to_png", lambda src, *, dither: fake_quantized)
+
+    bridge = FakeBridge()
+    history = HistoryStore(tmp_path / "history.db")
+    page_store = PageStore(tmp_path / "pages.json")
+    _seed_demo(page_store)
+    manager = PushManager(
+        bridge=bridge,
+        history=history,
+        page_store=page_store,
+        renders_dir=tmp_path / "renders",
+        base_url="http://test:5555",
+        rotate_quarters=1,
+    )
+    result = manager.push("_demo")
+    assert result.status == "sent"
+    artifact = tmp_path / "renders" / f"{result.digest}.png"
+    out = Image.open(io.BytesIO(artifact.read_bytes()))
+    assert out.size == (10, 40)  # rotated 90° from 40×10
+
+
 def test_lru_eviction_drops_oldest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     counter = [0]
 

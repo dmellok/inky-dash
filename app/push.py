@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Literal
 
 from app.mqtt_bridge import MqttBridge
-from app.quantizer import DitherMode, quantize_to_png
+from app.quantizer import DitherMode, quantize_to_png, rotate_png
 from app.renderer import RenderRequest, render_to_png
 from app.state.history import HistoryStore
 from app.state.page_store import PageStore
@@ -81,6 +81,7 @@ class PushManager:
         base_url: str,
         topic: str = "inky/update",
         renders_cap: int = 500,
+        rotate_quarters: int = 0,
     ) -> None:
         self._bridge = bridge
         self._history = history
@@ -90,6 +91,7 @@ class PushManager:
         self._base_url = base_url.rstrip("/")
         self._topic = topic
         self._renders_cap = renders_cap
+        self._rotate_quarters = rotate_quarters % 4
         self._lock = threading.Lock()
 
     def push(
@@ -143,6 +145,7 @@ class PushManager:
                 )
             )
             quantized = quantize_to_png(raw, dither=dither)
+            quantized = rotate_png(quantized, quarters=self._rotate_quarters)
         except Exception as err:  # noqa: BLE001 — surface any renderer/quantizer failure
             duration = time.monotonic() - started
             history_id = self._history.record(
@@ -191,6 +194,8 @@ class PushManager:
                 duration_s=duration,
                 error=f"mqtt: {err}",
                 options=asdict(opts),
+                payload=payload,
+                topic=self._topic,
             )
             return PushResult(
                 status="failed",
@@ -210,6 +215,8 @@ class PushManager:
             duration_s=duration,
             error=None,
             options=asdict(opts),
+            payload=payload,
+            topic=self._topic,
         )
         return PushResult(
             status="sent",
@@ -231,6 +238,31 @@ class PushManager:
                 stale.unlink()
             except OSError as err:
                 logger.warning("Could not evict %s: %s", stale, err)
+
+    # -- Hot-swap hooks for the /settings page --------------------------------
+
+    def set_bridge(self, bridge: MqttBridge) -> None:
+        """Replace the MQTT bridge atomically. Old bridge is disconnected."""
+        with self._lock:
+            previous, self._bridge = self._bridge, bridge
+        if previous is not bridge:
+            try:
+                previous.disconnect()
+            except Exception as err:  # noqa: BLE001
+                logger.warning("Old bridge disconnect failed: %s", err)
+
+    def set_base_url(self, base_url: str) -> None:
+        with self._lock:
+            self._base_url = base_url.rstrip("/")
+
+    def set_topic(self, topic: str) -> None:
+        with self._lock:
+            self._topic = topic
+
+    def set_rotate_quarters(self, quarters: int) -> None:
+        """Set the pre-publish rotation. ``quarters`` is mod-4 number of 90° turns."""
+        with self._lock:
+            self._rotate_quarters = quarters % 4
 
     # ------------------------------------------------------------------
     # Send-page entry points: arbitrary image bytes / arbitrary URL render.
@@ -319,6 +351,7 @@ class PushManager:
         started = time.monotonic()
         try:
             quantized = quantize_to_png(image_bytes, dither=dither)
+            quantized = rotate_png(quantized, quarters=self._rotate_quarters)
         except Exception as err:  # noqa: BLE001
             duration = time.monotonic() - started
             history_id = self._history.record(
@@ -366,6 +399,8 @@ class PushManager:
                 duration_s=duration,
                 error=f"mqtt: {err}",
                 options=asdict(opts),
+                payload=payload,
+                topic=self._topic,
             )
             return PushResult(
                 status="failed",
@@ -385,6 +420,8 @@ class PushManager:
             duration_s=duration,
             error=None,
             options=asdict(opts),
+            payload=payload,
+            topic=self._topic,
         )
         return PushResult(
             status="sent",

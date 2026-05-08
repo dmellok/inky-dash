@@ -78,3 +78,37 @@ def test_send_file_no_part(client: FlaskClient) -> None:
 def test_send_webpage_validates_scheme(client: FlaskClient) -> None:
     res = client.post("/api/send/webpage", json={"url": "javascript:alert(1)"})
     assert res.status_code == 400
+
+
+def _asymmetric_png() -> bytes:
+    img = Image.new("RGB", (40, 10), color="blue")
+    out = io.BytesIO()
+    img.save(out, format="PNG")
+    return out.getvalue()
+
+
+def test_preview_file_returns_input_dims_unchanged(client: FlaskClient) -> None:
+    """Preview shows the dashboard upright (composition orientation). The
+    pre-publish rotation is applied only when actually pushing to the panel."""
+    res = client.post(
+        "/api/send/preview/file",
+        data={"file": (io.BytesIO(_asymmetric_png()), "test.png"), "dither": "none"},
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200
+    img = Image.open(io.BytesIO(res.data))
+    assert img.size == (40, 10)
+
+
+def test_preview_file_portrait_does_not_rotate(client: FlaskClient) -> None:
+    """Even in portrait mode the preview is upright — only the push pipeline
+    rotates bytes for the panel's landscape-native pixel grid."""
+    client.put("/api/app/settings", json={"panel": {"orientation": "portrait"}})
+    res = client.post(
+        "/api/send/preview/file",
+        data={"file": (io.BytesIO(_asymmetric_png()), "test.png"), "dither": "none"},
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200
+    img = Image.open(io.BytesIO(res.data))
+    assert img.size == (40, 10)

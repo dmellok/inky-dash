@@ -5,8 +5,8 @@
   "description": "Admin UI bundle for Inky Dash. Vanilla JS Lit components bundled with esbuild.",
   "scripts": {
     "gen-types": "node tools/gen-page-types.mjs",
-    "build": "npm run gen-types && esbuild static/pages/components-demo.js static/pages/editor.js static/pages/themes.js static/pages/schedules.js static/pages/send.js static/pages/settings.js --bundle --format=esm --outdir=static/dist --target=es2022 --minify --legal-comments=none",
-    "dev": "npm run gen-types && esbuild static/pages/components-demo.js static/pages/editor.js static/pages/themes.js static/pages/schedules.js static/pages/send.js static/pages/settings.js --bundle --format=esm --outdir=static/dist --target=es2022 --watch --sourcemap"
+    "build": "npm run gen-types && esbuild static/pages/_components.js static/pages/index.js static/pages/components-demo.js static/pages/editor.js static/pages/themes.js static/pages/schedules.js static/pages/send.js static/pages/settings.js static/pages/gallery-admin.js static/pages/dashboards.js --bundle --format=esm --outdir=static/dist --target=es2022 --minify --legal-comments=none",
+    "dev": "npm run gen-types && esbuild static/pages/_components.js static/pages/index.js static/pages/components-demo.js static/pages/editor.js static/pages/themes.js static/pages/schedules.js static/pages/send.js static/pages/settings.js static/pages/gallery-admin.js static/pages/dashboards.js --bundle --format=esm --outdir=static/dist --target=es2022 --watch --sourcemap"
   },
   "dependencies": {
     "lit": "^3.2.1"

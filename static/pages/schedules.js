@@ -41,6 +41,9 @@ class SchedulesPage extends LitElement {
   static properties = {
     schedules: { state: true },
     pages: { state: true },
+    history: { state: true },
+    listener: { state: true },
+    now: { state: true },
     error: { state: true },
     editing: { state: true },
     saving: { state: true },
@@ -50,11 +53,13 @@ class SchedulesPage extends LitElement {
   static styles = css`
     :host {
       display: block;
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 24px 16px;
       font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       color: var(--id-fg, #1a1612);
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
     }
     h1 {
       margin: 0 0 4px;
@@ -191,31 +196,184 @@ class SchedulesPage extends LitElement {
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
+    /* Timeline */
+    .timeline-card {
+      border: 1px solid var(--id-divider, #c8b89b);
+      background: var(--id-surface, #ffffff);
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+    .timeline-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .timeline-head h2 {
+      margin: 0;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .timeline-head .now-label {
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .timeline-head .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--id-surface2, #f5e8d8);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .timeline-head .live .ph { color: var(--id-accent, #d97757); }
+    .timeline-rows {
+      display: grid;
+      gap: 6px;
+    }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+    @media (max-width: 700px) {
+      .timeline-row { grid-template-columns: 1fr; gap: 4px; }
+    }
+    .timeline-label {
+      font-size: 13px;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .timeline-label.dim { opacity: 0.5; }
+    .timeline-track {
+      position: relative;
+      height: 22px;
+      border-radius: 4px;
+      background: linear-gradient(
+        to right,
+        var(--id-surface2) 0%,
+        var(--id-surface2) 100%
+      );
+      overflow: hidden;
+      border: 1px solid var(--id-divider, #c8b89b);
+    }
+    .timeline-track .window {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: rgba(125, 166, 112, 0.12);
+      border-left: 1px solid rgba(125, 166, 112, 0.4);
+      border-right: 1px solid rgba(125, 166, 112, 0.4);
+    }
+    .timeline-track .marker {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      width: 3px;
+      background: var(--id-accent, #d97757);
+      border-radius: 2px;
+      transition: opacity 120ms ease;
+    }
+    .timeline-track .marker.past { opacity: 0.35; }
+    .timeline-track .now {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 2px;
+      background: var(--id-fg, #1a1612);
+      pointer-events: none;
+    }
+    .timeline-track .now::before {
+      content: "";
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      width: 10px;
+      height: 10px;
+      background: var(--id-fg, #1a1612);
+      border-radius: 50%;
+    }
+    .timeline-axis {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    @media (max-width: 700px) {
+      .timeline-axis { grid-template-columns: 1fr; }
+      .timeline-axis > span:first-child { display: none; }
+    }
+    .timeline-axis .ticks {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      font-size: 10px;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .timeline-axis .ticks span {
+      border-left: 1px solid var(--id-divider, #c8b89b);
+      padding-left: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .timeline-axis .ticks span:first-child { border-left: 0; }
+    .timeline-empty {
+      color: var(--id-fg-soft, #5a4f44);
+      font-style: italic;
+      padding: 12px 0;
+    }
   `;
 
   constructor() {
     super();
     this.schedules = [];
     this.pages = [];
+    this.history = [];
+    this.listener = null;
+    this.now = new Date();
     this.error = null;
     this.editing = null; // null or schedule object being edited
     this.saving = false;
     this.firing = null; // id of schedule currently firing
+    this._tickInterval = null;
   }
 
   async connectedCallback() {
     super.connectedCallback();
     await this._load();
+    // Re-tick the timeline cursor every minute so the "now" indicator moves.
+    this._tickInterval = setInterval(() => {
+      this.now = new Date();
+    }, 60_000);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    if (this._tickInterval) clearInterval(this._tickInterval);
   }
 
   async _load() {
     try {
-      const [schedulesRes, pagesRes] = await Promise.all([
+      const [schedulesRes, pagesRes, historyRes, listenerRes] = await Promise.all([
         fetch("/api/schedules"),
         fetch("/api/pages"),
+        fetch("/api/history?limit=10"),
+        fetch("/api/listener/status"),
       ]);
       this.schedules = await schedulesRes.json();
       this.pages = await pagesRes.json();
+      this.history = await historyRes.json();
+      this.listener = await listenerRes.json();
     } catch (err) {
       this.error = err.message;
     }
@@ -302,6 +460,131 @@ class SchedulesPage extends LitElement {
     } finally {
       this.firing = null;
     }
+  }
+
+  // Compute the next ~24h of fire times for an interval/oneshot schedule, in
+  // hour fractions [0, 24]. Returns ordered (relative-hours-from-now)
+  // for placing markers on the timeline.
+  _projectFires(schedule) {
+    const out = [];
+    const now = this.now;
+    const horizonMs = 24 * 3600 * 1000;
+    const isToday = (d) => {
+      const dow = (d.getDay() + 6) % 7; // JS: 0=Sun → ISO 0=Mon
+      return (schedule.days_of_week || [0, 1, 2, 3, 4, 5, 6]).includes(dow);
+    };
+    const inWindow = (d) => {
+      if (!schedule.time_of_day_start && !schedule.time_of_day_end) return true;
+      const hhmm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+      const start = schedule.time_of_day_start || "00:00";
+      const end = schedule.time_of_day_end || "23:59";
+      if (start <= end) return hhmm >= start && hhmm <= end;
+      return hhmm >= start || hhmm <= end; // wrap
+    };
+    if (schedule.type === "oneshot") {
+      const fires = schedule.fires_at ? new Date(schedule.fires_at) : null;
+      if (fires) {
+        const offsetH = (fires.getTime() - now.getTime()) / 3600000;
+        if (offsetH >= -1 && offsetH <= 24) out.push(offsetH);
+      }
+      return out;
+    }
+    const intervalMin = Number(schedule.interval_minutes) || 60;
+    let cursor = new Date(now.getTime());
+    let safetyMax = Math.ceil((24 * 60) / Math.max(1, intervalMin)) + 5;
+    while (safetyMax-- > 0) {
+      const offsetH = (cursor.getTime() - now.getTime()) / 3600000;
+      if (offsetH > 24) break;
+      if (isToday(cursor) && inWindow(cursor)) out.push(offsetH);
+      cursor = new Date(cursor.getTime() + intervalMin * 60_000);
+    }
+    return out;
+  }
+
+  _renderTimelineRow(schedule) {
+    const fires = schedule.enabled ? this._projectFires(schedule) : [];
+    const xPct = (offsetH) => Math.max(0, Math.min(100, (offsetH / 24) * 100));
+    // Time-of-day window highlight
+    let windowBlock = null;
+    if (schedule.enabled && (schedule.time_of_day_start || schedule.time_of_day_end)) {
+      const startMins = (() => {
+        const v = schedule.time_of_day_start || "00:00";
+        const [h, m] = v.split(":").map(Number);
+        return h * 60 + m;
+      })();
+      const endMins = (() => {
+        const v = schedule.time_of_day_end || "23:59";
+        const [h, m] = v.split(":").map(Number);
+        return h * 60 + m;
+      })();
+      const nowMins = this.now.getHours() * 60 + this.now.getMinutes();
+      // Convert to "hours from now": startOffsetH = (startMins - nowMins)/60 (today)
+      // For wrap-around windows, render as up to two blocks.
+      const startOffsetH = (startMins - nowMins) / 60;
+      const endOffsetH = (endMins - nowMins) / 60;
+      if (startMins <= endMins) {
+        const a = startOffsetH < 0 ? 0 : startOffsetH;
+        const b = endOffsetH < 0 ? 0 : endOffsetH;
+        if (b > a)
+          windowBlock = html`<div class="window" style="left:${xPct(a)}%; right:${100 - xPct(b)}%"></div>`;
+      }
+    }
+    return html`
+      <div class="timeline-row">
+        <div class="timeline-label ${schedule.enabled ? "" : "dim"}">
+          ${schedule.name}
+          <span style="color: var(--id-fg-soft); font-size: 11px;"> · ${schedule.page_id}</span>
+        </div>
+        <div class="timeline-track">
+          ${windowBlock}
+          ${fires.map(
+            (offsetH) => html`
+              <div
+                class="marker ${offsetH < 0 ? "past" : ""}"
+                style="left: calc(${xPct(offsetH)}% - 1.5px);"
+                title="+${offsetH.toFixed(1)}h"
+              ></div>
+            `
+          )}
+          <div class="now" style="left: 0;"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  _renderTimeline() {
+    const enabledSchedules = this.schedules.filter((s) => s.enabled);
+    const ticks = Array.from({ length: 8 }, (_, i) => {
+      const offsetH = i * 3;
+      const t = new Date(this.now.getTime() + offsetH * 3600_000);
+      return `${String(t.getHours()).padStart(2, "0")}:00`;
+    });
+    const lastPush = this.history && this.history.length ? this.history[0] : null;
+    const liveDashboard = lastPush?.status === "sent" ? lastPush.page_id : null;
+    return html`
+      <div class="timeline-card">
+        <div class="timeline-head">
+          <h2><i class="ph ph-clock-clockwise" style="color: var(--id-accent); margin-right: 4px;"></i>Next 24h</h2>
+          <span class="now-label">
+            now ${this.now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+          ${liveDashboard
+            ? html`<span class="live"><i class="ph ph-broadcast"></i> on panel: ${liveDashboard}</span>`
+            : html`<span class="now-label">no recent push</span>`}
+        </div>
+        ${enabledSchedules.length === 0
+          ? html`<p class="timeline-empty">No enabled schedules to plot.</p>`
+          : html`
+              <div class="timeline-rows">
+                ${enabledSchedules.map((s) => this._renderTimelineRow(s))}
+              </div>
+              <div class="timeline-axis">
+                <span></span>
+                <div class="ticks">${ticks.map((t) => html`<span>${t}</span>`)}</div>
+              </div>
+            `}
+      </div>
+    `;
   }
 
   _renderRow(s) {
@@ -486,12 +769,15 @@ class SchedulesPage extends LitElement {
   render() {
     return html`
       <link rel="stylesheet" href="/static/icons/phosphor.css">
-      <a class="nav" href="/editor"><i class="ph ph-arrow-left"></i> back to editor</a>
+      <id-nav current="schedules"></id-nav>
+      <div class="container">
       <h1>Schedules</h1>
       <p class="lede">
         Trigger pushes on a recurring interval or at a specific time.
         Schedules run in the background as long as the companion is up.
       </p>
+
+      ${this.schedules.length > 0 ? this._renderTimeline() : null}
 
       ${this.editing ? this._renderEditor() : null}
 
@@ -509,6 +795,7 @@ class SchedulesPage extends LitElement {
       ${this.schedules.length === 0
         ? html`<div class="empty">No schedules yet.</div>`
         : this.schedules.map((s) => this._renderRow(s))}
+      </div>
     `;
   }
 }

@@ -50,46 +50,80 @@ def fetch(
 _TEMPLATE = """
 <!doctype html>
 <html><head>
-<meta charset="utf-8">
-<title>Todo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-  body { font: 16px/1.5 system-ui, -apple-system, sans-serif; max-width: 540px; margin: 24px auto; padding: 0 16px; color: #1a1612; }
-  h1 { font-size: 20px; margin: 0 0 16px; }
-  form.add { display: flex; gap: 8px; margin-bottom: 24px; }
-  form.add input[type=text] { flex: 1; padding: 10px 12px; border: 1px solid #c8b89b; border-radius: 6px; font: inherit; min-height: 44px; box-sizing: border-box; }
-  form.add button { padding: 0 16px; min-height: 44px; border: 0; border-radius: 6px; background: #d97757; color: white; font: inherit; font-weight: 600; cursor: pointer; }
-  ul.items { list-style: none; padding: 0; margin: 0; }
-  ul.items li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #ead9bc; }
-  ul.items li form { display: contents; }
-  ul.items li button { padding: 6px 12px; border: 1px solid #c8b89b; border-radius: 6px; background: white; font: inherit; font-size: 13px; cursor: pointer; }
-  ul.items li button:hover { background: #f5e8d8; }
-  .text { flex: 1; }
-  .empty { color: #5a4f44; font-style: italic; padding: 16px 0; }
-  a.back { font-size: 13px; color: #5a4f44; text-decoration: none; }
-  a.back:hover { color: #d97757; }
-</style>
+  <meta charset="utf-8">
+  <title>Todo — Inky Dash</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="/static/icons/phosphor.css">
+  <script type="module" src="/static/dist/_components.js"></script>
+  <style>
+    :root {
+      --id-bg: #fbf7f1; --id-fg: #1a1612; --id-fg-soft: #5a4f44;
+      --id-surface: #ffffff; --id-surface2: #f5e8d8; --id-divider: #c8b89b;
+      --id-accent: #d97757; --id-accent-soft: #aa5a3f; --id-danger: #c97c70;
+      --id-ok: #7da670;
+    }
+    body {
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0; background: var(--id-bg); color: var(--id-fg);
+    }
+    .container { max-width: 540px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 22px; margin: 0 0 16px; }
+    form.add { display: flex; gap: 8px; margin-bottom: 24px; }
+    form.add input[type=text] {
+      flex: 1; padding: 10px 12px; border: 1px solid var(--id-divider);
+      border-radius: 6px; font: inherit; min-height: 44px; box-sizing: border-box;
+      background: var(--id-surface); color: var(--id-fg);
+    }
+    form.add button {
+      padding: 0 16px; min-height: 44px; border: 0; border-radius: 6px;
+      background: var(--id-accent); color: white; font: inherit;
+      font-weight: 600; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 6px;
+    }
+    form.add button:hover { background: var(--id-accent-soft); }
+    ul.items { list-style: none; padding: 0; margin: 0; background: var(--id-surface); border: 1px solid var(--id-divider); border-radius: 8px; overflow: hidden; }
+    ul.items li {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-bottom: 1px solid var(--id-divider);
+    }
+    ul.items li:last-child { border-bottom: 0; }
+    ul.items li form { display: contents; }
+    ul.items li button {
+      padding: 6px 12px; border: 1px solid var(--id-divider);
+      border-radius: 6px; background: var(--id-surface); font: inherit;
+      font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    }
+    ul.items li button:hover { background: var(--id-surface2); }
+    .text { flex: 1; }
+    .empty {
+      color: var(--id-fg-soft); font-style: italic; padding: 32px 16px;
+      text-align: center; background: var(--id-surface);
+      border: 1px dashed var(--id-divider); border-radius: 8px;
+    }
+  </style>
 </head><body>
-<a class="back" href="/editor">← back to editor</a>
-<h1>Todo</h1>
-<form class="add" method="post" action="/plugins/todo/add">
-  <input type="text" name="text" placeholder="What needs doing?" autofocus required maxlength="200">
-  <button type="submit">Add</button>
-</form>
-{% if items %}
-<ul class="items">
-  {% for item in items %}
-  <li>
-    <span class="text">{{ item.text }}</span>
-    <form method="post" action="/plugins/todo/remove/{{ item.id }}">
-      <button type="submit">Done</button>
+  <id-nav></id-nav>
+  <div class="container">
+    <h1><i class="ph ph-list-checks" style="color: var(--id-accent);"></i> Todo</h1>
+    <form class="add" method="post" action="/plugins/todo/add">
+      <input type="text" name="text" placeholder="What needs doing?" autofocus required maxlength="200">
+      <button type="submit"><i class="ph ph-plus"></i> Add</button>
     </form>
-  </li>
-  {% endfor %}
-</ul>
-{% else %}
-<p class="empty">No items. Add one above.</p>
-{% endif %}
+    {% if items %}
+    <ul class="items">
+      {% for item in items %}
+      <li>
+        <span class="text">{{ item.text }}</span>
+        <form method="post" action="/plugins/todo/remove/{{ item.id }}">
+          <button type="submit"><i class="ph ph-check"></i> Done</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty">All done. Add an item above.</p>
+    {% endif %}
+  </div>
 </body></html>
 """
 

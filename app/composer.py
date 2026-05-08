@@ -18,7 +18,7 @@ from typing import Any
 from flask import Blueprint, abort, current_app, render_template, request
 
 from app.plugin_loader import Font, PluginRegistry
-from app.state import PageStore
+from app.state import Page, PageStore
 
 logger = logging.getLogger(__name__)
 
@@ -179,8 +179,14 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
 
 @bp.get("/compose/<page_id>")
 def compose(page_id: str) -> str:
-    store: PageStore = current_app.config["PAGE_STORE"]
-    page = store.get(page_id)
+    # An in-memory preview cache lets the editor show unsaved edits in the
+    # iframe without persisting them. The cache is populated by
+    # PUT /api/pages/<id>/preview and lives only in-process.
+    preview_cache: dict[str, Page] = current_app.config.get("PREVIEW_CACHE", {})
+    page = preview_cache.get(page_id)
+    if page is None:
+        store: PageStore = current_app.config["PAGE_STORE"]
+        page = store.get(page_id)
     if page is None:
         abort(404)
     for_push = request.args.get("for_push") == "1"
