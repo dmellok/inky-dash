@@ -145,9 +145,14 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
 
     cells_out: list[dict[str, Any]] = []
     for cell in page_dict["cells"]:
-        cell_palette = (
+        cell_palette = dict(
             _resolve_palette(cell["theme"], registry) if cell.get("theme") else page_palette
         )
+        # Per-cell colour overrides win over the resolved theme. Hex values
+        # are validated by the page schema; we trust whatever the editor saved.
+        for token, hex_value in (cell.get("palette_overrides") or {}).items():
+            if isinstance(hex_value, str) and hex_value:
+                cell_palette[token] = hex_value
         cell_font = _resolve_font(cell["font"], registry) if cell.get("font") else page_font
         cell_font_family = cell_font.name if cell_font else page_font_family
         resolved_options = _resolved_options(cell["plugin"], cell.get("options", {}))

@@ -34,6 +34,11 @@ class Cell(BaseModel):
     options: dict[str, Any] = Field(default_factory=dict)
     theme: str | None = None
     font: str | None = None
+    # Per-cell colour overrides keyed by theme token (e.g. "accent", "bg").
+    # Values are hex strings; merged on top of the resolved theme palette so
+    # the user can recolour individual widgets without forking the whole theme.
+    # Keys are validated at the editor; the composer just merges what it finds.
+    palette_overrides: dict[str, str] = Field(default_factory=dict)
 
 
 class Page(BaseModel):

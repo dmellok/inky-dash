@@ -394,44 +394,74 @@ class IdEditor extends LitElement {
       cursor: pointer;
     }
 
-    /* Inline hex color picker — native <input type="color"> wrapped with
-       a swatch + hex label so it visually matches the other form rows. */
-    .color-pick {
-      display: inline-flex;
+    /* Per-cell colour overrides — collapsed details summary acts like a card
+       header. Each token row pairs the color picker with a Reset button (when
+       overridden) or an "inherited" hint (when not). Inherited values appear
+       slightly dimmed so the user can see at a glance which tokens they've
+       customised. */
+    .overrides-details > .overrides-summary {
+      display: flex;
       align-items: center;
-      gap: 10px;
-      height: var(--id-control-h, 40px);
-      padding: 0 12px;
-      border: 1px solid var(--id-divider, #e2e8f0);
-      border-radius: var(--id-radius, 8px);
-      background: var(--id-bg, #ffffff);
+      gap: 8px;
       cursor: pointer;
-      position: relative;
+      list-style: none;
+      user-select: none;
     }
-    .color-pick:hover { border-color: var(--id-fg-soft, #64748b); }
-    .color-pick:focus-within {
-      border-color: var(--id-accent, #b06750);
-      box-shadow: 0 0 0 3px var(--id-accent-bg, rgb(176 103 80 / 0.12));
+    .overrides-details > .overrides-summary::-webkit-details-marker { display: none; }
+    .overrides-details > .overrides-summary::before {
+      content: "▸ ";
+      color: var(--id-fg-soft, #5a4f44);
+      transition: transform 120ms ease;
+      display: inline-block;
     }
-    .color-pick input[type="color"] {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      cursor: pointer;
-      width: 100%;
-      height: 100%;
-    }
-    .color-pick .swatch {
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      border: 1px solid var(--id-divider, #e2e8f0);
-      flex-shrink: 0;
-    }
-    .color-pick .hex {
-      font: 13px ui-monospace, "SF Mono", Menlo, monospace;
+    .overrides-details[open] > .overrides-summary::before { transform: rotate(90deg); }
+    .overrides-label {
+      font-size: 14px;
+      font-weight: 600;
       color: var(--id-fg, #0f172a);
-      letter-spacing: 0.02em;
+    }
+    .overrides-count {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .overrides-hint {
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      margin: 8px 0 12px;
+    }
+    .overrides-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .override-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .override-row.inherited id-color-picker { opacity: 0.55; }
+    .override-row.inherited id-color-picker:hover,
+    .override-row.inherited id-color-picker:focus-within { opacity: 1; }
+    .override-reset {
+      padding: 0 10px;
+      min-height: 32px;
+      border: 1px solid var(--id-divider, #e2e8f0);
+      border-radius: 6px;
+      background: var(--id-surface, #ffffff);
+      color: var(--id-fg, #0f172a);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .override-reset:hover {
+      background: var(--id-surface2, #f1f5f9);
+      border-color: var(--id-fg-soft, #64748b);
+    }
+    .override-inherit {
+      font-size: 11px;
+      color: var(--id-fg-soft, #5a4f44);
+      font-style: italic;
+      letter-spacing: 0.04em;
     }
     /* Toggle switch — replaces native checkbox styling. */
     label.checkbox input[type="checkbox"] {
@@ -913,6 +943,30 @@ class IdEditor extends LitElement {
     this.saved = false;
   }
 
+  /**
+   * Per-cell colour-token overrides. When `hex` is null/empty the override is
+   * removed and the cell falls back to the resolved theme palette. Empty
+   * palette_overrides objects get pruned so saved JSON stays clean.
+   */
+  _setCellPaletteOverride(index, token, hex) {
+    const newCells = this.page.cells.slice();
+    const overrides = { ...(newCells[index].palette_overrides || {}) };
+    if (hex == null || hex === "") {
+      delete overrides[token];
+    } else {
+      overrides[token] = hex;
+    }
+    const cell = { ...newCells[index] };
+    if (Object.keys(overrides).length === 0) {
+      delete cell.palette_overrides;
+    } else {
+      cell.palette_overrides = overrides;
+    }
+    newCells[index] = cell;
+    this.page = { ...this.page, cells: newCells };
+    this.saved = false;
+  }
+
   async _save() {
     this.saving = true;
     this.error = null;
@@ -1215,6 +1269,67 @@ class IdEditor extends LitElement {
     `;
   }
 
+  _renderColorOverrides() {
+    const cell = this.page.cells[this.selectedCell];
+    if (!cell) return null;
+    const themeId = cell.theme || this.page.theme;
+    const theme = this.themes.find((t) => t.id === themeId);
+    const inherited = theme?.palette || {};
+    const overrides = cell.palette_overrides || {};
+    const tokens = [
+      "bg", "surface", "surface2",
+      "fg", "fgSoft", "muted",
+      "divider",
+      "accent", "accentSoft",
+      "danger", "warn", "ok",
+    ];
+    const overrideCount = Object.keys(overrides).length;
+    return html`
+      <id-card>
+        <details class="overrides-details" ?open=${overrideCount > 0}>
+          <summary class="overrides-summary">
+            <span class="overrides-label">Per-cell colour overrides</span>
+            <span class="overrides-count">${overrideCount} of ${tokens.length} overridden</span>
+          </summary>
+          <p class="overrides-hint">
+            Override individual theme tokens for this cell only. Leave a token at
+            its inherited value (no Reset button shown) to follow the page theme.
+          </p>
+          <div class="overrides-grid">
+            ${tokens.map((tok) => {
+              const isOverridden = Object.prototype.hasOwnProperty.call(overrides, tok);
+              const value = isOverridden ? overrides[tok] : (inherited[tok] || "#ffffff");
+              return html`
+                <id-form-row label=${tok}>
+                  <div class="override-row ${isOverridden ? "overridden" : "inherited"}">
+                    <id-color-picker
+                      .value=${value}
+                      @change=${(e) =>
+                        this._setCellPaletteOverride(
+                          this.selectedCell,
+                          tok,
+                          e.detail.value
+                        )}
+                    ></id-color-picker>
+                    ${isOverridden
+                      ? html`<button
+                          type="button"
+                          class="override-reset"
+                          title="Reset to inherited theme value"
+                          @click=${() =>
+                            this._setCellPaletteOverride(this.selectedCell, tok, null)}
+                        >Reset</button>`
+                      : html`<span class="override-inherit">inherited</span>`}
+                  </div>
+                </id-form-row>
+              `;
+            })}
+          </div>
+        </details>
+      </id-card>
+    `;
+  }
+
   _renderOption(cell, opt) {
     const value = cell.options[opt.name] ?? opt.default ?? "";
     if (opt.type === "select") {
@@ -1248,15 +1363,11 @@ class IdEditor extends LitElement {
     }
     if (opt.type === "color") {
       return html`<id-form-row label=${opt.label}>
-        <label class="color-pick">
-          <input
-            type="color"
-            .value=${String(value || "#ffffff")}
-            @input=${(e) => this._setCellOption(this.selectedCell, opt.name, e.target.value)}
-          />
-          <span class="swatch" style=${`background: ${value || "#ffffff"};`}></span>
-          <span class="hex">${String(value || "#ffffff").toUpperCase()}</span>
-        </label>
+        <id-color-picker
+          .value=${String(value || "#ffffff")}
+          @change=${(e) =>
+            this._setCellOption(this.selectedCell, opt.name, e.detail.value)}
+        ></id-color-picker>
       </id-form-row>`;
     }
     if (opt.type === "textarea") {
@@ -1475,15 +1586,10 @@ class IdEditor extends LitElement {
                 </select>
               </id-form-row>
               <id-form-row label="Matting" hint="Color that bleeds through the gap between widgets and behind rounded corners.">
-                <label class="color-pick">
-                  <input
-                    type="color"
-                    .value=${this.page.bleed_color || "#ffffff"}
-                    @input=${(e) => this._setPageBleed(e.target.value)}
-                  />
-                  <span class="swatch" style=${`background: ${this.page.bleed_color || "#ffffff"};`}></span>
-                  <span class="hex">${(this.page.bleed_color || "#ffffff").toUpperCase()}</span>
-                </label>
+                <id-color-picker
+                  .value=${this.page.bleed_color || "#ffffff"}
+                  @change=${(e) => this._setPageBleed(e.detail.value)}
+                ></id-color-picker>
               </id-form-row>
               <id-form-row label="Gap" hint="Pixels between cells + around the panel edge.">
                 <id-slider
@@ -1512,6 +1618,9 @@ class IdEditor extends LitElement {
             </id-card>
 
             ${this._renderCellOptions()}
+            ${this.selectedCell != null && this.page.cells[this.selectedCell]
+              ? this._renderColorOverrides()
+              : null}
           </div>
 
           ${this._renderPreviewPane()}

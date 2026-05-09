@@ -83,6 +83,14 @@
         "font": {
           "type": "string",
           "description": "Optional font id override; falls back to the page's font."
+        },
+        "palette_overrides": {
+          "type": "object",
+          "description": "Per-cell theme-token overrides (e.g. {\"accent\":\"#ff0000\"}). Merged on top of the resolved theme palette so individual widgets can be recoloured without forking the theme.",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
         }
       }
     }

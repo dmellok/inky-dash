@@ -70,5 +70,26 @@
     {% endfor %}
   </div>
   <script type="module" src="{{ url_for('static', filename='composer.js') }}"></script>
+  <script>
+    // Live palette overrides via postMessage. Used by the Themes page (and
+    // anything else embedding compose output in an iframe) to re-theme the
+    // rendered cells without reloading. Message shape:
+    //   { type: 'palette', palette: { bg: '#...', accent: '#...', ... } }
+    // Optional `cellId` scopes the override to a single cell; without it,
+    // all cells are updated.
+    window.addEventListener('message', (e) => {
+      const msg = e.data;
+      if (!msg || msg.type !== 'palette' || typeof msg.palette !== 'object') return;
+      const palette = msg.palette;
+      const cells = msg.cellId
+        ? document.querySelectorAll(`.cell[data-cell-id="${msg.cellId}"]`)
+        : document.querySelectorAll('.cell');
+      cells.forEach((cell) => {
+        for (const [k, v] of Object.entries(palette)) {
+          if (typeof v === 'string') cell.style.setProperty(`--theme-${k}`, v);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

@@ -44,6 +44,7 @@ class ThemesPage extends LitElement {
   static properties = {
     themes: { state: true },
     fonts: { state: true },
+    widgets: { state: true },
     selectedFontId: { state: true },
     selectedId: { state: true },
     error: { state: true },
@@ -203,79 +204,42 @@ class ThemesPage extends LitElement {
       color: white;
     }
 
-    /* Mock dashboard */
-    .mock {
+    /* Real-widget preview grid. Each cell mounts a /_test/render iframe and
+       receives the live palette via postMessage so the theme paints onto a
+       genuine widget rather than a hand-drawn mock. */
+    .widget-preview {
       padding: 16px;
-      background: var(--mock-bg);
-      color: var(--mock-fg);
-    }
-    .mock-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 200px 140px;
-      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      background: var(--id-bg);
     }
-    .mock-cell {
-      background: var(--mock-surface);
-      border: 1px solid var(--mock-divider);
-      border-radius: 8px;
-      padding: 14px;
-      display: grid;
-      align-content: center;
-      overflow: hidden;
-    }
-    .mock-cell.hero {
-      grid-column: 1 / -1;
-      align-content: center;
-      justify-items: center;
+    .widget-preview.empty {
+      display: block;
+      padding: 32px;
       text-align: center;
-      background: var(--mock-surface2);
+      color: var(--id-fg-soft);
+      font-style: italic;
     }
-    .mock-time {
-      font-size: 56px;
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1;
-      color: var(--mock-accent);
-      font-variant-numeric: tabular-nums;
+    .widget-preview-cell {
+      display: grid;
+      gap: 4px;
     }
-    .mock-date {
-      color: var(--mock-fg-soft);
-      font-size: 13px;
-      margin-top: 6px;
-    }
-    .mock-cell h4 {
-      margin: 0 0 10px;
-      font-size: 11px;
+    .widget-preview-label {
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: var(--mock-fg-soft);
+      font-weight: 600;
+      color: var(--id-fg-soft);
+      font-family: ui-monospace, "SF Mono", monospace;
     }
-    .mock-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      padding: 4px 0;
-      border-bottom: 1px solid var(--mock-divider);
-    }
-    .mock-row:last-child { border-bottom: 0; }
-    .mock-row .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-    .mock-pills {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-      flex-wrap: wrap;
-    }
-    .mock-pill {
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 500;
+    .widget-preview iframe {
+      width: 100%;
+      aspect-ratio: 640 / 400;
+      border: 1px solid var(--id-divider);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: var(--id-shadow-sm);
     }
 
     .swatch-grid {
@@ -330,23 +294,7 @@ class ThemesPage extends LitElement {
       border-radius: 6px;
       background: var(--id-surface, #ffffff);
     }
-    .colour-row input[type="color"] {
-      width: 28px;
-      height: 28px;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: pointer;
-    }
-    .colour-row input[type="text"] {
-      flex: 1;
-      min-width: 0;
-      padding: 6px 8px;
-      border: 1px solid var(--id-divider, #c8b89b);
-      border-radius: 4px;
-      font: 12px ui-monospace, "JetBrains Mono", monospace;
-      text-transform: uppercase;
-    }
+    .colour-row id-color-picker { flex: 1; min-width: 0; }
     .colour-row .label {
       font-size: 11px;
       color: var(--id-fg-soft, #5a4f44);
@@ -427,12 +375,14 @@ class ThemesPage extends LitElement {
 
   async _load() {
     try {
-      const [themesRes, fontsRes] = await Promise.all([
+      const [themesRes, fontsRes, widgetsRes] = await Promise.all([
         fetch("/api/themes"),
         fetch("/api/fonts"),
+        fetch("/api/widgets"),
       ]);
       this.themes = await themesRes.json();
       this.fonts = await fontsRes.json();
+      this.widgets = await widgetsRes.json();
       if (!this.selectedId && this.themes.length) {
         const def = this.themes.find((t) => t.id === "default") || this.themes[0];
         this.selectedId = def.id;
@@ -450,6 +400,9 @@ class ThemesPage extends LitElement {
   _select(theme) {
     this.selectedId = theme.id;
     this.editing = false;
+    // Re-theme already-mounted iframes — switching themes shouldn't require
+    // a reload, the postMessage path handles it.
+    requestAnimationFrame(() => this._broadcastPalette());
   }
 
   _startNew() {
@@ -526,6 +479,72 @@ class ThemesPage extends LitElement {
 
   _setPaletteColour(key, value) {
     this.editingPalette = { ...this.editingPalette, [key]: value };
+    this._broadcastPalette();
+  }
+
+  /**
+   * postMessage the current palette to every preview iframe so they re-theme
+   * in place (no reload, no flicker). compose.html listens for this message
+   * and applies the values as inline CSS variables on each .cell.
+   */
+  _broadcastPalette() {
+    const palette = this.editing ? this.editingPalette : this._selected()?.palette;
+    if (!palette) return;
+    const iframes = this.renderRoot?.querySelectorAll(".widget-preview iframe") || [];
+    iframes.forEach((f) => {
+      try {
+        f.contentWindow?.postMessage({ type: "palette", palette }, "*");
+      } catch {
+        /* iframe not yet loaded — onload handler will resend */
+      }
+    });
+  }
+
+  _onPreviewIframeLoad(e) {
+    // First broadcast happens once compose.html is ready to receive messages.
+    const palette = this.editing ? this.editingPalette : this._selected()?.palette;
+    if (!palette) return;
+    try {
+      e.target.contentWindow?.postMessage({ type: "palette", palette }, "*");
+    } catch {
+      /* swallow */
+    }
+  }
+
+  /**
+   * Render real widget iframes themed by the live palette. compose.html serves
+   * each via the `/_test/render` endpoint (debug-only — fine for editor use).
+   */
+  _renderWidgetMocks() {
+    // Choose widgets that render meaningfully without per-cell config and
+    // exercise a varied subset of palette tokens so the user can see the
+    // theme in real use rather than an abstract mock.
+    const candidates = [
+      { plugin: "clock", size: "md" },
+      { plugin: "year_progress", size: "md" },
+      { plugin: "todo", size: "md" },
+      { plugin: "note", size: "md" },
+    ].filter((c) => (this.widgets || []).some((w) => w.id === c.plugin));
+    if (candidates.length === 0) {
+      return html`<div class="widget-preview empty">No preview widgets installed.</div>`;
+    }
+    return html`
+      <div class="widget-preview">
+        ${candidates.map(
+          (c) => html`
+            <div class="widget-preview-cell">
+              <div class="widget-preview-label">${c.plugin}</div>
+              <iframe
+                src=${`/_test/render?plugin=${encodeURIComponent(c.plugin)}&size=${c.size}`}
+                title=${`Live preview: ${c.plugin}`}
+                @load=${(e) => this._onPreviewIframeLoad(e)}
+                sandbox="allow-scripts allow-same-origin"
+              ></iframe>
+            </div>
+          `
+        )}
+      </div>
+    `;
   }
 
   _renderListRow(theme) {
@@ -604,44 +623,7 @@ class ThemesPage extends LitElement {
           <span>·</span>
           <code>${theme.id}</code>
         </div>
-        <div class="mock" style=${mockStyle}>
-          <div class="mock-grid">
-            <div class="mock-cell hero">
-              <div class="mock-time">12:34</div>
-              <div class="mock-date">Friday, May 8</div>
-            </div>
-            <div class="mock-cell">
-              <h4>Today</h4>
-              <div class="mock-row">
-                <span class="dot" style="background: ${p.ok};"></span>
-                <span style="flex: 1;">Push went out</span>
-                <span style="color: ${p.fgSoft};">3m</span>
-              </div>
-              <div class="mock-row">
-                <span class="dot" style="background: ${p.warn};"></span>
-                <span style="flex: 1;">Schedule fired</span>
-                <span style="color: ${p.fgSoft};">14m</span>
-              </div>
-              <div class="mock-row">
-                <span class="dot" style="background: ${p.danger};"></span>
-                <span style="flex: 1;">Listener offline</span>
-                <span style="color: ${p.fgSoft};">22m</span>
-              </div>
-            </div>
-            <div class="mock-cell">
-              <h4>Tags</h4>
-              <div class="mock-pills">
-                <span class="mock-pill" style="background: ${p.accent}; color: ${p.bg};">accent</span>
-                <span class="mock-pill" style="background: ${p.accentSoft}; color: ${p.bg};">soft</span>
-                <span class="mock-pill" style="background: ${p.surface2}; color: ${p.fg}; border: 1px solid ${p.divider};">surface</span>
-                <span class="mock-pill" style="background: ${p.muted}; color: ${p.bg};">muted</span>
-                <span class="mock-pill" style="background: ${p.danger}; color: ${p.bg};">danger</span>
-                <span class="mock-pill" style="background: ${p.warn}; color: ${p.bg};">warn</span>
-                <span class="mock-pill" style="background: ${p.ok}; color: ${p.bg};">ok</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        ${this._renderWidgetMocks(p)}
         <div class="swatch-grid">
           ${PALETTE_KEYS.map(
             (k) => html`<div data-key=${k} style="background: ${p[k]};"></div>`
@@ -681,21 +663,11 @@ class ThemesPage extends LitElement {
           ${PALETTE_KEYS.map(
             (key) => html`
               <div class="colour-row">
-                <input
-                  type="color"
-                  .value=${this.editingPalette[key]}
-                  @input=${(e) => this._setPaletteColour(key, e.target.value)}
-                />
                 <span class="label">${key}</span>
-                <input
-                  type="text"
-                  .value=${this.editingPalette[key].toUpperCase()}
-                  @change=${(e) => {
-                    const v = e.target.value.trim();
-                    if (/^#[0-9a-fA-F]{6}$/.test(v))
-                      this._setPaletteColour(key, v.toLowerCase());
-                  }}
-                />
+                <id-color-picker
+                  .value=${this.editingPalette[key]}
+                  @change=${(e) => this._setPaletteColour(key, e.detail.value)}
+                ></id-color-picker>
               </div>
             `
           )}

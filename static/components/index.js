@@ -7,3 +7,4 @@ import "./id-form-row.js";
 import "./id-nav.js";
 import "./id-icon-picker.js";
 import "./id-date-time.js";
+import "./id-color-picker.js";
