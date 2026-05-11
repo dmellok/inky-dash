@@ -1,33 +1,85 @@
-:host {
-  display: block;
-  height: 100%;
-}
-.countdown {
-  display: grid;
-  place-items: center;
-  align-content: center;
+:host { display: block; height: 100%; }
+
+.cd {
   height: 100%;
   width: 100%;
-  padding: 6cqmin;
-  box-sizing: border-box;
   background: var(--theme-bg);
   color: var(--theme-fg);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5cqh;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
 }
-.big {
-  font-weight: 700;
-  line-height: 1;
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
   color: var(--theme-accent);
+  align-self: center;
 }
-.unit {
-  font-weight: 500;
-  color: var(--theme-fgSoft);
-  margin-top: 0.2em;
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
 }
-.label {
-  font-weight: 500;
+.head-place {
+  font-size: min(3cqw, 4.6cqh);
+  font-weight: 600;
+  color: var(--theme-accent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 1cqh 0;
+}
+.hero-num {
+  font-size: min(40cqw, 60cqh);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  color: var(--theme-accent);
+  font-variant-numeric: tabular-nums;
+}
+.hero-unit {
+  font-size: min(6cqw, 10cqh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--theme-fgSoft);
-  margin-top: 0.5em;
+  margin-top: 1cqh;
+}
+
+.cd--past .hero-num { color: var(--theme-fgSoft); }
+.cd--now  .hero-num { color: var(--theme-ok); }
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: min(2.6cqw, 4.2cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 600;
+}
+.footer .ph { color: var(--theme-fgSoft); font-size: 1.2em; }
+
+@container (max-width: 240px) {
+  .head { display: none; }
+  .footer { display: none; }
 }

@@ -1,12 +1,19 @@
 // Todo — render-only widget. Items are added/done/undone at /plugins/todo/.
 // Server returns items pre-sorted: open (newest first) then completed
 // (most-recent first). Completed items linger 24h then prune themselves.
+//
+// Layout matches the design screenshot:
+//   - Header: "TASKS LEFT" caps + big open-count / total
+//   - Filled accent progress bar (only when there are tasks AND some progress)
+//   - List of tasks: open with hollow circle, completed with filled circle +
+//     strikethrough text + JUST DONE badge (within ~10 min of completion)
 
 function escapeHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 const VISIBLE_BY_SIZE = { xs: 3, sm: 6, md: 10, lg: 16 };
+const JUST_DONE_WINDOW_S = 10 * 60;
 
 export default function render(host, ctx) {
   const { size } = ctx.cell;
@@ -16,7 +23,9 @@ export default function render(host, ctx) {
   const open = items.filter((i) => !i.completed_at);
   const done = items.filter((i) => i.completed_at);
   const total = items.length;
-  const pct = total === 0 ? 0 : Math.round((done.length / total) * 100);
+  const openCount = open.length;
+  const pct = total === 0 ? 0 : (done.length / total) * 100;
+  const nowS = Date.now() / 1000;
 
   const shown = items.slice(0, visible);
   const remaining = Math.max(0, items.length - shown.length);
@@ -24,11 +33,13 @@ export default function render(host, ctx) {
   const itemRows = shown
     .map((item) => {
       const isDone = !!item.completed_at;
-      const icon = isDone ? "ph-check-square-fill" : "ph-square";
+      const icon = isDone ? "ph-check-circle-fill" : "ph-circle";
+      const justDone = isDone && (nowS - item.completed_at) < JUST_DONE_WINDOW_S;
       return `
         <li class="${isDone ? "done" : "open"}">
           <i class="ph ${icon} bullet"></i>
           <span class="text">${escapeHtml(item.text)}</span>
+          ${justDone ? `<span class="badge">JUST DONE</span>` : ""}
         </li>
       `;
     })
@@ -47,17 +58,21 @@ export default function render(host, ctx) {
          </div>`
       : `<ul class="list">${itemRows}${moreRow}</ul>`;
 
+  // Show progress bar only when there's work AND some of it is done — an
+  // empty/full bar adds visual weight without information.
+  const showProgress = total > 0 && done.length > 0 && done.length < total && size !== "xs";
+  const progress = showProgress
+    ? `<div class="progress" role="progressbar" aria-valuenow="${pct.toFixed(0)}" aria-valuemin="0" aria-valuemax="100">
+         <div class="progress-fill" style="width: ${pct.toFixed(2)}%;"></div>
+       </div>`
+    : "";
+
   const headerCount =
     total === 0
       ? ""
-      : `<span class="count">${done.length}<span class="count-sep">/</span>${total}</span>`;
-
-  const progressBar =
-    total > 0 && size !== "xs"
-      ? `<div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
-           <div class="progress-fill" style="width: ${pct}%"></div>
-         </div>`
-      : "";
+      : `<span class="count">
+           <span class="count-num">${openCount}</span><span class="count-total">/${total}</span>
+         </span>`;
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
@@ -65,10 +80,10 @@ export default function render(host, ctx) {
     <div class="todo todo--${size}">
       <div class="header">
         <i class="ph ph-list-checks header-icon"></i>
-        <span class="title">Todo</span>
+        <span class="title">TASKS LEFT</span>
         ${headerCount}
       </div>
-      ${progressBar}
+      ${progress}
       ${body}
     </div>
   `;

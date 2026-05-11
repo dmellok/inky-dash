@@ -1,0 +1,29 @@
+{
+  "manifest_version": 1,
+  "id": "world_clock",
+  "name": "World clock",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Multi-timezone clock with day-progress timeline bars per zone. Configure as a comma-separated list of `Label|TZ` entries (e.g. 'Local|local, New York|America/New_York').",
+  "icon": "ph-globe-hemisphere-east",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "zones",
+      "type": "textarea",
+      "label": "Zones (one per line: Label|TZ)",
+      "default": "Local|local\nNew York|America/New_York\nLondon|Europe/London\nTokyo|Asia/Tokyo"
+    },
+    {
+      "name": "format",
+      "type": "select",
+      "label": "Time format",
+      "default": "24h",
+      "choices": [
+        { "value": "24h", "label": "24-hour" },
+        { "value": "12h", "label": "12-hour" }
+      ]
+    }
+  ],
+  "render": { "dither": "none" }
+}

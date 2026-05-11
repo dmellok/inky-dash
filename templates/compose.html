@@ -69,6 +69,10 @@
                 {% for key, val in cell.palette.items() %}--theme-{{ key }}: {{ val }};{% endfor %}"></div>
     {% endfor %}
   </div>
+  <!-- Chart.js available globally to all widget shadow DOMs as window.Chart.
+       Vendored locally (static/lib/) so the dashboard renders without
+       network access — important on the panel itself. -->
+  <script src="{{ url_for('static', filename='lib/chart.umd.min.js') }}"></script>
   <script type="module" src="{{ url_for('static', filename='composer.js') }}"></script>
   <script>
     // Live palette overrides via postMessage. Used by the Themes page (and

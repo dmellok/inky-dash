@@ -47,7 +47,8 @@ def fetch(
     url = (
         "https://air-quality-api.open-meteo.com/v1/air-quality"
         f"?latitude={lat}&longitude={lon}"
-        "&current=european_aqi,pm2_5,pm10,nitrogen_dioxide,ozone"
+        "&current=european_aqi,pm2_5,pm10,nitrogen_dioxide,ozone,"
+        "sulphur_dioxide,carbon_monoxide"
         "&hourly=european_aqi"
         f"&past_hours=12&forecast_hours={HOURS - 12}"
         "&timezone=auto"

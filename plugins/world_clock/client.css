@@ -1,0 +1,110 @@
+:host { display: block; height: 100%; }
+
+.wc {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  padding: 3cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+}
+
+.clocks {
+  display: grid;
+  gap: 1.5cqmin;
+  height: 100%;
+  align-content: stretch;
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+.row {
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  padding: 2cqmin 2.5cqmin;
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 0.6cqh;
+  min-width: 0;
+}
+
+.row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  min-width: 0;
+}
+.zone-name {
+  font-size: min(3cqw, 5.2cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  letter-spacing: -0.01em;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zone-time {
+  font-size: min(6cqw, 11cqh);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--theme-fg);
+  line-height: 1;
+}
+
+.zone-meta {
+  font-size: min(2.2cqw, 3.4cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.track {
+  display: grid;
+  gap: 0.4cqh;
+}
+.track-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: min(1.6cqw, 2.6cqh);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-fgSoft);
+  padding: 0 1px;
+}
+.track-bar {
+  position: relative;
+  height: max(8px, 1.4cqmin);
+  background: var(--theme-divider);
+  border-radius: 999px;
+  overflow: hidden;
+}
+/* "Day window" — visual band representing 06:00–18:00 (active hours). */
+.day-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--theme-accent);
+  opacity: 0.35;
+  border-radius: 999px;
+}
+.now {
+  position: absolute;
+  top: -25%;
+  bottom: -25%;
+  width: max(3px, 0.5cqmin);
+  background: var(--theme-fg);
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+
+@container (max-width: 360px) {
+  .zone-meta { display: none; }
+  .row-head { flex-direction: column; align-items: flex-start; gap: 0.2cqh; }
+}

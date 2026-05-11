@@ -1,99 +1,172 @@
 :host { display: block; height: 100%; }
+
 .aqi {
   height: 100%;
   width: 100%;
   background: var(--theme-bg);
   color: var(--theme-fg);
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 1.5cqh;
   padding: 4cqmin;
   box-sizing: border-box;
-  gap: 2cqmin;
-  font-variant-numeric: tabular-nums;
   container-type: size;
-}
-.aqi.error {
-  grid-template-rows: 1fr;
-  place-items: center;
-  text-align: center;
-  color: var(--theme-danger);
-}
-.aqi.error .ph { font-size: min(20cqw, 30cqh); margin-bottom: 1cqh; }
-.aqi.error .message { font-size: min(3.5cqw, 6cqh); }
-
-/* Band-colored accent on the AQI number + chart line. */
-.aqi { --band: var(--theme-fg); }
-.aqi.band-ok { --band: var(--theme-ok); }
-.aqi.band-warn { --band: var(--theme-warn); }
-.aqi.band-danger { --band: var(--theme-danger); }
-.aqi.band-muted { --band: var(--theme-muted); }
-
-.head { display: flex; align-items: center; }
-.hero { display: flex; align-items: baseline; gap: 3cqmin; flex: 1; }
-.aqi-num {
-  font-weight: 700;
-  font-size: min(22cqw, 36cqh);
-  line-height: 1;
-  color: var(--band);
-  letter-spacing: -0.02em;
-}
-.label { display: grid; gap: 0.2em; }
-.band {
-  font-size: min(5cqw, 8cqh);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--band);
-}
-.place {
-  font-size: min(2.8cqw, 4.5cqh);
-  color: var(--theme-fgSoft);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-family: inherit;
 }
 
-.chart {
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 0.5cqmin;
-}
-.chart svg { width: 100%; height: 100%; display: block; }
-.chart svg .fill { fill: var(--band); fill-opacity: 0.18; }
-.chart svg .line {
-  fill: none;
-  stroke: var(--band);
-  stroke-width: 0.8;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
-}
-.axis {
+/* Hero — big AQI number with "/ 500" max alongside. */
+.hero {
   display: flex;
-  justify-content: space-between;
-  font-size: min(2.4cqw, 4cqh);
+  align-items: baseline;
+  gap: 1cqw;
+}
+.hero-num {
+  font-size: min(20cqw, 32cqh);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.hero-max {
+  font-size: min(5cqw, 8cqh);
+  font-weight: 600;
   color: var(--theme-fgSoft);
-  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.hero-band {
+  font-size: min(3.4cqw, 5.4cqh);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--theme-fgSoft);
+  margin-top: -0.5cqh;
 }
 
+/* Tint the band-relevant elements. */
+.aqi.band-ok    .hero-num,
+.aqi.band-ok    .hero-band { color: var(--theme-ok); }
+.aqi.band-warn  .hero-num,
+.aqi.band-warn  .hero-band { color: var(--theme-warn); }
+.aqi.band-danger .hero-num,
+.aqi.band-danger .hero-band { color: var(--theme-danger); }
+.aqi.band-muted .hero-num,
+.aqi.band-muted .hero-band { color: var(--theme-fgSoft); }
+
+/* Range indicator — thin bar showing where AQI sits in 0..500. */
+.range {
+  position: relative;
+  height: max(4px, 0.6cqh);
+}
+.range-track {
+  position: absolute;
+  inset: 50% 0 auto 0;
+  height: max(2px, 0.3cqh);
+  background: var(--theme-divider);
+  border-radius: 999px;
+  transform: translateY(-50%);
+}
+.range-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: max(8px, 1cqh);
+  height: max(8px, 1cqh);
+  border-radius: 50%;
+  background: var(--theme-fg);
+  transform: translateX(-50%);
+}
+.aqi.band-ok    .range-marker { background: var(--theme-ok); }
+.aqi.band-warn  .range-marker { background: var(--theme-warn); }
+.aqi.band-danger .range-marker { background: var(--theme-danger); }
+
+/* Chart block — small caps label + Chart.js canvas below. */
+.chart-block {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.5cqh;
+  min-height: 0;
+}
+.chart-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--theme-fgSoft);
+}
+.chart-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 60px;
+  position: relative;
+}
+.chart-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* 6 pollutant tiles in a 3×2 grid. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5cqmin;
 }
 .tile {
-  display: grid;
-  gap: 0.2em;
-  padding: 1.2cqmin 1cqmin;
   background: var(--theme-surface);
-  border-radius: 6px;
-  text-align: center;
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  padding: 1.4cqmin 1.6cqmin;
+  display: grid;
+  gap: 0.2cqh;
+  min-width: 0;
 }
-.tile .k {
-  font-size: min(2.4cqw, 4cqh);
+.tile-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--theme-fgSoft);
-  font-weight: 600;
+  white-space: nowrap;
 }
-.tile .v {
-  font-size: min(4.5cqw, 7cqh);
+.tile-value {
+  font-size: min(3.2cqw, 5.2cqh);
   font-weight: 700;
   color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 0.1em;
+}
+.tile-unit {
+  font-size: 0.45em;
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+
+/* Smaller cells: chart hides first, then tiles collapse to 2 cols. */
+@container (max-height: 420px) {
+  .chart-block { display: none; }
+}
+@container (max-width: 540px) {
+  .tiles { grid-template-columns: repeat(3, 1fr); }
+  .tile-unit { display: none; }
+}
+@container (max-width: 360px) {
+  .tiles { grid-template-columns: repeat(2, 1fr); }
+  .tiles .tile:nth-child(n + 5) { display: none; }
+}
+
+.aqi--error {
+  grid-template-rows: auto auto;
+  place-items: center;
+  text-align: center;
+  gap: 1cqh;
+}
+.aqi--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn);
+}
+.aqi--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
 }

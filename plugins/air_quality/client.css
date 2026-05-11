@@ -1,67 +1,135 @@
 :host { display: block; height: 100%; }
+
 .aq {
-  display: grid;
-  align-content: center;
   height: 100%;
-  padding: 4cqmin;
-  box-sizing: border-box;
+  width: 100%;
   background: var(--theme-bg);
   color: var(--theme-fg);
-  gap: 3cqmin;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-.hero {
   display: grid;
-  justify-items: center;
-  gap: 0.2em;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5cqh;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
 }
-.aqi {
-  font-size: min(28cqw, 38cqh);
+
+/* Header strip — matches weather + aqi_trend. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
+  color: var(--theme-accent);
+  align-self: center;
+}
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
 }
-.band {
-  font-size: min(7cqw, 11cqh);
+.head-place {
+  font-size: min(3cqw, 4.6cqh);
   font-weight: 600;
+  color: var(--theme-accent);
 }
-.place {
-  font-size: min(4cqw, 7cqh);
+.head-time {
+  margin-left: auto;
+  font-size: min(3cqw, 4.6cqh);
   color: var(--theme-fgSoft);
+  font-variant-numeric: tabular-nums;
 }
-.pollutants {
+
+/* Hero — big AQI number + band word. */
+.hero {
+  display: flex;
+  align-items: baseline;
+  gap: 2cqw;
+  padding: 1cqh 0;
+  align-self: center;
+}
+.hero-num {
+  font-size: min(28cqw, 40cqh);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+.hero-band {
+  font-size: min(6cqw, 10cqh);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.aq.band-ok    .hero-num,
+.aq.band-ok    .hero-band { color: var(--theme-ok); }
+.aq.band-warn  .hero-num,
+.aq.band-warn  .hero-band { color: var(--theme-warn); }
+.aq.band-danger .hero-num,
+.aq.band-danger .hero-band { color: var(--theme-danger); }
+.aq.band-muted .hero-num { color: var(--theme-fgSoft); }
+.aq.band-muted .hero-band { color: var(--theme-fgSoft); }
+
+/* 4 pollutant tiles. */
+.tiles {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2cqmin;
+  gap: 1.5cqmin;
 }
 .tile {
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  padding: 1.4cqmin 1.6cqmin;
   display: grid;
-  gap: 0.2em;
-  padding: 1.5cqmin;
-  border-radius: 6px;
-  background: var(--theme-bg);
-  align-content: center;
-  justify-items: center;
+  gap: 0.2cqh;
+  min-width: 0;
 }
-.t-label { font-size: min(2.8cqw, 5cqh); color: var(--theme-fgSoft); text-transform: uppercase; letter-spacing: 0.05em; }
-.t-val { font-size: min(7cqw, 11cqh); font-weight: 700; color: var(--theme-fg); }
-.t-unit { font-size: min(2.4cqw, 4cqh); color: var(--theme-fgSoft); }
-.error {
-  color: var(--theme-danger);
-  font-size: min(4cqw, 7cqh);
-  text-align: center;
+.tile-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--theme-fgSoft);
+  white-space: nowrap;
 }
-.error-block {
-  display: grid;
+.tile-value {
+  font-size: min(3.6cqw, 6cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  display: flex;
+  align-items: baseline;
+  gap: 0.1em;
+}
+.tile-unit {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+
+@container (max-width: 540px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+@container (max-width: 360px) {
+  .head { display: none; }
+  .tile-unit { display: none; }
+}
+
+.aq--error {
+  grid-template-rows: auto auto;
   place-items: center;
-  gap: 1cqmin;
-  color: var(--theme-danger);
+  text-align: center;
+  gap: 1cqh;
 }
-.error-block .ph {
-  font-size: min(15cqw, 22cqh);
+.aq--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn);
 }
-.hero-icon {
-  font-size: min(20cqw, 28cqh);
-  line-height: 1;
+.aq--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
 }

@@ -8,49 +8,61 @@
   box-sizing: border-box;
   background: var(--theme-bg);
   color: var(--theme-fg);
-  gap: 2cqmin;
+  gap: 1.5cqh;
+  font-family: inherit;
 }
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.6em;
-  border-bottom: max(2px, 0.5cqmin) solid var(--theme-divider);
-  padding-bottom: 1.5cqmin;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
 }
 .header-icon {
-  font-size: min(7cqw, 12cqh);
+  font-size: min(4cqw, 6.5cqh);
   color: var(--theme-accent);
+  align-self: center;
 }
 .title {
+  font-size: min(3.2cqw, 5.2cqh);
   font-weight: 700;
-  font-size: min(6cqw, 11cqh);
-  color: var(--theme-accent);
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
   flex: 1;
-  letter-spacing: -0.01em;
 }
 .count {
-  font-size: min(4.5cqw, 8cqh);
-  font-weight: 600;
-  color: var(--theme-fg);
+  display: inline-flex;
+  align-items: baseline;
   font-variant-numeric: tabular-nums;
+  color: var(--theme-accent);
 }
-.count-sep {
+.count-num {
+  font-size: min(7cqw, 11cqh);
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+.count-total {
+  font-size: min(2.8cqw, 4.4cqh);
+  font-weight: 600;
   color: var(--theme-fgSoft);
-  margin: 0 0.1em;
-  font-weight: 400;
+  margin-left: 0.1em;
 }
 
+/* Filled accent progress bar — shown only with mid-progress (some done,
+   not all). Empty/full bars hide so they don't add visual weight without
+   information. */
 .progress {
-  height: max(4px, 1.2cqmin);
-  background: var(--theme-surface);
-  border: max(2px, 0.4cqmin) solid var(--theme-divider);
+  height: max(6px, 1.4cqmin);
+  background: var(--theme-divider);
   border-radius: 999px;
   overflow: hidden;
 }
 .progress-fill {
   height: 100%;
   background: var(--theme-accent);
+  border-radius: 999px;
   transition: width 200ms ease;
 }
 
@@ -65,16 +77,17 @@
 }
 .list li {
   display: flex;
-  gap: 1.6cqmin;
+  gap: 1.6cqw;
   align-items: center;
-  font-size: min(4.4cqw, 7.5cqh);
+  font-size: min(3.4cqw, 5.5cqh);
   line-height: 1.25;
   overflow: hidden;
-  padding: 0.6cqmin 0;
-  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+  padding: 1.2cqmin 1.5cqmin;
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1cqmin);
+  min-width: 0;
 }
-.list li:last-child { border-bottom: 0; }
-
 .list li .text {
   flex: 1;
   white-space: nowrap;
@@ -85,25 +98,37 @@
   flex-shrink: 0;
   font-size: 1.2em;
 }
-.list li.open .bullet { color: var(--theme-accent); }
-
+.list li.open .bullet { color: var(--theme-fgSoft); }
+.list li.done .bullet { color: var(--theme-accent); }
 .list li.done {
   color: var(--theme-fgSoft);
-}
-.list li.done .bullet {
-  color: var(--theme-accent);
+  background: var(--theme-bg);
 }
 .list li.done .text {
   text-decoration: line-through;
   text-decoration-thickness: max(2px, 0.3cqmin);
 }
 
+/* JUST DONE badge — pill on the right of recently-completed rows. */
+.badge {
+  flex-shrink: 0;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+  font-size: 0.5em;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  background: var(--theme-accent);
+  color: var(--theme-bg);
+}
+
 .more {
   color: var(--theme-fgSoft);
   font-style: italic;
-  font-size: min(3.6cqw, 6.5cqh);
-  border-bottom: 0 !important;
-  padding-top: 1cqmin;
+  font-size: min(3cqw, 4.6cqh);
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0.4cqmin 0 !important;
+  justify-content: center;
 }
 
 .empty {
@@ -125,5 +150,5 @@
   gap: 1.2cqmin;
 }
 .todo--xs .header { display: none; }
-.todo--xs .progress { display: none; }
-.todo--xs .list li { font-size: min(6cqw, 10cqh); }
+.todo--xs .list li { font-size: min(6cqw, 10cqh); padding: 1.2cqmin; }
+.todo--xs .badge { display: none; }

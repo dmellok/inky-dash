@@ -1,7 +1,9 @@
-// Generic RSS/Atom feed reader.
+// Generic RSS/Atom feed reader — header strip + entry rows.
 
 function escapeHtml(s) {
-  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
 }
 
 function fmtAge(iso) {
@@ -16,36 +18,39 @@ function fmtAge(iso) {
   return `${Math.round(hours / 24)}d`;
 }
 
+function formatTime(now) {
+  return now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
 export default function render(host, ctx) {
   const { size } = ctx.cell;
   const { data } = ctx;
   const items = data && data.items ? data.items : [];
   const error = data && data.error;
   const title = (data && data.title) || "News";
-  const visible = size === "sm" ? 3 : size === "md" ? 6 : 9;
+  const visible = size === "sm" ? 3 : size === "md" ? 6 : 10;
+  const now = formatTime(new Date());
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
     <link rel="stylesheet" href="/plugins/news/client.css">
-    <div class="news news--${size}">
-      <div class="header">
-        <span class="title"><i class="ph ph-newspaper-fill"></i> ${escapeHtml(title)}</span>
+    <div class="news">
+      <div class="head">
+        <i class="ph ph-newspaper head-icon"></i>
+        <span class="head-title">NEWS</span>
+        <span class="head-place">${escapeHtml(title)}</span>
+        <span class="head-time">${escapeHtml(now)}</span>
       </div>
       ${error
-        ? `<div class="error"><i class="ph ph-warning-circle"></i> ${escapeHtml(error)}</div>`
+        ? `<div class="news-error"><i class="ph ph-warning-circle"></i> ${escapeHtml(error)}</div>`
         : items.length === 0
-          ? `<div class="empty">No items.</div>`
-          : `<ul class="list">${items
-              .slice(0, visible)
-              .map(
-                (item) => `
-                  <li>
-                    <div class="entry-title">${escapeHtml(item.title)}</div>
-                    <div class="entry-meta"><i class="ph ph-clock"></i> ${fmtAge(item.published)}</div>
-                  </li>
-                `
-              )
-              .join("")}</ul>`}
+          ? `<div class="news-empty">No items.</div>`
+          : `<ul class="list">${items.slice(0, visible).map((item) => `
+              <li class="row">
+                <div class="row-title">${escapeHtml(item.title)}</div>
+                <div class="row-meta"><i class="ph ph-clock"></i> ${escapeHtml(fmtAge(item.published))}</div>
+              </li>
+            `).join("")}</ul>`}
     </div>
   `;
 

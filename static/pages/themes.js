@@ -204,38 +204,23 @@ class ThemesPage extends LitElement {
       color: white;
     }
 
-    /* Real-widget preview grid. Each cell mounts a /_test/render iframe and
-       receives the live palette via postMessage so the theme paints onto a
-       genuine widget rather than a hand-drawn mock. */
+    /* Real-widget preview — single iframe of /_test/render that receives
+       the live palette via postMessage. One widget at full size keeps the
+       preview readable without scrollbars. */
     .widget-preview {
       padding: 16px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
       background: var(--id-bg);
     }
     .widget-preview.empty {
-      display: block;
       padding: 32px;
       text-align: center;
       color: var(--id-fg-soft);
       font-style: italic;
     }
-    .widget-preview-cell {
-      display: grid;
-      gap: 4px;
-    }
-    .widget-preview-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-weight: 600;
-      color: var(--id-fg-soft);
-      font-family: ui-monospace, "SF Mono", monospace;
-    }
     .widget-preview iframe {
+      display: block;
       width: 100%;
-      aspect-ratio: 640 / 400;
+      aspect-ratio: 1200 / 800;
       border: 1px solid var(--id-divider);
       border-radius: 8px;
       background: #ffffff;
@@ -516,33 +501,24 @@ class ThemesPage extends LitElement {
    * each via the `/_test/render` endpoint (debug-only — fine for editor use).
    */
   _renderWidgetMocks() {
-    // Choose widgets that render meaningfully without per-cell config and
-    // exercise a varied subset of palette tokens so the user can see the
-    // theme in real use rather than an abstract mock.
-    const candidates = [
-      { plugin: "clock", size: "md" },
-      { plugin: "year_progress", size: "md" },
-      { plugin: "todo", size: "md" },
-      { plugin: "note", size: "md" },
-    ].filter((c) => (this.widgets || []).some((w) => w.id === c.plugin));
-    if (candidates.length === 0) {
-      return html`<div class="widget-preview empty">No preview widgets installed.</div>`;
+    // Render a single widget at lg — weather is the richest exerciser of the
+    // palette (bg + surface + fg + fgSoft + accent + danger/warn/ok via the
+    // chart and stat cards). Falls back to clock then todo if weather isn't
+    // installed.
+    const preferred = ["weather", "clock", "todo", "year_progress"];
+    const installed = new Set((this.widgets || []).map((w) => w.id));
+    const pick = preferred.find((p) => installed.has(p));
+    if (!pick) {
+      return html`<div class="widget-preview empty">No preview widget installed.</div>`;
     }
     return html`
       <div class="widget-preview">
-        ${candidates.map(
-          (c) => html`
-            <div class="widget-preview-cell">
-              <div class="widget-preview-label">${c.plugin}</div>
-              <iframe
-                src=${`/_test/render?plugin=${encodeURIComponent(c.plugin)}&size=${c.size}`}
-                title=${`Live preview: ${c.plugin}`}
-                @load=${(e) => this._onPreviewIframeLoad(e)}
-                sandbox="allow-scripts allow-same-origin"
-              ></iframe>
-            </div>
-          `
-        )}
+        <iframe
+          src=${`/_test/render?plugin=${encodeURIComponent(pick)}&size=lg`}
+          title=${`Live preview: ${pick}`}
+          @load=${(e) => this._onPreviewIframeLoad(e)}
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
       </div>
     `;
   }

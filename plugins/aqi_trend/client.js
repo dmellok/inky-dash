@@ -1,6 +1,12 @@
 // Air quality + 24h hourly trend.
+// Layout (matches the design screenshot):
+//   - Big hero AQI number with "/ 500" max
+//   - Band label below (GOOD / FAIR / MODERATE / POOR / ...)
+//   - Thin range indicator showing where AQI sits within the 0–500 scale
+//   - "LAST 24 HOURS" caps + Chart.js line chart
+//   - 6 pollutant tiles in a 3×2 grid (PM2.5, PM10, O3, NO2, SO2, CO)
 
-const BAND_COLOR = {
+const BAND_TOKEN = {
   good: "ok",
   fair: "ok",
   moderate: "warn",
@@ -10,15 +16,85 @@ const BAND_COLOR = {
   unknown: "muted",
 };
 
+const AQI_MAX = 500;
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function readVar(host, name, fallback) {
+  try {
+    const v = getComputedStyle(host.host).getPropertyValue(name).trim();
+    return v || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function fmtPollutant(v) {
+  if (typeof v !== "number") return "—";
+  return v < 10 ? v.toFixed(1) : Math.round(v);
+}
+
+function mountTrendChart(host, canvas, points, bandToken) {
+  if (!window.Chart || !canvas || !points.length) return null;
+  const tokenVar = `--theme-${bandToken}`;
+  const accent = readVar(host, tokenVar, readVar(host, "--theme-accent", "#d97757"));
+  const fgSoft = readVar(host, "--theme-fgSoft", "#5a4f44");
+  const labels = points.map((p) => p.label);
+  const aqis = points.map((p) => (typeof p.aqi === "number" ? p.aqi : null));
+  return new window.Chart(canvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          data: aqis,
+          borderColor: accent,
+          backgroundColor: accent + "30",
+          tension: 0.4,
+          fill: true,
+          pointRadius: 0,
+          borderWidth: 2,
+          spanGaps: true,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      layout: { padding: { top: 8, bottom: 4, left: 4, right: 4 } },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      scales: {
+        x: {
+          grid: { display: false, drawBorder: false },
+          ticks: {
+            color: fgSoft,
+            font: { family: "ui-monospace, monospace", size: 9, weight: "600" },
+            padding: 4,
+            maxTicksLimit: 6,
+            autoSkip: true,
+          },
+          border: { display: false },
+        },
+        y: { display: false, grace: "10%" },
+      },
+    },
+  });
+}
+
 export default function render(host, ctx) {
   const data = ctx.data || {};
   if (data.error || !data.points) {
     host.innerHTML = `
       <link rel="stylesheet" href="/plugins/aqi_trend/client.css">
       <link rel="stylesheet" href="/static/icons/phosphor.css">
-      <div class="aqi error">
+      <div class="aqi aqi--error">
         <i class="ph ph-warning-circle"></i>
-        <div class="message">${escapeHtml(data.error || "No air quality data.")}</div>
+        <div class="msg">${escapeHtml(data.error || "No air quality data.")}</div>
       </div>
     `;
     host.host.dataset.rendered = "true";
@@ -27,71 +103,73 @@ export default function render(host, ctx) {
 
   const { current, band, points } = data;
   const aqiNow = current.european_aqi;
-  const bandColor = BAND_COLOR[band] || "muted";
-  const place = ctx.cell?.options?.label || "";
-
-  const aqis = points.map((p) => p.aqi).filter((v) => typeof v === "number");
-  const aMin = aqis.length ? Math.min(...aqis) : 0;
-  const aMax = aqis.length ? Math.max(...aqis) : 100;
-  const aRange = Math.max(10, aMax - aMin);
-
-  const W = 100;
-  const H = 28;
-  const pts = points
-    .filter((p) => typeof p.aqi === "number")
-    .map((p, i, arr) => {
-      const x = (i / Math.max(1, arr.length - 1)) * W;
-      const y = H - ((p.aqi - aMin) / aRange) * (H - 6) - 3;
-      return [x.toFixed(2), y.toFixed(2)];
-    });
-  const path = pts.map(([x, y], i) => (i === 0 ? `M${x} ${y}` : `L${x} ${y}`)).join(" ");
-  const fillPath = pts.length > 0 ? `${path} L${W} ${H} L0 ${H} Z` : "";
-
-  const step = Math.max(1, Math.ceil(points.length / 6));
-  const ticks = points
-    .map((p, i) => ({ p, i }))
-    .filter(({ i }) => i % step === 0 || i === points.length - 1);
+  const bandToken = BAND_TOKEN[band] || "muted";
+  // Range indicator — where AQI sits within 0..500.
+  const rangePct = aqiNow != null
+    ? Math.max(0, Math.min(100, (aqiNow / AQI_MAX) * 100))
+    : 0;
 
   host.innerHTML = `
     <link rel="stylesheet" href="/plugins/aqi_trend/client.css">
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <div class="aqi band-${bandColor}">
-      <div class="head">
-        <div class="hero">
-          <div class="aqi-num">${aqiNow != null ? Math.round(aqiNow) : "—"}</div>
-          <div class="label">
-            <div class="band">${escapeHtml(band)}</div>
-            ${place ? `<div class="place">${escapeHtml(place)}</div>` : ""}
-          </div>
-        </div>
+    <div class="aqi band-${bandToken}">
+      <div class="hero">
+        <div class="hero-num">${aqiNow != null ? Math.round(aqiNow) : "—"}</div>
+        <div class="hero-max">/ ${AQI_MAX}</div>
       </div>
-      <div class="chart">
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
-          ${fillPath ? `<path class="fill" d="${fillPath}"></path>` : ""}
-          ${path ? `<path class="line" d="${path}"></path>` : ""}
-        </svg>
-        <div class="axis">
-          ${ticks.map(({ p }) => `<span>${escapeHtml(p.label)}</span>`).join("")}
-        </div>
+      <div class="hero-band">${escapeHtml(band).toUpperCase()}</div>
+
+      <div class="range">
+        <div class="range-track"></div>
+        <div class="range-marker" style="left: ${rangePct.toFixed(2)}%;"></div>
       </div>
+
+      <div class="chart-block">
+        <div class="chart-label">LAST 24 HOURS</div>
+        <div class="chart-wrap"><canvas class="chart-canvas"></canvas></div>
+      </div>
+
       <div class="tiles">
-        <div class="tile"><span class="k">PM₂.₅</span><span class="v">${fmt(current.pm2_5)}</span></div>
-        <div class="tile"><span class="k">PM₁₀</span><span class="v">${fmt(current.pm10)}</span></div>
-        <div class="tile"><span class="k">NO₂</span><span class="v">${fmt(current.nitrogen_dioxide)}</span></div>
-        <div class="tile"><span class="k">O₃</span><span class="v">${fmt(current.ozone)}</span></div>
+        <div class="tile">
+          <div class="tile-label">PM₂.₅</div>
+          <div class="tile-value">${fmtPollutant(current.pm2_5)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">PM₁₀</div>
+          <div class="tile-value">${fmtPollutant(current.pm10)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">O₃</div>
+          <div class="tile-value">${fmtPollutant(current.ozone)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">NO₂</div>
+          <div class="tile-value">${fmtPollutant(current.nitrogen_dioxide)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">SO₂</div>
+          <div class="tile-value">${fmtPollutant(current.sulphur_dioxide)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">CO</div>
+          <div class="tile-value">${fmtPollutant(current.carbon_monoxide)}<span class="tile-unit"> µg/m³</span></div>
+        </div>
       </div>
     </div>
   `;
+
+  if (host.__inkyChart && host.__inkyChart.destroy) {
+    host.__inkyChart.destroy();
+  }
+  const canvas = host.querySelector(".chart-canvas");
+  host.__inkyChart = mountTrendChart(host, canvas, points, bandToken);
+
   host.host.dataset.rendered = "true";
 }
 
-function fmt(v) {
-  if (typeof v !== "number") return "—";
-  return v < 10 ? v.toFixed(1) : Math.round(v);
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
+export function cleanup(host) {
+  if (host.__inkyChart && host.__inkyChart.destroy) {
+    host.__inkyChart.destroy();
+    host.__inkyChart = null;
+  }
 }

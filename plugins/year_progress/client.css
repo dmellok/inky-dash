@@ -1,65 +1,145 @@
-:host {
-  display: block;
-  height: 100%;
-}
+:host { display: block; height: 100%; }
+
 .yp {
-  display: grid;
-  align-content: center;
-  justify-items: center;
   height: 100%;
   width: 100%;
-  padding: 6cqmin;
-  box-sizing: border-box;
   background: var(--theme-bg);
   color: var(--theme-fg);
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  gap: 2cqmin;
-}
-.hero {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.3em;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-}
-.day {
-  color: var(--theme-accent);
-}
-.of {
-  font-weight: 500;
-  color: var(--theme-fgSoft);
-  font-size: 0.5em;
-  letter-spacing: 0;
-}
-.total {
-  font-weight: 500;
-  color: var(--theme-fgSoft);
-  font-size: 0.7em;
-}
-.pct {
-  color: var(--theme-fgSoft);
-  font-weight: 500;
-}
-.ribbon {
   display: grid;
-  grid-template-columns: repeat(52, 1fr);
-  gap: 2px;
-  width: 92%;
-  height: 12cqmin;
-  margin-top: 1cqmin;
+  grid-template-rows: auto auto auto auto auto 1fr;
+  gap: 1.5cqh;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
 }
-.seg {
+
+/* Hero — big day number + "/ 365" beside it. */
+.hero {
+  display: flex;
+  align-items: baseline;
+  gap: 2cqw;
+}
+.hero-num {
+  font-size: min(22cqw, 36cqh);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.9;
+}
+.hero-of {
+  font-size: min(8cqw, 14cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+  font-variant-numeric: tabular-nums;
+}
+.hero-sub {
+  font-size: min(2.6cqw, 4cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fgSoft);
+}
+
+/* % bar with the value to the right. */
+.pct-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5cqw;
+  align-items: center;
+}
+.pct-track {
+  height: max(8px, 1.5cqh);
+  background: var(--theme-surface);
+  border-radius: 999px;
+  overflow: hidden;
+  border: max(1px, 0.2cqmin) solid var(--theme-divider);
+}
+.pct-fill {
+  height: 100%;
+  background: var(--theme-ok, var(--theme-accent));
+  border-radius: 999px;
+}
+.pct-value {
+  font-size: min(2.6cqw, 4cqh);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-fg);
+}
+
+/* Daily ticks — one per day of year, filled up to today. Auto-fits the
+   row by using flex-wrap with a fixed cell ratio. */
+.ticks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: max(1px, 0.25cqmin);
+  align-content: center;
+  height: max(10px, 2.4cqh);
+  overflow: hidden;
+}
+.tick {
+  flex: 0 0 calc((100% - 0.25cqmin * 60) / 61);
+  min-width: 2px;
+  height: 100%;
   background: var(--theme-divider);
   border-radius: 1px;
 }
-.seg.filled {
-  background: var(--theme-accent);
+.tick.on {
+  background: var(--theme-ok, var(--theme-accent));
 }
+
+/* Stat cards row. */
 .stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5cqmin;
+}
+.stat {
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  padding: 1.4cqmin 2cqmin;
+  display: grid;
+  gap: 0.4cqh;
+  min-width: 0;
+}
+.stat-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--theme-fgSoft);
-  font-weight: 500;
-  margin-top: 1cqmin;
+}
+.stat-value {
+  font-size: min(4.4cqw, 7cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 0.2em;
+  white-space: nowrap;
+}
+.stat-unit {
+  font-size: 0.5em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--theme-fgSoft);
+}
+
+.footer {
+  align-self: end;
+  font-size: min(2.4cqw, 3.6cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+
+/* Smaller cells: drop the daily ticks + stats; keep hero + % bar. */
+@container (max-width: 540px) {
+  .stats { grid-template-columns: 1fr 1fr; }
+  .stats .stat:nth-child(3) { display: none; }
+}
+@container (max-width: 360px) {
+  .ticks { display: none; }
+  .stats { display: none; }
+  .footer { display: none; }
 }

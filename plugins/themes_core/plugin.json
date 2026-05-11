@@ -2,16 +2,16 @@
   "manifest_version": 1,
   "id": "themes_core",
   "name": "Core themes",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "kind": "theme",
-  "description": "Minimal light + dark fallback themes. Calibration-driven theme generation is on hold; rebuild when ready.",
+  "description": "35 hand-curated themes: 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, plus 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. Midtones target a tinted-paper bg around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
   "supports": {
     "sizes": ["xs", "sm", "md", "lg"]
   },
   "themes": [
     {
       "id": "default",
-      "name": "Default (Linen)",
+      "name": "Linen",
       "mode": "light",
       "palette": {
         "bg": "#e8d8be",
@@ -26,6 +26,177 @@
         "danger": "#c97c70",
         "warn": "#d4a957",
         "ok": "#7da670"
+      }
+    },
+    {
+      "id": "mist",
+      "name": "Mist",
+      "mode": "light",
+      "palette": {
+        "bg": "#d8e0e8",
+        "surface": "#eef2f6",
+        "surface2": "#c8d2dc",
+        "fg": "#0f1a26",
+        "fgSoft": "#4a5a6e",
+        "muted": "#708090",
+        "accent": "#2e6da4",
+        "accentSoft": "#1d4a73",
+        "divider": "#b0bec8",
+        "danger": "#b85a52",
+        "warn": "#c89b3a",
+        "ok": "#5a8f6a"
+      }
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "mode": "light",
+      "palette": {
+        "bg": "#d6e0d2",
+        "surface": "#ecf0e8",
+        "surface2": "#c0cdb8",
+        "fg": "#1a2418",
+        "fgSoft": "#4a5a45",
+        "muted": "#758270",
+        "accent": "#5a7a3a",
+        "accentSoft": "#3d5826",
+        "divider": "#adbca5",
+        "danger": "#a85a4a",
+        "warn": "#b8923a",
+        "ok": "#4a7a3a"
+      }
+    },
+    {
+      "id": "bloom",
+      "name": "Bloom",
+      "mode": "light",
+      "palette": {
+        "bg": "#ecdcd6",
+        "surface": "#f7eae5",
+        "surface2": "#d8c5be",
+        "fg": "#2a1818",
+        "fgSoft": "#5a4842",
+        "muted": "#8a7570",
+        "accent": "#b85870",
+        "accentSoft": "#903e54",
+        "divider": "#c8b3ab",
+        "danger": "#b8505a",
+        "warn": "#c8a04a",
+        "ok": "#6a8a5a"
+      }
+    },
+    {
+      "id": "slate",
+      "name": "Slate",
+      "mode": "light",
+      "palette": {
+        "bg": "#c8d0d8",
+        "surface": "#e0e6ec",
+        "surface2": "#b0bac4",
+        "fg": "#0f1620",
+        "fgSoft": "#46505a",
+        "muted": "#6a7480",
+        "accent": "#2860a8",
+        "accentSoft": "#1a4480",
+        "divider": "#9aa6b2",
+        "danger": "#b04a44",
+        "warn": "#b08a36",
+        "ok": "#4a8266"
+      }
+    },
+    {
+      "id": "kraft",
+      "name": "Kraft",
+      "mode": "light",
+      "palette": {
+        "bg": "#b89a78",
+        "surface": "#c8aa88",
+        "surface2": "#a08868",
+        "fg": "#1f140a",
+        "fgSoft": "#4a3826",
+        "muted": "#6a5240",
+        "accent": "#3a5878",
+        "accentSoft": "#264058",
+        "divider": "#8a7858",
+        "danger": "#a8403a",
+        "warn": "#b87830",
+        "ok": "#4a6a3a"
+      }
+    },
+    {
+      "id": "moss",
+      "name": "Moss",
+      "mode": "light",
+      "palette": {
+        "bg": "#98a888",
+        "surface": "#aab8a0",
+        "surface2": "#7a8a6a",
+        "fg": "#18200f",
+        "fgSoft": "#424d34",
+        "muted": "#5e6a4e",
+        "accent": "#b8783a",
+        "accentSoft": "#8a5828",
+        "divider": "#6a7a5a",
+        "danger": "#a8503a",
+        "warn": "#c89030",
+        "ok": "#486a3a"
+      }
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "mode": "light",
+      "palette": {
+        "bg": "#d8a098",
+        "surface": "#e8b0a8",
+        "surface2": "#b8807a",
+        "fg": "#2a0f0a",
+        "fgSoft": "#5a302a",
+        "muted": "#804a44",
+        "accent": "#2e7878",
+        "accentSoft": "#1f5858",
+        "divider": "#b08078",
+        "danger": "#a83020",
+        "warn": "#c87a30",
+        "ok": "#408050"
+      }
+    },
+    {
+      "id": "dusk",
+      "name": "Dusk",
+      "mode": "light",
+      "palette": {
+        "bg": "#8898a8",
+        "surface": "#a0b0c0",
+        "surface2": "#6a7a8a",
+        "fg": "#08121e",
+        "fgSoft": "#3a4858",
+        "muted": "#5a6878",
+        "accent": "#c89030",
+        "accentSoft": "#a07020",
+        "divider": "#607080",
+        "danger": "#b04a3a",
+        "warn": "#c8a040",
+        "ok": "#4a8260"
+      }
+    },
+    {
+      "id": "lavender",
+      "name": "Lavender",
+      "mode": "light",
+      "palette": {
+        "bg": "#b8a0c0",
+        "surface": "#c8b0d0",
+        "surface2": "#9880a0",
+        "fg": "#200f28",
+        "fgSoft": "#483050",
+        "muted": "#6a4a72",
+        "accent": "#5a7a3a",
+        "accentSoft": "#3d5826",
+        "divider": "#886a90",
+        "danger": "#a85068",
+        "warn": "#b89230",
+        "ok": "#5a8a48"
       }
     },
     {
@@ -45,6 +216,462 @@
         "danger": "#c97c70",
         "warn": "#d4a957",
         "ok": "#7da670"
+      }
+    },
+    {
+      "id": "midnight",
+      "name": "Midnight",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0e1420",
+        "surface": "#18202c",
+        "surface2": "#222a38",
+        "fg": "#d8e0ec",
+        "fgSoft": "#98a4b4",
+        "muted": "#5a6878",
+        "accent": "#5a98d8",
+        "accentSoft": "#7ab0e5",
+        "divider": "#2e3848",
+        "danger": "#d87870",
+        "warn": "#d8aa50",
+        "ok": "#80c890"
+      }
+    },
+    {
+      "id": "forest",
+      "name": "Forest",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a1a0e",
+        "surface": "#122418",
+        "surface2": "#1a2e22",
+        "fg": "#d8e8d0",
+        "fgSoft": "#98ac90",
+        "muted": "#607060",
+        "accent": "#80c060",
+        "accentSoft": "#a0d880",
+        "divider": "#2a3a30",
+        "danger": "#c87870",
+        "warn": "#c8a850",
+        "ok": "#60c870"
+      }
+    },
+    {
+      "id": "vapor",
+      "name": "Vapor",
+      "mode": "dark",
+      "palette": {
+        "bg": "#150e22",
+        "surface": "#1f1830",
+        "surface2": "#2a223e",
+        "fg": "#e8d8e8",
+        "fgSoft": "#b098b8",
+        "muted": "#786080",
+        "accent": "#d050b8",
+        "accentSoft": "#e878d0",
+        "divider": "#3a2e48",
+        "danger": "#d87080",
+        "warn": "#d8b050",
+        "ok": "#70c898"
+      }
+    },
+    {
+      "id": "carbon",
+      "name": "Carbon",
+      "mode": "dark",
+      "palette": {
+        "bg": "#161616",
+        "surface": "#202020",
+        "surface2": "#2a2a2a",
+        "fg": "#e0e0e0",
+        "fgSoft": "#a0a0a0",
+        "muted": "#707070",
+        "accent": "#4a98d8",
+        "accentSoft": "#6ab0e8",
+        "divider": "#383838",
+        "danger": "#d87870",
+        "warn": "#d8aa60",
+        "ok": "#78c890"
+      }
+    },
+    {
+      "id": "pyre",
+      "name": "Pyre",
+      "mode": "light",
+      "palette": {
+        "bg": "#ecd5d2",
+        "surface": "#f7e6e3",
+        "surface2": "#d8bcb8",
+        "fg": "#08222a",
+        "fgSoft": "#2e505a",
+        "muted": "#4a6a72",
+        "accent": "#c0413a",
+        "accentSoft": "#2e7878",
+        "divider": "#c8a8a4",
+        "danger": "#b8403a",
+        "warn": "#c89030",
+        "ok": "#4a8260"
+      }
+    },
+    {
+      "id": "lagoon",
+      "name": "Lagoon",
+      "mode": "light",
+      "palette": {
+        "bg": "#d2e2ec",
+        "surface": "#e8f0f6",
+        "surface2": "#b8c8d4",
+        "fg": "#2a1408",
+        "fgSoft": "#523828",
+        "muted": "#745a48",
+        "accent": "#2e6da4",
+        "accentSoft": "#b0501e",
+        "divider": "#a8b8c4",
+        "danger": "#b04a3a",
+        "warn": "#c8923a",
+        "ok": "#4a8260"
+      }
+    },
+    {
+      "id": "citron",
+      "name": "Citron",
+      "mode": "light",
+      "palette": {
+        "bg": "#ece4c4",
+        "surface": "#f5eedc",
+        "surface2": "#d8d0a8",
+        "fg": "#1e0a2a",
+        "fgSoft": "#463258",
+        "muted": "#685878",
+        "accent": "#b89e30",
+        "accentSoft": "#5a48a8",
+        "divider": "#c8be9a",
+        "danger": "#b04a3a",
+        "warn": "#b08828",
+        "ok": "#588a4a"
+      }
+    },
+    {
+      "id": "verdant",
+      "name": "Verdant",
+      "mode": "light",
+      "palette": {
+        "bg": "#d4e6d4",
+        "surface": "#e8f2e8",
+        "surface2": "#b8ccba",
+        "fg": "#2a0f24",
+        "fgSoft": "#523848",
+        "muted": "#745a6a",
+        "accent": "#4a8050",
+        "accentSoft": "#a0408a",
+        "divider": "#aac0aa",
+        "danger": "#b04050",
+        "warn": "#c89030",
+        "ok": "#4a8048"
+      }
+    },
+    {
+      "id": "twilight",
+      "name": "Twilight",
+      "mode": "light",
+      "palette": {
+        "bg": "#ddd2e8",
+        "surface": "#ece4f2",
+        "surface2": "#b8a8cc",
+        "fg": "#2e1a08",
+        "fgSoft": "#5a4028",
+        "muted": "#7a604a",
+        "accent": "#6448a0",
+        "accentSoft": "#b08838",
+        "divider": "#b8a4c8",
+        "danger": "#a85048",
+        "warn": "#b08020",
+        "ok": "#5a8050"
+      }
+    },
+    {
+      "id": "sunset",
+      "name": "Sunset",
+      "mode": "light",
+      "palette": {
+        "bg": "#d8a098",
+        "surface": "#e8b4ac",
+        "surface2": "#b88078",
+        "fg": "#08222a",
+        "fgSoft": "#2e505a",
+        "muted": "#4a6a72",
+        "accent": "#b83820",
+        "accentSoft": "#1f5858",
+        "divider": "#b08078",
+        "danger": "#a83020",
+        "warn": "#c87a30",
+        "ok": "#408050"
+      }
+    },
+    {
+      "id": "marina",
+      "name": "Marina",
+      "mode": "light",
+      "palette": {
+        "bg": "#8898a8",
+        "surface": "#a0b0c0",
+        "surface2": "#6a7a8a",
+        "fg": "#2a1808",
+        "fgSoft": "#4a3018",
+        "muted": "#6a4a30",
+        "accent": "#1a4480",
+        "accentSoft": "#c8783a",
+        "divider": "#607080",
+        "danger": "#a8403a",
+        "warn": "#c87a30",
+        "ok": "#487848"
+      }
+    },
+    {
+      "id": "saffron",
+      "name": "Saffron",
+      "mode": "light",
+      "palette": {
+        "bg": "#c8b870",
+        "surface": "#d4c688",
+        "surface2": "#a89858",
+        "fg": "#1a0f3a",
+        "fgSoft": "#383058",
+        "muted": "#585078",
+        "accent": "#8a7028",
+        "accentSoft": "#4a3a8a",
+        "divider": "#a89858",
+        "danger": "#a8483a",
+        "warn": "#b06820",
+        "ok": "#487848"
+      }
+    },
+    {
+      "id": "cypress",
+      "name": "Cypress",
+      "mode": "light",
+      "palette": {
+        "bg": "#98a888",
+        "surface": "#aab8a0",
+        "surface2": "#7a8a6a",
+        "fg": "#2e0f24",
+        "fgSoft": "#503348",
+        "muted": "#6a5060",
+        "accent": "#486a3a",
+        "accentSoft": "#803868",
+        "divider": "#6a7a5a",
+        "danger": "#a83a3a",
+        "warn": "#b08a30",
+        "ok": "#486a3a"
+      }
+    },
+    {
+      "id": "orchid",
+      "name": "Orchid",
+      "mode": "light",
+      "palette": {
+        "bg": "#b8a0c0",
+        "surface": "#c8b0d0",
+        "surface2": "#9880a0",
+        "fg": "#1f1808",
+        "fgSoft": "#483820",
+        "muted": "#686030",
+        "accent": "#5a3878",
+        "accentSoft": "#8a7820",
+        "divider": "#886a90",
+        "danger": "#a83048",
+        "warn": "#b08020",
+        "ok": "#588048"
+      }
+    },
+    {
+      "id": "inferno",
+      "name": "Inferno",
+      "mode": "dark",
+      "palette": {
+        "bg": "#1a0a08",
+        "surface": "#241410",
+        "surface2": "#321e18",
+        "fg": "#d8eaee",
+        "fgSoft": "#98aab0",
+        "muted": "#607078",
+        "accent": "#d8503a",
+        "accentSoft": "#50b8b8",
+        "divider": "#483028",
+        "danger": "#d87870",
+        "warn": "#d8a850",
+        "ok": "#80c890"
+      }
+    },
+    {
+      "id": "abyss",
+      "name": "Abyss",
+      "mode": "dark",
+      "palette": {
+        "bg": "#08121e",
+        "surface": "#14202c",
+        "surface2": "#1f2a38",
+        "fg": "#ecd8c0",
+        "fgSoft": "#b0987a",
+        "muted": "#786050",
+        "accent": "#4a98e8",
+        "accentSoft": "#d8783a",
+        "divider": "#2a3848",
+        "danger": "#d87870",
+        "warn": "#d8a850",
+        "ok": "#80c890"
+      }
+    },
+    {
+      "id": "amber",
+      "name": "Amber",
+      "mode": "dark",
+      "palette": {
+        "bg": "#1e1408",
+        "surface": "#2a1d10",
+        "surface2": "#382818",
+        "fg": "#e0d4f0",
+        "fgSoft": "#a898b8",
+        "muted": "#786080",
+        "accent": "#d89830",
+        "accentSoft": "#a060d0",
+        "divider": "#483828",
+        "danger": "#d87870",
+        "warn": "#d8a850",
+        "ok": "#80c898"
+      }
+    },
+    {
+      "id": "pine",
+      "name": "Pine",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a1e10",
+        "surface": "#102818",
+        "surface2": "#1a3422",
+        "fg": "#f0d8e8",
+        "fgSoft": "#b098a8",
+        "muted": "#786068",
+        "accent": "#50c060",
+        "accentSoft": "#d850a0",
+        "divider": "#2a3a30",
+        "danger": "#d87080",
+        "warn": "#d8a850",
+        "ok": "#60c870"
+      }
+    },
+    {
+      "id": "aurora",
+      "name": "Aurora",
+      "mode": "dark",
+      "palette": {
+        "bg": "#150e22",
+        "surface": "#1f1830",
+        "surface2": "#2a223e",
+        "fg": "#d8f0c0",
+        "fgSoft": "#98a880",
+        "muted": "#607060",
+        "accent": "#a050d8",
+        "accentSoft": "#98d050",
+        "divider": "#3a2e48",
+        "danger": "#d87080",
+        "warn": "#d8a850",
+        "ok": "#98d050"
+      }
+    },
+    {
+      "id": "hotwire",
+      "name": "Hotwire",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a0a14",
+        "surface": "#14141f",
+        "surface2": "#1f1f2a",
+        "fg": "#ffe8f0",
+        "fgSoft": "#c098a8",
+        "muted": "#806068",
+        "accent": "#ff2e88",
+        "accentSoft": "#ff70b8",
+        "divider": "#2a2a3a",
+        "danger": "#ff5060",
+        "warn": "#ffa830",
+        "ok": "#5fff90"
+      }
+    },
+    {
+      "id": "plasma",
+      "name": "Plasma",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0e0820",
+        "surface": "#18102a",
+        "surface2": "#221838",
+        "fg": "#f0e0ff",
+        "fgSoft": "#b098c8",
+        "muted": "#786080",
+        "accent": "#b030ff",
+        "accentSoft": "#d870ff",
+        "divider": "#2e1f48",
+        "danger": "#ff5570",
+        "warn": "#ffaa30",
+        "ok": "#50ff90"
+      }
+    },
+    {
+      "id": "matrix",
+      "name": "Matrix",
+      "mode": "dark",
+      "palette": {
+        "bg": "#050a05",
+        "surface": "#0a140a",
+        "surface2": "#122a14",
+        "fg": "#c0ffc0",
+        "fgSoft": "#8ac88a",
+        "muted": "#607060",
+        "accent": "#00ff80",
+        "accentSoft": "#50ffa0",
+        "divider": "#1a2a18",
+        "danger": "#ff5060",
+        "warn": "#ffaa30",
+        "ok": "#00ff80"
+      }
+    },
+    {
+      "id": "synthwave",
+      "name": "Synthwave",
+      "mode": "dark",
+      "palette": {
+        "bg": "#100820",
+        "surface": "#1a1030",
+        "surface2": "#241840",
+        "fg": "#ffe0f8",
+        "fgSoft": "#c098b0",
+        "muted": "#806878",
+        "accent": "#ff20a0",
+        "accentSoft": "#a040ff",
+        "divider": "#2e1f48",
+        "danger": "#ff5060",
+        "warn": "#ffaa30",
+        "ok": "#50ff90"
+      }
+    },
+    {
+      "id": "toxic",
+      "name": "Toxic",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a0810",
+        "surface": "#14101e",
+        "surface2": "#1f182c",
+        "fg": "#d0ffd0",
+        "fgSoft": "#98c098",
+        "muted": "#607060",
+        "accent": "#50ff50",
+        "accentSoft": "#c050ff",
+        "divider": "#2a2030",
+        "danger": "#ff5060",
+        "warn": "#ffaa30",
+        "ok": "#50ff50"
       }
     }
   ]

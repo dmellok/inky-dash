@@ -1,10 +1,10 @@
 {
   "manifest_version": 1,
   "id": "note",
-  "name": "Sticky note",
-  "version": "0.1.0",
+  "name": "Note",
+  "version": "0.2.0",
   "kind": "widget",
-  "description": "A free-text note. Pick the background + text colors and write whatever you want — auto-scales to the cell.",
+  "description": "A free-text note that uses the active theme's colours. Writes whatever you want and auto-scales to the cell. For a real sticky-yellow look, override the cell's bg/accent via the per-cell colour overrides on the editor.",
   "icon": "ph-note",
   "supports": { "sizes": ["xs", "sm", "md", "lg"] },
   "cell_options": [
@@ -24,7 +24,7 @@
       "name": "align",
       "type": "select",
       "label": "Alignment",
-      "default": "center",
+      "default": "left",
       "choices": [
         { "value": "left", "label": "Left" },
         { "value": "center", "label": "Center" },
@@ -35,7 +35,7 @@
       "name": "weight",
       "type": "select",
       "label": "Weight",
-      "default": "600",
+      "default": "500",
       "choices": [
         { "value": "400", "label": "Regular" },
         { "value": "500", "label": "Medium" },
@@ -43,18 +43,6 @@
         { "value": "700", "label": "Bold" },
         { "value": "900", "label": "Black" }
       ]
-    },
-    {
-      "name": "bg_color",
-      "type": "color",
-      "label": "Background",
-      "default": "#fff8b0"
-    },
-    {
-      "name": "fg_color",
-      "type": "color",
-      "label": "Text color",
-      "default": "#1a1612"
     }
   ],
   "render": { "dither": "none" }

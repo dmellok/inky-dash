@@ -1,17 +1,14 @@
-// Sun & moon — SVG-rendered: an arc showing the sun's position for the day,
-// plus a moon disc with an actual lit/dark phase boundary.
+// Sun & moon — header strip + sun-arc visualisation + moon-phase disc + stat
+// cards. Keeps the SVG visualisations but wraps them in the new design.
 
-// Synodic month constants (J2000 reference new moon).
 const KNOWN_NEW_MOON = Date.UTC(2000, 0, 6, 18, 14) / 1000;
 const SYNODIC_DAYS = 29.530588853;
 
 function moonPhase(date) {
   const days = (date.getTime() / 1000 - KNOWN_NEW_MOON) / 86400;
   const cycle = ((days % SYNODIC_DAYS) + SYNODIC_DAYS) % SYNODIC_DAYS;
-  const fraction = cycle / SYNODIC_DAYS; // 0..1
-  const illuminationPct = Math.round(
-    (1 - Math.cos(2 * Math.PI * fraction)) * 50
-  );
+  const fraction = cycle / SYNODIC_DAYS;
+  const illuminationPct = Math.round((1 - Math.cos(2 * Math.PI * fraction)) * 50);
   let label;
   if (fraction < 0.03 || fraction > 0.97) label = "New";
   else if (fraction < 0.22) label = "Waxing crescent";
@@ -24,16 +21,12 @@ function moonPhase(date) {
   return { fraction, label, illuminationPct };
 }
 
-// Build the SVG path for the LIT portion of the moon. Background circle is
-// drawn separately as the dark side.
 function moonLitPath(phase, cx = 50, cy = 50, R = 42) {
   const cos = Math.cos(phase * Math.PI * 2);
   const illum = (1 - cos) / 2;
   const waxing = phase < 0.5;
   const a = Math.abs(cos) * R;
   const outerSweep = waxing ? 1 : 0;
-  // Crescent: terminator bows toward lit side (same sweep as outer).
-  // Gibbous: terminator bows toward shadow (opposite sweep).
   const terminatorSweep = illum < 0.5 ? outerSweep : 1 - outerSweep;
   return (
     `M ${cx},${cy - R} ` +
@@ -45,10 +38,8 @@ function moonLitPath(phase, cx = 50, cy = 50, R = 42) {
 function fmtTime(iso) {
   if (!iso) return "—";
   try {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
+    return new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit", minute: "2-digit", hour12: false,
     }).format(new Date(iso));
   } catch {
     return iso;
@@ -74,53 +65,52 @@ function sunProgress(now, sunrise, sunset) {
   return (t - r) / (s - r);
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function formatTime(now) {
+  return now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
 export default function render(host, ctx) {
-  const { size, options } = ctx.cell;
+  const { options } = ctx.cell;
   const { data } = ctx;
-  const placeLabel = options.label || "";
+  const place = options.label || "";
   const moon = moonPhase(new Date());
   const sunrise = data && data.sunrise;
   const sunset = data && data.sunset;
   const error = data && data.error;
+  const now = new Date();
 
   if (error) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/icons/phosphor.css">
       <link rel="stylesheet" href="/plugins/sun_moon/client.css">
-      <div class="sm sm--${size}">
-        <div class="error-block"><div class="error">${error}</div></div>
+      <div class="sm sm--error">
+        <i class="ph ph-warning-circle"></i>
+        <div class="msg">${escapeHtml(error)}</div>
       </div>
     `;
     host.host.dataset.rendered = "true";
     return;
   }
 
-  // Sun arc geometry. SVG viewBox is 200×100; horizon at y=80, peak at y=8.
-  const progress = sunProgress(new Date(), sunrise, sunset);
-  const arcLeft = 18;
-  const arcRight = 182;
-  const horizonY = 80;
-  const peakY = 8;
-  const clampedProgress = progress == null ? null : Math.max(0, Math.min(1, progress));
-  const sunX =
-    clampedProgress == null
-      ? null
-      : arcLeft + (arcRight - arcLeft) * clampedProgress;
-  const sunY =
-    clampedProgress == null
-      ? null
-      : horizonY - (horizonY - peakY) * Math.sin(Math.PI * clampedProgress);
+  // Sun-arc geometry. SVG viewBox is 200×100; horizon at y=80, peak at y=8.
+  const progress = sunProgress(now, sunrise, sunset);
+  const arcLeft = 18, arcRight = 182, horizonY = 80, peakY = 8;
+  const clamped = progress == null ? null : Math.max(0, Math.min(1, progress));
+  const sunX = clamped == null ? null : arcLeft + (arcRight - arcLeft) * clamped;
+  const sunY = clamped == null ? null : horizonY - (horizonY - peakY) * Math.sin(Math.PI * clamped);
 
-  // Sun rays angled around the disc.
   const rays = [];
-  const rayCount = 8;
-  for (let i = 0; i < rayCount; i++) {
-    const angle = (i / rayCount) * 2 * Math.PI;
-    const x1 = Math.cos(angle) * 9;
-    const y1 = Math.sin(angle) * 9;
-    const x2 = Math.cos(angle) * 13.5;
-    const y2 = Math.sin(angle) * 13.5;
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * 2 * Math.PI;
     rays.push(
-      `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" />`
+      `<line x1="${(Math.cos(angle) * 9).toFixed(1)}" y1="${(Math.sin(angle) * 9).toFixed(1)}"
+             x2="${(Math.cos(angle) * 13.5).toFixed(1)}" y2="${(Math.sin(angle) * 13.5).toFixed(1)}" />`
     );
   }
 
@@ -128,20 +118,16 @@ export default function render(host, ctx) {
     <svg viewBox="0 0 200 100" preserveAspectRatio="xMidYMid meet" class="sun-svg">
       <line class="horizon" x1="10" y1="${horizonY}" x2="190" y2="${horizonY}" />
       <path class="arc" d="M ${arcLeft},${horizonY} Q 100,${peakY - 10} ${arcRight},${horizonY}" />
-      ${
-        sunX !== null
-          ? `<g class="sun" transform="translate(${sunX.toFixed(1)},${sunY.toFixed(1)})">
-              <g class="rays">${rays.join("")}</g>
-              <circle cx="0" cy="0" r="6.5" />
-            </g>`
-          : `<text class="sun-out" x="100" y="${horizonY + 12}" text-anchor="middle">Sun is below the horizon</text>`
-      }
+      ${sunX !== null
+        ? `<g class="sun" transform="translate(${sunX.toFixed(1)},${sunY.toFixed(1)})">
+            <g class="rays">${rays.join("")}</g>
+            <circle cx="0" cy="0" r="6.5" />
+          </g>`
+        : `<text class="sun-out" x="100" y="${horizonY + 12}" text-anchor="middle">Below horizon</text>`}
       <g class="endpoints">
         <circle cx="${arcLeft}" cy="${horizonY}" r="2" />
         <circle cx="${arcRight}" cy="${horizonY}" r="2" />
       </g>
-      <text class="time-label" x="${arcLeft}" y="${horizonY + 12}" text-anchor="middle">${fmtTime(sunrise)}</text>
-      <text class="time-label" x="${arcRight}" y="${horizonY + 12}" text-anchor="middle">${fmtTime(sunset)}</text>
     </svg>
   `;
 
@@ -154,20 +140,50 @@ export default function render(host, ctx) {
   `;
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/icons/phosphor.css">
     <link rel="stylesheet" href="/plugins/sun_moon/client.css">
-    <div class="sm sm--${size}">
-      ${placeLabel ? `<div class="place">${placeLabel}</div>` : ""}
-      <div class="sun-row">${sunSvg}</div>
-      ${
-        size !== "sm"
-          ? `<div class="day-length">Day length · ${dayLength(sunrise, sunset)}</div>`
-          : ""
-      }
-      <div class="moon-row">
-        ${moonSvg}
-        <div class="moon-meta">
-          <div class="moon-label">${moon.label}</div>
-          <div class="moon-illum">${moon.illuminationPct}% illuminated</div>
+    <div class="sm">
+      <div class="head">
+        <i class="ph ph-sun-horizon head-icon"></i>
+        <span class="head-title">SUN &amp; MOON</span>
+        ${place ? `<span class="head-place">${escapeHtml(place)}</span>` : ""}
+        <span class="head-time">${escapeHtml(formatTime(now))}</span>
+      </div>
+
+      <div class="visuals">
+        <div class="sun-card">
+          ${sunSvg}
+        </div>
+        <div class="moon-card">
+          ${moonSvg}
+          <div class="moon-meta">
+            <div class="moon-label">${escapeHtml(moon.label)}</div>
+            <div class="moon-illum">${moon.illuminationPct}% lit</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <i class="ph ph-sun-horizon"></i>
+          <div class="stat-text">
+            <div class="stat-label">SUNRISE</div>
+            <div class="stat-value">${escapeHtml(fmtTime(sunrise))}</div>
+          </div>
+        </div>
+        <div class="stat">
+          <i class="ph ph-moon"></i>
+          <div class="stat-text">
+            <div class="stat-label">SUNSET</div>
+            <div class="stat-value">${escapeHtml(fmtTime(sunset))}</div>
+          </div>
+        </div>
+        <div class="stat">
+          <i class="ph ph-clock"></i>
+          <div class="stat-text">
+            <div class="stat-label">DAY LENGTH</div>
+            <div class="stat-value">${escapeHtml(dayLength(sunrise, sunset))}</div>
+          </div>
         </div>
       </div>
     </div>

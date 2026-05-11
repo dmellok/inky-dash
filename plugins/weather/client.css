@@ -1,79 +1,362 @@
 :host { display: block; height: 100%; }
+
 .wx {
-  display: grid;
-  align-content: center;
   height: 100%;
-  padding: 5cqmin;
-  box-sizing: border-box;
+  width: 100%;
   background: var(--theme-bg);
   color: var(--theme-fg);
+  display: grid;
+  grid-template-rows: auto auto auto auto auto 1fr;
   gap: 2cqmin;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
+}
+
+/* Header strip — small icon + WEATHER label + place (accent) + time, with
+   a hairline divider beneath. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
+  color: var(--theme-accent);
+  align-self: center;
+}
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
+}
+.head-place {
+  font-size: min(3cqw, 4.6cqh);
+  font-weight: 600;
+  color: var(--theme-accent);
+}
+.head-time {
+  margin-left: auto;
+  font-size: min(3cqw, 4.6cqh);
+  color: var(--theme-fgSoft);
   font-variant-numeric: tabular-nums;
 }
-.wx-error {
-  place-items: center;
-  text-align: center;
-}
-.wx-error-icon { font-size: min(15cqw, 22cqh); color: var(--theme-danger); }
-.error-msg {
-  color: var(--theme-danger);
-  font-size: min(4cqw, 7cqh);
-  margin-top: 1cqmin;
-}
+
+/* Hero — big icon + big temperature side by side. */
 .hero {
   display: flex;
   align-items: center;
-  gap: 4cqmin;
-  justify-content: center;
+  gap: 4cqw;
+  padding: 1cqh 0;
 }
 .hero-icon {
-  font-size: min(28cqw, 38cqh);
-  line-height: 1;
+  font-size: min(22cqw, 30cqh);
   color: var(--theme-accent);
+  line-height: 1;
 }
 .hero-temp {
+  font-size: min(18cqw, 26cqh);
   font-weight: 700;
-  font-size: min(22cqw, 38cqh);
   line-height: 1;
-  color: var(--theme-accent);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
 }
 .hero-temp .unit {
-  font-size: 0.5em;
-  color: var(--theme-fgSoft);
-  font-weight: 500;
+  font-size: 0.4em;
+  font-weight: 600;
+  margin-left: 0.1em;
+  vertical-align: super;
+  color: var(--theme-fg);
 }
-.meta {
-  text-align: center;
+
+.hero-meta { display: grid; gap: 0.4cqh; }
+.condition {
+  font-size: min(7cqw, 11cqh);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--theme-fg);
+}
+.feels {
+  font-size: min(2.6cqw, 4cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fgSoft);
+}
+
+/* Stat-card grid — 3 cols. Cards collapse to 2 cols on narrow cells (sm/md
+   that are tall-ish), or even 1 col on xs via the size query below. */
+.stats {
   display: grid;
-  gap: 0.2em;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5cqmin;
 }
-.place { font-weight: 600; font-size: min(5cqw, 9cqh); }
-.cond { color: var(--theme-fgSoft); font-size: min(5cqw, 9cqh); }
-.extras {
-  color: var(--theme-fgSoft);
-  font-size: min(4cqw, 7cqh);
+.stat {
   display: flex;
-  gap: 2em;
-  justify-content: center;
+  align-items: center;
+  gap: 1.5cqw;
+  padding: 1.5cqmin 2cqmin;
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  min-width: 0;
 }
-.extras span { display: inline-flex; align-items: center; gap: 0.3em; }
-.daily {
+.stat .ph {
+  font-size: min(5cqw, 8cqh);
+  color: var(--theme-accent);
+  flex-shrink: 0;
+}
+.stat-text { display: grid; gap: 0.2cqh; min-width: 0; }
+.stat-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fgSoft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat-value {
+  font-size: min(3.4cqw, 5.2cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hourly block: chart canvas + per-hour icon/time row beneath it. The
+   block reserves a fixed slot (height tweaked by the size queries below);
+   inside, the canvas takes the remaining space after the tick row. */
+.hourly-block {
+  width: 100%;
+  height: 28cqh;
+  min-height: 130px;
+  margin-top: 1cqh;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15%, 1fr));
-  gap: 2cqmin;
-  margin-top: 2cqmin;
+  grid-template-rows: 1fr auto;
+  gap: 0.4cqh;
+  min-width: 0;
 }
-.daily-cell {
+.hourly-wrap {
+  position: relative;
+  min-height: 0;
+  width: 100%;
+}
+.hourly-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+.hourly-ticks {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 0.5cqw;
+  padding: 0 1cqw;
+}
+.hour-tick {
   display: grid;
   justify-items: center;
-  gap: 0.2em;
-  padding: 1.5cqmin;
-  border-radius: 6px;
-  background: var(--theme-surface);
+  gap: 0.2cqh;
+  min-width: 0;
 }
-.day { font-size: min(3.5cqw, 6cqh); color: var(--theme-fgSoft); text-transform: uppercase; letter-spacing: 0.06em; }
-.icon { font-size: min(8cqw, 14cqh); color: var(--theme-fg); }
-.hi-lo { display: flex; gap: 0.4em; font-size: min(4cqw, 7cqh); }
-.hi { color: var(--theme-fg); font-weight: 700; }
-.lo { color: var(--theme-fgSoft); }
+.hour-tick .ph {
+  font-size: min(3.6cqw, 5.6cqh);
+  color: var(--theme-accent);
+  line-height: 1;
+}
+.hour-tick-time {
+  font: 700 min(2cqw, 3.2cqh) ui-monospace, "SF Mono", monospace;
+  color: var(--theme-fgSoft);
+  letter-spacing: 0.04em;
+}
+
+/* Daily bars — gradient from cool to warm based on each day's min→max
+   relative to the week's range. */
+.daily {
+  display: grid;
+  gap: 0.8cqh;
+  margin-top: 1cqh;
+}
+.day {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  gap: 1.5cqw;
+  align-items: center;
+  font-size: min(3cqw, 4.8cqh);
+}
+.day .ph {
+  color: var(--theme-accent);
+  font-size: 1.2em;
+}
+.day-label {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--theme-fgSoft);
+  width: 4ch;
+}
+.day-track {
+  position: relative;
+  height: max(6px, 1cqh);
+  background: var(--theme-surface);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.day-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(to right, #4a90e2, #56c0c4, #97c64a, #e0b13a, #e07a3a);
+  border-radius: 999px;
+}
+.day-max {
+  font-weight: 700;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+}
+.day-min {
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+  font-variant-numeric: tabular-nums;
+  width: 3ch;
+  text-align: right;
+}
+
+/* Compact today/tomorrow cards. Hidden by default — appear only when the
+   full daily forecast bars get hidden by the height query below, so the
+   freed vertical space stays useful instead of going blank. */
+.day-row {
+  display: none;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5cqmin;
+  margin-top: 1cqh;
+}
+.day-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5cqw;
+  padding: 1.5cqmin 2cqmin;
+  background: var(--theme-surface);
+  border: max(2px, 0.25cqmin) solid var(--theme-divider);
+  border-radius: max(4px, 1.2cqmin);
+  min-width: 0;
+}
+.day-card .ph {
+  font-size: min(7cqw, 11cqh);
+  color: var(--theme-accent);
+  flex-shrink: 0;
+}
+.day-card-text { display: grid; gap: 0.2cqh; min-width: 0; }
+.day-card-label {
+  font-size: min(2cqw, 3cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fgSoft);
+  white-space: nowrap;
+}
+.day-card-temp {
+  display: flex;
+  align-items: baseline;
+  gap: 0.2em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.day-card-hi {
+  font-size: min(4cqw, 6.5cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+}
+.day-card-sep {
+  font-size: min(3cqw, 5cqh);
+  color: var(--theme-fgSoft);
+  font-weight: 400;
+}
+.day-card-lo {
+  font-size: min(3.4cqw, 5.5cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+
+/* Size adaptations.
+   The chart's role grows as the cell shrinks: at full height it shares
+   space with the daily forecast bars; at half-mode (no daily) it gets the
+   day-row beside it; at quarter (no day-row) it owns the bottom slot
+   entirely. Hero + stats sizes step down at each tier so the chart can
+   actually grow without overflowing. */
+
+/* Half-mode (≤700px tall): hide daily, swap in today/tomorrow card row,
+   bump chart slot height and tighten the hero/stats. */
+@container (max-height: 700px) {
+  .daily { display: none; }
+  .day-row { display: grid; }
+  .hourly-block { height: 36cqh; min-height: 140px; }
+  .hero-icon { font-size: min(18cqw, 26cqh); }
+  .hero-temp { font-size: min(14cqw, 22cqh); }
+  .condition { font-size: min(5cqw, 8.5cqh); }
+  .stat .ph { font-size: min(4cqw, 6.5cqh); }
+  .stat-value { font-size: min(3cqw, 4.6cqh); }
+}
+
+/* Quarter view (≤460px tall): hide day-row entirely so the chart owns
+   the freed space. Pull hero/stats down further. */
+@container (max-height: 460px) {
+  .day-row { display: none; }
+  .hourly-block { height: 42cqh; min-height: 140px; }
+  .hero-icon { font-size: min(14cqw, 22cqh); }
+  .hero-temp { font-size: min(11cqw, 18cqh); }
+  .condition { font-size: min(4.5cqw, 7cqh); }
+  .feels { font-size: min(2.4cqw, 3.6cqh); }
+}
+
+/* Very short cells: chart hides too, hero takes everything. */
+@container (max-height: 280px) {
+  .hourly-block { display: none; }
+}
+
+/* Width adaptations.
+   Quarter cells on the 1200×1600 panel are 600×800 — height alone (800px)
+   doesn't trigger the height queries, so we use width≤700 to also hide the
+   day-row in those cells. */
+@container (max-width: 700px) {
+  .day-row { display: none; }
+}
+@container (max-width: 440px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  /* Fewer hour ticks fit comfortably on narrow cells; thin them out. */
+  .hour-tick:nth-child(2n) { display: none; }
+}
+@container (max-width: 380px) {
+  .head .head-time { display: none; }
+  .hero-meta .feels { display: none; }
+  /* Drop sunrise/sunset stats — only when there's truly no room. */
+  .stats .stat:nth-child(n + 5) { display: none; }
+}
+@container (max-width: 280px) {
+  .head { display: none; }
+  .hourly-block { display: none; }
+  .stats { grid-template-columns: 1fr; }
+  .stats .stat:nth-child(n + 3) { display: none; }
+}
+
+/* Error fallback. */
+.wx--error {
+  grid-template-rows: auto auto;
+  place-items: center;
+  text-align: center;
+  gap: 1cqh;
+  padding: 4cqmin;
+}
+.wx--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn);
+}
+.wx--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
+}
