@@ -260,12 +260,13 @@ class ThemesPage extends LitElement {
       color: white;
     }
 
-    /* Inline mock dashboard themed via the live palette. Replaces the old
-       iframe-of-weather preview which didn't fit the pane reliably. Every
-       palette token has a job here so a regression in any single token
-       shows up immediately. */
+    /* Inline mock dashboard themed via the live palette. Mirrors the
+       flat-surface design of the real widgets (no card borders, tonal
+       surface-vs-bg step, color-mix pills) so a theme that looks right
+       here looks right on the panel. Every palette token has a job so
+       a regression in any single token shows up immediately. */
     .widget-preview {
-      padding: 16px;
+      padding: 12px;
       background: var(--id-bg);
     }
     .widget-preview.empty {
@@ -276,130 +277,139 @@ class ThemesPage extends LitElement {
     }
     .mock {
       display: grid;
-      grid-template-rows: auto auto auto auto;
-      gap: 14px;
-      padding: 18px;
+      gap: 10px;
+      padding: 12px;
       border-radius: 10px;
-      aspect-ratio: 3 / 2;
       background: var(--m-bg);
       color: var(--m-fg);
-      box-shadow: var(--id-shadow-sm);
     }
-    /* Header strip — same shape every real widget uses. */
+    /* Header strip — matches .head in widget-base.css. */
     .mock-head {
       display: flex;
       align-items: baseline;
       gap: 10px;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 2px solid var(--m-divider);
     }
     .mock-icon {
       color: var(--m-accent);
-      font-size: 18px;
+      font-size: 16px;
+      align-self: center;
     }
     .mock-title {
       font-weight: 700;
       letter-spacing: 0.08em;
-      font-size: 13px;
+      font-size: 12px;
+      text-transform: uppercase;
       color: var(--m-fg);
     }
     .mock-place {
       font-weight: 600;
       color: var(--m-accent);
-      font-size: 13px;
+      font-size: 12px;
     }
     .mock-time {
       margin-left: auto;
       font-variant-numeric: tabular-nums;
       color: var(--m-fgSoft);
-      font-size: 13px;
+      font-size: 12px;
     }
-    /* Hero row — big number + caption. */
+    /* Hero row — compact: big temp on the left, caption inline. */
     .mock-hero {
       display: flex;
-      align-items: center;
-      gap: 14px;
+      align-items: baseline;
+      gap: 10px;
     }
     .mock-hero-num {
-      font-size: 48px;
+      font-size: 34px;
       font-weight: 800;
       line-height: 1;
       letter-spacing: -0.03em;
       color: var(--m-fg);
       font-variant-numeric: tabular-nums;
     }
-    .mock-hero-meta { display: grid; gap: 2px; }
     .mock-hero-cap {
-      font-size: 16px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--m-fg);
     }
     .mock-hero-sub {
-      font-size: 11px;
+      margin-left: auto;
+      font-size: 10px;
       color: var(--m-fgSoft);
       font-weight: 700;
       letter-spacing: 0.06em;
+      align-self: center;
     }
-    /* Stat-card grid — borders + surface backgrounds. */
+    /* Stat-card grid — flat surfaces, no borders, matches .stat. */
     .mock-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 6px;
     }
     .mock-stat {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
+      gap: 6px;
+      padding: 6px 8px;
       background: var(--m-surface);
-      border: 2px solid var(--m-divider);
       border-radius: 6px;
+      min-width: 0;
     }
     .mock-stat-ico {
       color: var(--m-accent);
-      font-size: 18px;
+      font-size: 16px;
       flex-shrink: 0;
     }
+    .mock-stat-text { min-width: 0; }
     .mock-stat-label {
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
       letter-spacing: 0.08em;
       color: var(--m-fgSoft);
+      text-transform: uppercase;
     }
     .mock-stat-val {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--m-fg);
       font-variant-numeric: tabular-nums;
     }
-    /* Pill row — exercises ok / warn / danger and muted/accentSoft. */
+    /* Pill row — matches .pill in widget-base.css: translucent
+       backgrounds via color-mix, no borders. */
     .mock-pills {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-wrap: wrap;
     }
     .mock-pill {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
+      gap: 3px;
+      padding: 2px 9px;
       border-radius: 999px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.04em;
-      text-transform: uppercase;
       background: var(--m-surface2);
-      color: var(--m-fg);
-      border: 1px solid var(--m-divider);
+      color: var(--m-fgSoft);
     }
-    .mock-pill .ph { font-size: 12px; }
-    .mock-pill.ok { color: var(--m-ok); border-color: var(--m-ok); }
-    .mock-pill.warn { color: var(--m-warn); border-color: var(--m-warn); }
-    .mock-pill.danger { color: var(--m-danger); border-color: var(--m-danger); }
-    .mock-pill.muted {
-      background: var(--m-muted);
+    .mock-pill .ph { font-size: 11px; }
+    .mock-pill.accent {
+      background: var(--m-accent);
       color: var(--m-bg);
-      border-color: var(--m-muted);
+    }
+    .mock-pill.ok {
+      color: var(--m-ok);
+      background: color-mix(in oklab, var(--m-ok) 15%, transparent);
+    }
+    .mock-pill.warn {
+      color: var(--m-warn);
+      background: color-mix(in oklab, var(--m-warn) 15%, transparent);
+    }
+    .mock-pill.danger {
+      color: var(--m-danger);
+      background: color-mix(in oklab, var(--m-danger) 15%, transparent);
     }
 
     .swatch-grid {
@@ -711,38 +721,36 @@ class ThemesPage extends LitElement {
           })}
         >
           <div class="mock-head">
-            <span class="mock-icon"><i class="ph ph-list-checks"></i></span>
-            <span class="mock-title">DASHBOARD</span>
-            <span class="mock-place">Preview</span>
+            <span class="mock-icon"><i class="ph ph-cloud-sun"></i></span>
+            <span class="mock-title">Weather</span>
+            <span class="mock-place">Melbourne</span>
             <span class="mock-time">14:32</span>
           </div>
 
           <div class="mock-hero">
             <div class="mock-hero-num">42°</div>
-            <div class="mock-hero-meta">
-              <div class="mock-hero-cap">Mostly sunny</div>
-              <div class="mock-hero-sub">Feels like 39°</div>
-            </div>
+            <div class="mock-hero-cap">Mostly sunny</div>
+            <div class="mock-hero-sub">Feels 39°</div>
           </div>
 
           <div class="mock-stats">
             <div class="mock-stat">
               <span class="mock-stat-ico"><i class="ph ph-wind"></i></span>
-              <div>
-                <div class="mock-stat-label">WIND</div>
+              <div class="mock-stat-text">
+                <div class="mock-stat-label">Wind</div>
                 <div class="mock-stat-val">12 km/h</div>
               </div>
             </div>
             <div class="mock-stat">
               <span class="mock-stat-ico"><i class="ph ph-drop"></i></span>
-              <div>
-                <div class="mock-stat-label">HUMIDITY</div>
+              <div class="mock-stat-text">
+                <div class="mock-stat-label">Humidity</div>
                 <div class="mock-stat-val">58%</div>
               </div>
             </div>
             <div class="mock-stat">
               <span class="mock-stat-ico"><i class="ph ph-sun-horizon"></i></span>
-              <div>
+              <div class="mock-stat-text">
                 <div class="mock-stat-label">UV</div>
                 <div class="mock-stat-val">7</div>
               </div>
@@ -750,10 +758,11 @@ class ThemesPage extends LitElement {
           </div>
 
           <div class="mock-pills">
+            <span class="mock-pill accent">Now</span>
+            <span class="mock-pill">14 °C</span>
             <span class="mock-pill ok"><i class="ph ph-check-circle"></i> ok</span>
             <span class="mock-pill warn"><i class="ph ph-warning-circle"></i> warn</span>
             <span class="mock-pill danger"><i class="ph ph-x-circle"></i> danger</span>
-            <span class="mock-pill muted">muted</span>
           </div>
         </div>
       </div>
