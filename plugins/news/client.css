@@ -1,92 +1,90 @@
-:host { display: block; height: 100%; }
+/* Chrome (.widget, .head, .head-*, .state-empty, .state-error) comes from
+   /static/style/widget-base.css. News-specific card layout below — same
+   shape as HN: big rank | title + meta | age chip. */
 
 .news {
-  height: 100%;
-  width: 100%;
-  background: var(--theme-bg);
-  color: var(--theme-fg);
-  display: grid;
   grid-template-rows: auto 1fr;
   gap: 1.5cqh;
-  padding: 4cqmin;
-  box-sizing: border-box;
-  container-type: size;
-  font-family: inherit;
-  overflow: hidden;
 }
 
-.head {
-  display: flex;
-  align-items: baseline;
-  gap: 1.5cqw;
-  padding-bottom: 1cqh;
-  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+.cards {
+  display: grid;
+  gap: 1.5cqh;
+  align-content: start;
+  overflow: hidden;
+  min-height: 0;
 }
-.head-icon { font-size: min(4cqw, 6cqh); color: var(--theme-accent); align-self: center; }
-.head-title {
+
+.card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2cqw;
+  align-items: center;
+  padding: 2cqmin 2.5cqmin;
+  background: var(--theme-surface);
+  border-radius: max(8px, 1.6cqmin);
+  min-width: 0;
+}
+
+.rank {
+  font-size: min(7cqw, 11cqh);
+  font-weight: 800;
+  color: var(--theme-accent);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  min-width: 1.4em;
+  line-height: 1;
+}
+
+.card-body {
+  display: grid;
+  gap: 0.5cqh;
+  min-width: 0;
+}
+
+.card-title {
   font-size: min(3.2cqw, 5cqh);
   font-weight: 700;
-  letter-spacing: 0.08em;
-}
-.head-place {
-  font-size: min(3cqw, 4.6cqh);
-  font-weight: 600;
-  color: var(--theme-accent);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.head-time {
-  margin-left: auto;
-  font-size: min(3cqw, 4.6cqh);
-  color: var(--theme-fgSoft);
-  font-variant-numeric: tabular-nums;
-}
-
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  align-content: start;
-  gap: 1cqh;
-  overflow: hidden;
-}
-.row {
-  display: grid;
-  gap: 0.4cqh;
-  padding-bottom: 0.8cqh;
-  border-bottom: max(2px, 0.2cqmin) solid var(--theme-divider);
-}
-.row:last-child { border-bottom: 0; }
-
-.row-title {
-  font-size: min(3cqw, 4.6cqh);
-  font-weight: 600;
   color: var(--theme-fg);
-  line-height: 1.25;
+  line-height: 1.2;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
-.row-meta {
+
+.card-meta {
   font-size: min(2.2cqw, 3.4cqh);
   font-weight: 600;
   color: var(--theme-fgSoft);
-  display: flex;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Age chip on the right — same shape as HN's score chip so the two feed
+   widgets read as one design system. */
+.score-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.35em;
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  background: var(--theme-surface2, var(--theme-bg));
+  color: var(--theme-accent);
+  font-weight: 700;
+  font-size: min(2.6cqw, 4cqh);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-.row-meta .ph { font-size: 1.1em; }
+.score-pill .ph { font-size: 1em; }
 
-.news-empty, .news-error {
-  text-align: center;
-  padding: 4cqh 2cqmin;
-  color: var(--theme-fgSoft);
-  font-style: italic;
-  font-size: min(3cqw, 4.5cqh);
+@container (max-width: 360px) {
+  .head { display: none; }
+  .card { gap: 1.5cqw; padding: 1.6cqmin 2cqmin; }
+  .rank { font-size: min(8cqw, 12cqh); }
+  .score-pill { padding: 0.3em 0.7em; }
 }
-.news-error .ph { color: var(--theme-warn); }
-
-@container (max-width: 360px) { .head { display: none; } }

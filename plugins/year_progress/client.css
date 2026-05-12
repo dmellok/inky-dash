@@ -1,17 +1,10 @@
-:host { display: block; height: 100%; }
+/* Chrome (.widget, .head, .stat, .stat-label, .stat-value) comes from
+   /static/style/widget-base.css. Local rules here only add yp-specific
+   layout — hero day number, % bar, daily-tick row. */
 
 .yp {
-  height: 100%;
-  width: 100%;
-  background: var(--theme-bg);
-  color: var(--theme-fg);
-  display: grid;
-  grid-template-rows: auto auto auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto auto auto;
   gap: 1.5cqh;
-  padding: 4cqmin;
-  box-sizing: border-box;
-  container-type: size;
-  font-family: inherit;
 }
 
 /* Hero — big day number + "/ 365" beside it. */
@@ -53,7 +46,6 @@
   background: var(--theme-surface);
   border-radius: 999px;
   overflow: hidden;
-  border: max(1px, 0.2cqmin) solid var(--theme-divider);
 }
 .pct-fill {
   height: 100%;
@@ -88,48 +80,29 @@
   background: var(--theme-ok, var(--theme-accent));
 }
 
-/* Stat cards row. */
+/* Stats row — boxes provided by .stat in widget-base.css. yp uses a column
+   layout inside (label above value) instead of the default icon-row, so a
+   couple of overrides land here. */
 .stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5cqmin;
 }
-.stat {
-  background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
-  border-radius: max(4px, 1.2cqmin);
-  padding: 1.4cqmin 2cqmin;
+.yp .stat {
   display: grid;
   gap: 0.4cqh;
-  min-width: 0;
+  padding: 1.4cqmin 2cqmin;
 }
-.stat-label {
-  font-size: min(2cqw, 3cqh);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--theme-fgSoft);
-}
-.stat-value {
+.yp .stat-value {
   font-size: min(4.4cqw, 7cqh);
-  font-weight: 700;
-  color: var(--theme-fg);
-  font-variant-numeric: tabular-nums;
   display: flex;
   align-items: baseline;
   gap: 0.2em;
-  white-space: nowrap;
 }
 .stat-unit {
   font-size: 0.5em;
   font-weight: 600;
   letter-spacing: 0.06em;
-  color: var(--theme-fgSoft);
-}
-
-.footer {
-  align-self: end;
-  font-size: min(2.4cqw, 3.6cqh);
-  font-weight: 600;
   color: var(--theme-fgSoft);
 }
 
@@ -141,5 +114,5 @@
 @container (max-width: 360px) {
   .ticks { display: none; }
   .stats { display: none; }
-  .footer { display: none; }
+  .head-time { display: none; }
 }

@@ -90,6 +90,7 @@ export default function render(host, ctx) {
   const data = ctx.data || {};
   if (data.error || !data.points) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/aqi_trend/client.css">
       <link rel="stylesheet" href="/static/icons/phosphor.css">
       <div class="aqi aqi--error">
@@ -110,9 +111,17 @@ export default function render(host, ctx) {
     : 0;
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/aqi_trend/client.css">
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <div class="aqi band-${bandToken}">
+    <div class="widget aqi band-${bandToken}">
+      <div class="head">
+        <i class="ph ph-wind head-icon"></i>
+        <span class="head-title">AIR QUALITY</span>
+        ${ctx.cell?.options?.label
+          ? `<span class="head-place">${escapeHtml(ctx.cell.options.label)}</span>`
+          : ""}
+      </div>
       <div class="hero">
         <div class="hero-num">${aqiNow != null ? Math.round(aqiNow) : "—"}</div>
         <div class="hero-max">/ ${AQI_MAX}</div>

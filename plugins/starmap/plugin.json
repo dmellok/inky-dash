@@ -1,0 +1,43 @@
+{
+  "manifest_version": 1,
+  "id": "starmap",
+  "name": "Star map",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Tonight's sky from your latitude/longitude — bright stars + constellation outlines projected on a stereographic horizon disc. Refreshes each render so the sky rotates through the night.",
+  "icon": "ph-star",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "lat",
+      "type": "string",
+      "label": "Latitude",
+      "default": "-37.6494"
+    },
+    {
+      "name": "lon",
+      "type": "string",
+      "label": "Longitude",
+      "default": "145.1004"
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "label": "Label",
+      "default": "South Morang"
+    },
+    {
+      "name": "show_constellations",
+      "type": "boolean",
+      "label": "Show constellation lines",
+      "default": true
+    },
+    {
+      "name": "show_names",
+      "type": "boolean",
+      "label": "Label brightest stars",
+      "default": true
+    }
+  ],
+  "render": { "dither": "floyd-steinberg" }
+}

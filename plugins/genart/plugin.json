@@ -1,0 +1,34 @@
+{
+  "manifest_version": 1,
+  "id": "genart",
+  "name": "Generative art",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Daily deterministic geometric/minimalist art. Seeded by the date so every cell on a given day shows the same piece; flips to a new one at midnight.",
+  "icon": "ph-shapes",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "style",
+      "type": "select",
+      "label": "Style",
+      "default": "auto",
+      "choices": [
+        { "value": "auto", "label": "Auto (rotates daily)" },
+        { "value": "stella", "label": "Concentric (Frank Stella)" },
+        { "value": "bauhaus", "label": "Bauhaus grid" },
+        { "value": "kandinsky", "label": "Floating shapes" },
+        { "value": "mondrian", "label": "Mondrian blocks" },
+        { "value": "rays", "label": "Sun rays" },
+        { "value": "flowfield", "label": "Flow field" }
+      ]
+    },
+    {
+      "name": "seed",
+      "type": "string",
+      "label": "Seed (blank = daily)",
+      "default": ""
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "full_bleed": true }
+}

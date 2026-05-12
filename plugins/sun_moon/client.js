@@ -88,6 +88,7 @@ export default function render(host, ctx) {
   if (error) {
     host.innerHTML = `
       <link rel="stylesheet" href="/static/icons/phosphor.css">
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/sun_moon/client.css">
       <div class="sm sm--error">
         <i class="ph ph-warning-circle"></i>
@@ -141,6 +142,7 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/sun_moon/client.css">
     <div class="sm">
       <div class="head">

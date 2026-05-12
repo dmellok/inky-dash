@@ -1,5 +1,11 @@
 import { LitElement, html, css } from "lit";
 import "../components/index.js";
+import {
+  isPushing,
+  onPushStateChange,
+  pushSource,
+  runWithPushLock,
+} from "../lib/push-state.js";
 
 class SendPage extends LitElement {
   static properties = {
@@ -10,6 +16,7 @@ class SendPage extends LitElement {
     file: { state: true },
     fileObjectUrl: { state: true },
     dither: { state: true },
+    scale: { state: true },
     sending: { state: true },
     result: { state: true },
     error: { state: true },
@@ -18,6 +25,12 @@ class SendPage extends LitElement {
     previewError: { state: true },
     dragOver: { state: true },
     appPanel: { state: true },
+    history: { state: true },
+    historyError: { state: true },
+    lightboxSrc: { state: true },
+    pendingHistoryId: { state: true },
+    globalPushing: { state: true },
+    globalPushSource: { state: true },
   };
 
   static styles = css`
@@ -330,6 +343,234 @@ class SendPage extends LitElement {
       margin: 0 auto 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Recent pushes — thumbnail grid. */
+    .history-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+    .history-head .meta {
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .history-empty {
+      padding: 24px;
+      text-align: center;
+      color: var(--id-fg-soft, #5a4f44);
+      font-style: italic;
+      background: var(--id-surface, #ffffff);
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 10px;
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .history-card {
+      background: var(--id-surface, #ffffff);
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 10px;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    .history-thumb {
+      aspect-ratio: var(--panel-w, 1600) / var(--panel-h, 1200);
+      background: var(--id-surface2, #f5e8d8);
+      cursor: zoom-in;
+      display: grid;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .history-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      transition: transform 200ms ease;
+    }
+    .history-thumb:hover img { transform: scale(1.03); }
+
+    /* Portrait panels: stored PNGs are pre-rotated landscape (for the
+       panel's pixel grid); rotate them back so the user sees the dashboard
+       in its composed orientation. container-type:size lets us address
+       the image at the container's swapped dimensions so it fills exactly. */
+    .history-thumb.portrait {
+      container-type: size;
+    }
+    .history-thumb.portrait img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100cqh;
+      height: 100cqw;
+      object-fit: cover;
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+    .history-thumb.portrait:hover img {
+      transform: translate(-50%, -50%) rotate(90deg) scale(1.03);
+    }
+    .history-thumb-missing {
+      font-size: 12px;
+      color: var(--id-fg-soft, #5a4f44);
+      padding: 12px;
+      text-align: center;
+    }
+    .history-thumb-missing .ph {
+      display: block;
+      font-size: 32px;
+      margin-bottom: 4px;
+    }
+    .history-body {
+      padding: 10px 12px 4px;
+      display: grid;
+      gap: 4px;
+    }
+    .history-line1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+    }
+    .history-page {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-age {
+      font-size: 11px;
+      color: var(--id-fg-soft, #5a4f44);
+      flex-shrink: 0;
+    }
+    .history-error {
+      font-size: 11px;
+      color: var(--id-danger, #c97c70);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-actions {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px 12px;
+      align-items: center;
+    }
+    .history-actions .spacer { flex: 1; }
+    .history-btn {
+      background: transparent;
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 6px;
+      color: var(--id-fg-soft, #5a4f44);
+      cursor: pointer;
+      padding: 5px 10px;
+      font: inherit;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 28px;
+    }
+    .history-btn:hover {
+      color: var(--id-fg, #1a1612);
+      border-color: var(--id-accent, #d97757);
+      background: var(--id-surface2, #f5e8d8);
+    }
+    .history-btn.primary {
+      color: var(--id-accent, #d97757);
+      border-color: var(--id-accent, #d97757);
+    }
+    .history-btn.danger:hover {
+      color: var(--id-danger, #c97c70);
+      border-color: var(--id-danger, #c97c70);
+    }
+    .history-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Lightbox — backdrop blur + centered image. */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 16, 12, 0.55);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      animation: fade-in 120ms ease;
+    }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      cursor: zoom-out;
+    }
+    /* Portrait: rotate the stored landscape PNG back upright. Swap the
+       max constraints so the rotated bounding box fits the viewport. */
+    .lightbox img.portrait {
+      max-width: calc(100vh - 64px);
+      max-height: calc(100vw - 64px);
+      transform: rotate(90deg);
+    }
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      border: 0;
+      background: rgba(255, 255, 255, 0.9);
+      color: #1a1612;
+      cursor: pointer;
+      font-size: 22px;
+      display: grid;
+      place-items: center;
+    }
+
+    /* Cross-tab "push in flight" warning bar — appears whenever another
+       Send / Resend / Fire-now is mid-flight, in this tab or another. */
+    .push-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      background: var(--id-surface2, #f5e8d8);
+      border: 1px solid var(--id-accent, #d97757);
+      color: var(--id-fg, #1a1612);
+      font-size: 14px;
+    }
+    .push-banner .ph {
+      color: var(--id-accent, #d97757);
+      animation: spin 1.2s linear infinite;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .pill.sent { background: rgba(125, 166, 112, 0.18); color: var(--id-ok, #7da670); }
+    .pill.failed { background: rgba(201, 124, 112, 0.18); color: var(--id-danger, #c97c70); }
+    .pill.busy { background: rgba(217, 119, 87, 0.18); color: var(--id-accent, #d97757); }
+    .pill.not_found { background: rgba(90, 79, 68, 0.18); color: var(--id-fg-soft, #5a4f44); }
   `;
 
   constructor() {
@@ -341,6 +582,7 @@ class SendPage extends LitElement {
     this.file = null;
     this.fileObjectUrl = null;
     this.dither = "floyd-steinberg";
+    this.scale = "fit";
     this.sending = false;
     this.result = null;
     this.error = null;
@@ -349,6 +591,14 @@ class SendPage extends LitElement {
     this.previewError = null;
     this.dragOver = false;
     this.appPanel = null; // { width, height, orientation }
+    this.history = [];
+    this.historyError = null;
+    this.lightboxSrc = null;
+    this.pendingHistoryId = null;
+    this.globalPushing = isPushing();
+    this.globalPushSource = pushSource();
+    this._unsubPushState = null;
+    if (window.location.pathname.endsWith("/history")) this.source = "history";
   }
 
   // Panel display dims (post-rotation). Mirrors PanelSettings.render_dimensions
@@ -388,6 +638,12 @@ class SendPage extends LitElement {
     } catch (err) {
       this.error = err.message;
     }
+    this._loadHistory();
+    this._unsubPushState = onPushStateChange(() => {
+      this.globalPushing = isPushing();
+      this.globalPushSource = pushSource();
+    });
+    window.addEventListener("keydown", this._onKeydown);
     // ?image=<url>&name=<filename> — gallery thumbnails hand off here.
     // We fetch the URL, build a File, drop it into the file source.
     const params = new URLSearchParams(window.location.search);
@@ -413,7 +669,15 @@ class SendPage extends LitElement {
     super.disconnectedCallback();
     if (this.fileObjectUrl) URL.revokeObjectURL(this.fileObjectUrl);
     if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+    window.removeEventListener("keydown", this._onKeydown);
+    this._unsubPushState?.();
   }
+
+  _onKeydown = (event) => {
+    if (event.key === "Escape" && this.lightboxSrc) {
+      this.lightboxSrc = null;
+    }
+  };
 
   // ----- file handling ------------------------------------------------
 
@@ -462,8 +726,14 @@ class SendPage extends LitElement {
   _switchSource(id) {
     this.source = id;
     this._clearPreview();
+    // Keep the URL in step so /send/history bookmarks land on the right tab.
+    const target = id === "history" ? "/send/history" : "/send";
+    if (window.location.pathname !== target) {
+      window.history.replaceState({}, "", target);
+    }
+    if (id === "history") this._loadHistory();
     // Auto-render whenever the new source already has enough info to preview.
-    if (id === "page" && this.pageId) this._loadPreview();
+    else if (id === "page" && this.pageId) this._loadPreview();
     else if (id === "file" && this.file) this._loadPreview();
   }
 
@@ -490,7 +760,11 @@ class SendPage extends LitElement {
         res = await fetch("/api/send/preview/url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: this.url, dither: this.dither }),
+          body: JSON.stringify({
+            url: this.url,
+            dither: this.dither,
+            scale: this.scale,
+          }),
         });
       } else if (this.source === "webpage") {
         if (!this.url) throw new Error("Enter a webpage URL");
@@ -504,6 +778,7 @@ class SendPage extends LitElement {
         const form = new FormData();
         form.append("file", this.file);
         form.append("dither", this.dither);
+        form.append("scale", this.scale);
         res = await fetch("/api/send/preview/file", {
           method: "POST",
           body: form,
@@ -525,9 +800,23 @@ class SendPage extends LitElement {
   // ----- send ---------------------------------------------------------
 
   async _send() {
+    if (isPushing()) {
+      this.error = "Another push is already in flight. Wait for it to finish.";
+      return;
+    }
     this.sending = true;
     this.result = null;
     this.error = null;
+    try {
+      await runWithPushLock(`send:${this.source}`, async () => {
+        await this._sendRequest();
+      });
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  async _sendRequest() {
     try {
       let res;
       if (this.source === "page") {
@@ -540,7 +829,11 @@ class SendPage extends LitElement {
         res = await fetch("/api/send/url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: this.url, dither: this.dither }),
+          body: JSON.stringify({
+            url: this.url,
+            dither: this.dither,
+            scale: this.scale,
+          }),
         });
       } else if (this.source === "webpage") {
         res = await fetch("/api/send/webpage", {
@@ -553,6 +846,7 @@ class SendPage extends LitElement {
         const form = new FormData();
         form.append("file", this.file);
         form.append("dither", this.dither);
+        form.append("scale", this.scale);
         res = await fetch("/api/send/file", { method: "POST", body: form });
       }
       const body = await res.json();
@@ -560,11 +854,87 @@ class SendPage extends LitElement {
         this.error = body.error || `HTTP ${res.status}`;
       }
       this.result = body;
+      // A successful send produces a new history row — refresh the list.
+      if (res.ok) this._loadHistory();
+    } catch (err) {
+      this.error = err.message;
+    }
+  }
+
+  // ----- history ------------------------------------------------------
+
+  async _loadHistory() {
+    try {
+      const res = await fetch("/api/history?limit=24");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      this.history = await res.json();
+      this.historyError = null;
+    } catch (err) {
+      this.historyError = err.message;
+    }
+  }
+
+  _fmtAge(iso) {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    const mins = Math.round((Date.now() - d.getTime()) / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.round(hours / 24)}d ago`;
+  }
+
+  async _resendHistory(record) {
+    if (isPushing()) {
+      this.error = "Another push is already in flight. Wait for it to finish.";
+      return;
+    }
+    this.pendingHistoryId = record.id;
+    this.error = null;
+    try {
+      await runWithPushLock(`resend:${record.id}`, async () => {
+        const res = await fetch(`/api/history/${record.id}/resend`, {
+          method: "POST",
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          this.error = body.error || `HTTP ${res.status}`;
+        } else {
+          this.result = body;
+          this._loadHistory();
+        }
+      });
     } catch (err) {
       this.error = err.message;
     } finally {
-      this.sending = false;
+      this.pendingHistoryId = null;
     }
+  }
+
+  async _deleteHistory(record) {
+    if (!confirm(`Delete this push from history?`)) return;
+    this.pendingHistoryId = record.id;
+    try {
+      const res = await fetch(`/api/history/${record.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok && res.status !== 404) {
+        const body = await res.json().catch(() => ({}));
+        this.error = body.error || `HTTP ${res.status}`;
+      } else {
+        this.history = this.history.filter((h) => h.id !== record.id);
+      }
+    } catch (err) {
+      this.error = err.message;
+    } finally {
+      this.pendingHistoryId = null;
+    }
+  }
+
+  _openLightbox(src) {
+    this.lightboxSrc = src;
   }
 
   // ----- render -------------------------------------------------------
@@ -699,12 +1069,21 @@ class SendPage extends LitElement {
         <h1>Send to panel</h1>
         <p class="lede">Push any image, dashboard, or webpage to the panel right now.</p>
 
+        ${this.globalPushing
+          ? html`<div class="push-banner">
+              <i class="ph ph-spinner-gap"></i>
+              Push in flight${this.globalPushSource ? html` · ${this.globalPushSource}` : ""}.
+              Sends are paused until it finishes.
+            </div>`
+          : null}
+
         <div class="source-tabs" role="tablist">
           ${[
             { id: "file", label: "File", icon: "ph-file-arrow-up" },
             { id: "page", label: "Saved dashboard", icon: "ph-cube" },
             { id: "url", label: "Image URL", icon: "ph-link" },
             { id: "webpage", label: "Webpage", icon: "ph-globe" },
+            { id: "history", label: "History", icon: "ph-clock-counter-clockwise" },
           ].map(
             (tab) => html`
               <button
@@ -718,37 +1097,173 @@ class SendPage extends LitElement {
           )}
         </div>
 
-        <div class="layout">
-          <div class="form">
-            ${this._renderSourceForm()}
-            <div class="form-row">
-              <label class="field">Dither</label>
-              <select @change=${(e) => { this.dither = e.target.value; this._clearPreview(); }}>
-                <option value="floyd-steinberg" ?selected=${this.dither === "floyd-steinberg"}>Floyd–Steinberg</option>
-                <option value="none" ?selected=${this.dither === "none"}>None (nearest)</option>
-              </select>
+        ${this.source === "history"
+          ? this._renderHistorySection()
+          : this._renderComposeBody()}
+      </div>
+      ${this.lightboxSrc
+        ? html`
+            <div class="lightbox" @click=${() => (this.lightboxSrc = null)}>
+              <button
+                class="lightbox-close"
+                aria-label="Close"
+                @click=${(e) => {
+                  e.stopPropagation();
+                  this.lightboxSrc = null;
+                }}
+              >
+                <i class="ph ph-x"></i>
+              </button>
+              <img
+                class=${this.appPanel?.orientation === "portrait" ? "portrait" : ""}
+                src=${this.lightboxSrc}
+                alt=""
+                @click=${(e) => e.stopPropagation()}
+              />
             </div>
-            <div class="actions">
-              <id-button variant="primary" ?disabled=${this.sending} @click=${() => this._send()}>
-                <i class="ph ph-paper-plane-tilt"></i>
-                ${this.sending ? "Sending…" : "Send to panel"}
-              </id-button>
-            </div>
-            ${this.error
-              ? html`<div class="result error">${this.error}</div>`
-              : this.result
-                ? html`<div class="result success">
-                    <div>
-                      <strong>${this.result.status}</strong>
-                      ${this.result.duration_s ? html` · ${this.result.duration_s}s` : null}
-                    </div>
-                    ${this.result.url
-                      ? html`<a href=${this.result.url} target="_blank">${this.result.url}</a>`
-                      : null}
-                  </div>`
-                : null}
+          `
+        : null}
+    `;
+  }
+
+  _renderComposeBody() {
+    return html`
+      <div class="layout">
+        <div class="form">
+          ${this._renderSourceForm()}
+          <div class="form-row">
+            <label class="field">Dither</label>
+            <select @change=${(e) => { this.dither = e.target.value; this._clearPreview(); }}>
+              <option value="floyd-steinberg" ?selected=${this.dither === "floyd-steinberg"}>Floyd–Steinberg</option>
+              <option value="none" ?selected=${this.dither === "none"}>None (nearest)</option>
+            </select>
           </div>
-          ${this._renderPreview()}
+          ${this.source === "file" || this.source === "url"
+            ? html`
+                <div class="form-row">
+                  <label class="field">Fit</label>
+                  <select @change=${(e) => {
+                    this.scale = e.target.value;
+                    this._clearPreview();
+                  }}>
+                    <option value="fit" ?selected=${this.scale === "fit"}>Fit (letterbox)</option>
+                    <option value="fill" ?selected=${this.scale === "fill"}>Fill (crop to cover)</option>
+                    <option value="stretch" ?selected=${this.scale === "stretch"}>Stretch (distort)</option>
+                    <option value="center" ?selected=${this.scale === "center"}>Center (no scaling)</option>
+                    <option value="blurred" ?selected=${this.scale === "blurred"}>Fit with blurred background</option>
+                  </select>
+                </div>
+              `
+            : null}
+          <div class="actions">
+            <id-button
+              variant="primary"
+              ?disabled=${this.sending || this.globalPushing}
+              @click=${() => this._send()}
+            >
+              <i class="ph ph-paper-plane-tilt"></i>
+              ${this.sending ? "Sending…" : "Send to panel"}
+            </id-button>
+          </div>
+          ${this.error
+            ? html`<div class="result error">${this.error}</div>`
+            : this.result
+              ? html`<div class="result success">
+                  <div>
+                    <strong>${this.result.status}</strong>
+                    ${this.result.duration_s ? html` · ${this.result.duration_s}s` : null}
+                  </div>
+                  ${this.result.url
+                    ? html`<a href=${this.result.url} target="_blank">${this.result.url}</a>`
+                    : null}
+                </div>`
+              : null}
+        </div>
+        ${this._renderPreview()}
+      </div>
+    `;
+  }
+
+  _renderHistorySection() {
+    const dims = this._panelDisplayDims();
+    const isPortrait = this.appPanel?.orientation === "portrait";
+    return html`
+      <div>
+        <div class="history-head">
+          <span class="meta">
+            ${this.historyError
+              ? html`Failed to load history: ${this.historyError}`
+              : html`${this.history.length} record${this.history.length === 1 ? "" : "s"}`}
+          </span>
+          <id-button @click=${() => this._loadHistory()}>
+            <i class="ph ph-arrows-clockwise"></i> Refresh
+          </id-button>
+        </div>
+        ${this.history.length === 0
+          ? html`<div class="history-empty">
+              No push attempts yet. Send something to the panel to start a history.
+            </div>`
+          : html`
+              <div
+                class="history-grid"
+                style="--panel-w: ${dims.w}; --panel-h: ${dims.h};"
+              >
+                ${this.history.map((h) => this._renderHistoryCard(h, isPortrait))}
+              </div>
+            `}
+      </div>
+    `;
+  }
+
+  _renderHistoryCard(h, isPortrait) {
+    const thumbUrl = h.digest ? `/renders/${h.digest}.png` : null;
+    const isPending = this.pendingHistoryId === h.id;
+    const canResend = !!h.digest && h.status !== "not_found";
+    return html`
+      <div class="history-card">
+        <div
+          class="history-thumb ${isPortrait ? "portrait" : ""}"
+          @click=${() => thumbUrl && this._openLightbox(thumbUrl)}
+        >
+          ${thumbUrl
+            ? html`<img src=${thumbUrl} alt="push ${h.id}" loading="lazy" />`
+            : html`<div class="history-thumb-missing">
+                <i class="ph ph-image-broken"></i>
+                no render
+              </div>`}
+        </div>
+        <div class="history-body">
+          <div class="history-line1">
+            <span class="history-page" title=${h.page_id}>${h.page_id}</span>
+            <span class="history-age">${this._fmtAge(h.ts)}</span>
+          </div>
+          <div class="history-line1">
+            <span class="pill ${h.status}">${h.status}</span>
+            ${h.duration_s
+              ? html`<span class="history-age">${h.duration_s}s</span>`
+              : null}
+          </div>
+          ${h.error ? html`<div class="history-error" title=${h.error}>${h.error}</div>` : null}
+        </div>
+        <div class="history-actions">
+          <button
+            class="history-btn primary"
+            ?disabled=${!canResend || isPending || this.globalPushing}
+            @click=${() => this._resendHistory(h)}
+            title=${canResend ? "Re-publish this exact render" : "No render to resend"}
+          >
+            <i class="ph ph-paper-plane-tilt"></i>
+            ${isPending ? "…" : "Resend"}
+          </button>
+          <span class="spacer"></span>
+          <button
+            class="history-btn danger"
+            ?disabled=${isPending}
+            @click=${() => this._deleteHistory(h)}
+            title="Delete from history"
+          >
+            <i class="ph ph-trash"></i>
+          </button>
         </div>
       </div>
     `;

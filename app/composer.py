@@ -138,7 +138,14 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
     page_font_family = page_font.name if page_font else "system-ui"
 
     gap = int(page_dict.get("gap", 0) or 0)
-    half_gap = gap // 2
+    # ``gap`` is the visible matting strip the user sees. We want it to look
+    # identical whether it's between two cells or between a cell and the
+    # panel edge. To achieve that:
+    #   * Each cell side that touches the panel edge insets by gap/2.
+    #   * Each cell side that abuts another cell insets by gap/4, so the two
+    #     facing insets sum to gap/2 — the same width as the outer matting.
+    outer_pad = gap // 2
+    inner_pad = gap // 4
     corner_radius = int(page_dict.get("corner_radius", 0) or 0)
     panel_w = int(page_dict["panel"]["w"])
     panel_h = int(page_dict["panel"]["h"])
@@ -160,13 +167,19 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
         full_bleed = bool(
             plugin and plugin.manifest.get("render", {}).get("full_bleed")
         )
+        # Pick the inset for each side based on whether that side is on the
+        # panel boundary or facing another cell.
+        left_pad = outer_pad if cell["x"] == 0 else inner_pad
+        top_pad = outer_pad if cell["y"] == 0 else inner_pad
+        right_pad = outer_pad if cell["x"] + cell["w"] == panel_w else inner_pad
+        bottom_pad = outer_pad if cell["y"] + cell["h"] == panel_h else inner_pad
         cells_out.append(
             {
                 **cell,
-                "x": cell["x"] + half_gap,
-                "y": cell["y"] + half_gap,
-                "w": max(1, cell["w"] - half_gap * 2),
-                "h": max(1, cell["h"] - half_gap * 2),
+                "x": cell["x"] + left_pad,
+                "y": cell["y"] + top_pad,
+                "w": max(1, cell["w"] - left_pad - right_pad),
+                "h": max(1, cell["h"] - top_pad - bottom_pad),
                 "options": resolved_options,
                 "data": _fetch_plugin_data(
                     cell["plugin"], resolved_options, panel_w, panel_h, preview

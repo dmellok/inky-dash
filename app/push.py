@@ -82,6 +82,7 @@ class PushManager:
         topic: str = "inky/update",
         renders_cap: int = 500,
         rotate_quarters: int = 0,
+        debounce_seconds: float = 5.0,
     ) -> None:
         self._bridge = bridge
         self._history = history
@@ -93,6 +94,50 @@ class PushManager:
         self._renders_cap = renders_cap
         self._rotate_quarters = rotate_quarters % 4
         self._lock = threading.Lock()
+        # Debounce: reject a *successful* push that's identical to one we
+        # just published, within this short window. Guards against runaway
+        # clients (cross-tab double-fires, sticky keys, replay storms).
+        # Keyed by a request signature; cleared when a fresh push lands.
+        self._debounce_lock = threading.Lock()
+        self._recent_pushes: dict[str, float] = {}
+        self._debounce_seconds: float = debounce_seconds
+
+    # -- Debounce helpers --------------------------------------------------
+    #
+    # The signature is whatever fully identifies "the same push": source
+    # type, target, and options. Two clicks that produce the same signature
+    # within ``_debounce_seconds`` collapse to one published frame.
+
+    @staticmethod
+    def _signature(kind: str, target: str, opts: PushOptions) -> str:
+        payload = json.dumps(asdict(opts), sort_keys=True)
+        return f"{kind}:{target}:{payload}"
+
+    def _allow_push(self, signature: str) -> bool:
+        if self._debounce_seconds <= 0:
+            return True
+        with self._debounce_lock:
+            now = time.monotonic()
+            # Cheap GC: drop any entries that have aged out by 2× the window.
+            stale_cutoff = now - self._debounce_seconds * 2
+            stale = [k for k, ts in self._recent_pushes.items() if ts < stale_cutoff]
+            for k in stale:
+                del self._recent_pushes[k]
+            last = self._recent_pushes.get(signature)
+            return last is None or (now - last) >= self._debounce_seconds
+
+    def _record_push(self, signature: str) -> None:
+        with self._debounce_lock:
+            self._recent_pushes[signature] = time.monotonic()
+
+    def _busy_duplicate(self, opts: PushOptions) -> PushResult:
+        return PushResult(
+            status="busy",
+            error=(
+                f"identical push fired in the last {self._debounce_seconds:.0f}s — ignored"
+            ),
+            options=asdict(opts),
+        )
 
     def push(
         self,
@@ -105,6 +150,10 @@ class PushManager:
         if dither not in VALID_DITHERS:
             raise ValueError(f"dither must be one of {sorted(VALID_DITHERS)}, got {dither!r}")
 
+        signature = self._signature("page", page_id, opts)
+        if not self._allow_push(signature):
+            return self._busy_duplicate(opts)
+
         if not self._lock.acquire(blocking=False):
             return PushResult(
                 status="busy",
@@ -112,7 +161,10 @@ class PushManager:
                 options=asdict(opts),
             )
         try:
-            return self._push_locked(page_id, opts, dither)
+            result = self._push_locked(page_id, opts, dither)
+            if result.status == "sent":
+                self._record_push(signature)
+            return result
         finally:
             self._lock.release()
 
@@ -286,6 +338,14 @@ class PushManager:
         if dither not in VALID_DITHERS:
             raise ValueError(f"dither must be one of {sorted(VALID_DITHERS)}, got {dither!r}")
 
+        # Hash the bytes so two uploads of the same image collapse, but two
+        # different uploads from the same source don't.
+        signature = self._signature(
+            "image", f"{source_label}#{hashlib.sha256(image_bytes).hexdigest()[:16]}", opts
+        )
+        if not self._allow_push(signature):
+            return self._busy_duplicate(opts)
+
         if not self._lock.acquire(blocking=False):
             return PushResult(
                 status="busy",
@@ -293,7 +353,10 @@ class PushManager:
                 options=asdict(opts),
             )
         try:
-            return self._push_bytes_locked(image_bytes, source_label, opts, dither)
+            result = self._push_bytes_locked(image_bytes, source_label, opts, dither)
+            if result.status == "sent":
+                self._record_push(signature)
+            return result
         finally:
             self._lock.release()
 
@@ -310,6 +373,10 @@ class PushManager:
         opts = options or PushOptions()
         if dither not in VALID_DITHERS:
             raise ValueError(f"dither must be one of {sorted(VALID_DITHERS)}, got {dither!r}")
+
+        signature = self._signature("webpage", url, opts)
+        if not self._allow_push(signature):
+            return self._busy_duplicate(opts)
 
         if not self._lock.acquire(blocking=False):
             return PushResult(
@@ -340,9 +407,134 @@ class PushManager:
                     history_id=history_id,
                     options=asdict(opts),
                 )
-            return self._push_bytes_locked(raw, f"webpage:{url[:80]}", opts, dither)
+            result = self._push_bytes_locked(raw, f"webpage:{url[:80]}", opts, dither)
+            if result.status == "sent":
+                self._record_push(signature)
+            return result
         finally:
             self._lock.release()
+
+    def republish(self, history_id: int) -> PushResult:
+        """Re-publish a previously-rendered artifact straight from the renders
+        dir — no re-render, no re-quantize. Looks up the existing history row
+        for its digest + options, then publishes the stored PNG. Records a new
+        history row tagged with the original ``page_id`` so the Send-page list
+        keeps grouping resends with their source."""
+        record = self._history.get(history_id)
+        if record is None:
+            return PushResult(status="not_found", error="history record not found")
+        if not record.digest:
+            return PushResult(
+                status="failed",
+                error="record has no digest — original push never produced a render",
+                history_id=history_id,
+            )
+        try:
+            opts = PushOptions(
+                rotate=int(record.options.get("rotate", 0)),
+                scale=str(record.options.get("scale", "fit")),
+                bg=str(record.options.get("bg", "white")),
+                saturation=float(record.options.get("saturation", 0.5)),
+            )
+        except (TypeError, ValueError) as err:
+            return PushResult(
+                status="failed",
+                error=f"options: {err}",
+                history_id=history_id,
+            )
+
+        artifact = self._renders_dir / f"{record.digest}.png"
+        if not artifact.exists():
+            return PushResult(
+                status="failed",
+                digest=record.digest,
+                error="render artifact has been evicted from disk",
+                options=asdict(opts),
+            )
+
+        signature = self._signature("republish", record.digest, opts)
+        if not self._allow_push(signature):
+            return self._busy_duplicate(opts)
+
+        if not self._lock.acquire(blocking=False):
+            return PushResult(
+                status="busy",
+                error="another push is already in flight",
+                options=asdict(opts),
+            )
+        try:
+            started = time.monotonic()
+            artifact.touch()  # bump LRU mtime
+            public_url = f"{self._base_url}/renders/{record.digest}.png"
+            payload = {
+                "url": public_url,
+                "rotate": opts.rotate,
+                "scale": opts.scale,
+                "bg": opts.bg,
+                "saturation": opts.saturation,
+            }
+            try:
+                self._bridge.publish(
+                    self._topic, json.dumps(payload).encode("utf-8"), qos=1, retain=False
+                )
+            except Exception as err:  # noqa: BLE001
+                duration = time.monotonic() - started
+                new_id = self._history.record(
+                    page_id=record.page_id,
+                    digest=record.digest,
+                    status="failed",
+                    duration_s=duration,
+                    error=f"mqtt: {err}",
+                    options=asdict(opts),
+                    payload=payload,
+                    topic=self._topic,
+                )
+                return PushResult(
+                    status="failed",
+                    digest=record.digest,
+                    url=public_url,
+                    error=f"mqtt: {err}",
+                    duration_s=duration,
+                    history_id=new_id,
+                    options=asdict(opts),
+                )
+            duration = time.monotonic() - started
+            new_id = self._history.record(
+                page_id=record.page_id,
+                digest=record.digest,
+                status="sent",
+                duration_s=duration,
+                error=None,
+                options=asdict(opts),
+                payload=payload,
+                topic=self._topic,
+            )
+            self._record_push(signature)
+            return PushResult(
+                status="sent",
+                digest=record.digest,
+                url=public_url,
+                duration_s=duration,
+                history_id=new_id,
+                options=asdict(opts),
+            )
+        finally:
+            self._lock.release()
+
+    def delete_history(self, history_id: int) -> bool:
+        """Delete a history row and, if no other rows still reference its
+        render, remove the PNG too. Returns True if the row was deleted."""
+        record = self._history.get(history_id)
+        if record is None:
+            return False
+        ok = self._history.delete(history_id)
+        if ok and record.digest and not self._history.digest_in_use(record.digest):
+            artifact = self._renders_dir / f"{record.digest}.png"
+            try:
+                artifact.unlink(missing_ok=True)
+            except OSError as err:
+                logger.warning("Could not delete render %s: %s", artifact, err)
+        return ok
 
     def _push_bytes_locked(
         self,

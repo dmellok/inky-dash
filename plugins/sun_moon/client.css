@@ -48,7 +48,6 @@
 
 .sun-card {
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   padding: 2cqmin;
   display: flex;
@@ -66,7 +65,6 @@
 
 .moon-card {
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   padding: 2cqmin;
   display: grid;
@@ -102,7 +100,6 @@
 }
 .stat {
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   padding: 1.4cqmin 1.6cqmin;
   display: flex;

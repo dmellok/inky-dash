@@ -1,17 +1,10 @@
-:host { display: block; height: 100%; }
+/* Chrome (.widget, .head) comes from /static/style/widget-base.css. Local
+   rules below cover the AQI hero number, band colours, range marker, chart,
+   and pollutant tiles. */
 
 .aqi {
-  height: 100%;
-  width: 100%;
-  background: var(--theme-bg);
-  color: var(--theme-fg);
-  display: grid;
-  grid-template-rows: auto auto auto 1fr auto;
+  grid-template-rows: auto auto auto auto 1fr auto;
   gap: 1.5cqh;
-  padding: 4cqmin;
-  box-sizing: border-box;
-  container-type: size;
-  font-family: inherit;
 }
 
 /* Hero — big AQI number with "/ 500" max alongside. */
@@ -113,7 +106,6 @@
 }
 .tile {
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   padding: 1.4cqmin 1.6cqmin;
   display: grid;

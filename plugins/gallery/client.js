@@ -15,6 +15,7 @@ export default function render(host, ctx) {
 
   if (!url) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/gallery/client.css">
       <div class="gallery empty">
         <div class="message">${error || "No image."}</div>
@@ -37,6 +38,7 @@ export default function render(host, ctx) {
       : `<img class="single" src="${escaped}" alt="" />`;
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/gallery/client.css">
     <div class="gallery scale-${scale}">
       ${body}

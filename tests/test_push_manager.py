@@ -235,6 +235,10 @@ def test_lru_eviction_drops_oldest(tmp_path: Path, monkeypatch: pytest.MonkeyPat
         renders_dir=renders,
         base_url="http://test:5555",
         renders_cap=3,
+        # Disable the identical-push debounce so this LRU test can fire
+        # five distinct synthetic renders back-to-back. The debounce is
+        # exercised by its own dedicated test.
+        debounce_seconds=0,
     )
 
     for _ in range(5):
@@ -243,3 +247,83 @@ def test_lru_eviction_drops_oldest(tmp_path: Path, monkeypatch: pytest.MonkeyPat
 
     surviving = sorted(renders.glob("*.png"))
     assert len(surviving) == 3
+
+
+def test_identical_push_within_debounce_returns_busy(
+    tmp_path: Path, fake_render: None
+) -> None:
+    """Five rapid pushes of the same page collapse to one — the rest get
+    ``status="busy"`` with a debounce error. Guards against runaway clients
+    (e.g. a cross-tab Send race producing 5 pushes in 41 s)."""
+    bridge = FakeBridge()
+    history = HistoryStore(tmp_path / "history.db")
+    page_store = PageStore(tmp_path / "pages.json")
+    _seed_demo(page_store)
+    manager = PushManager(
+        bridge=bridge,
+        history=history,
+        page_store=page_store,
+        renders_dir=tmp_path / "renders",
+        base_url="http://test:5555",
+        debounce_seconds=5,
+    )
+    results = [manager.push("_demo") for _ in range(5)]
+    statuses = [r.status for r in results]
+    assert statuses.count("sent") == 1
+    assert statuses.count("busy") == 4
+    # Only one MQTT publish ever happened.
+    assert len(bridge.published) == 1
+
+
+def test_debounce_lets_different_pages_through(
+    tmp_path: Path, fake_render: None
+) -> None:
+    """Debounce keys off page_id + options, so pushing page A then page B
+    in quick succession should not block page B."""
+    bridge = FakeBridge()
+    history = HistoryStore(tmp_path / "history.db")
+    page_store = PageStore(tmp_path / "pages.json")
+    _seed_demo(page_store)
+    page_store.upsert(
+        Page(
+            id="_other",
+            name="Other",
+            panel=Panel(w=400, h=300),
+            cells=[Cell(id="c", x=0, y=0, w=400, h=300, plugin="clock")],
+        )
+    )
+    manager = PushManager(
+        bridge=bridge,
+        history=history,
+        page_store=page_store,
+        renders_dir=tmp_path / "renders",
+        base_url="http://test:5555",
+        debounce_seconds=5,
+    )
+    a = manager.push("_demo")
+    b = manager.push("_other")
+    assert a.status == "sent"
+    assert b.status == "sent"
+
+
+def test_debounce_window_expires(tmp_path: Path, fake_render: None) -> None:
+    """After the window elapses, the same push goes through again."""
+    bridge = FakeBridge()
+    history = HistoryStore(tmp_path / "history.db")
+    page_store = PageStore(tmp_path / "pages.json")
+    _seed_demo(page_store)
+    manager = PushManager(
+        bridge=bridge,
+        history=history,
+        page_store=page_store,
+        renders_dir=tmp_path / "renders",
+        base_url="http://test:5555",
+        debounce_seconds=0.05,
+    )
+    first = manager.push("_demo")
+    blocked = manager.push("_demo")
+    time.sleep(0.08)
+    third = manager.push("_demo")
+    assert first.status == "sent"
+    assert blocked.status == "busy"
+    assert third.status == "sent"

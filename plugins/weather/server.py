@@ -35,8 +35,8 @@ def _hour_label(iso: str) -> str:
 def fetch(
     options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]
 ) -> dict[str, Any]:
-    lat = float(options.get("latitude", 51.5074))
-    lon = float(options.get("longitude", -0.1278))
+    lat = float(options.get("latitude", -37.6494))
+    lon = float(options.get("longitude", 145.1004))
     units = options.get("units", "metric")
 
     data_dir = Path(ctx["data_dir"])

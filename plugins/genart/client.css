@@ -1,0 +1,12 @@
+:host { display: block; height: 100%; }
+
+.genart {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  display: block;
+  overflow: hidden;
+}
+.genart svg {
+  display: block;
+}

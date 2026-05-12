@@ -146,6 +146,7 @@ export default function render(host, ctx) {
   if (data.error) {
     host.innerHTML = `
       <link rel="stylesheet" href="/static/icons/phosphor.css">
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/weather/client.css">
       <div class="wx wx--error">
         <i class="ph ph-warning-circle"></i>
@@ -301,6 +302,7 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/weather/client.css">
     <div class="wx">
       <div class="head">

@@ -9,7 +9,6 @@ class IndexPage extends LitElement {
     history: { state: true },
     listener: { state: true },
     listenerLog: { state: true },
-    expandedPushes: { state: true },
     error: { state: true },
   };
 
@@ -169,9 +168,7 @@ class IndexPage extends LitElement {
     .pill.not_found,
     .pill.unknown { background: rgba(90, 79, 68, 0.15); color: var(--id-fg-soft, #5a4f44); }
 
-    /* Expandable history rows: show the full inky/update payload + topic
-       so the user can debug "why isn't the panel updating?" by seeing
-       exactly what the broker received. */
+    /* Listener-log rows: pill + raw JSON payload stacked. */
     .history-row {
       display: block !important;
       padding: 0 !important;
@@ -182,53 +179,6 @@ class IndexPage extends LitElement {
       align-items: center;
       gap: 8px;
       padding: 8px 0;
-    }
-    .meta-actions {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .expand-btn {
-      background: transparent;
-      border: 1px solid var(--id-divider, #c8b89b);
-      border-radius: 4px;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--id-fg-soft, #5a4f44);
-      padding: 0;
-    }
-    .expand-btn:hover {
-      color: var(--id-fg, #1a1612);
-      background: var(--id-surface2, #f5e8d8);
-    }
-    .payload-card {
-      background: var(--id-surface2, #f5e8d8);
-      border: 1px solid var(--id-divider, #c8b89b);
-      border-radius: 6px;
-      padding: 8px 10px;
-      margin: 0 0 8px;
-    }
-    .payload-meta {
-      font-size: 12px;
-      color: var(--id-fg-soft, #5a4f44);
-      margin-bottom: 4px;
-    }
-    .payload-meta code {
-      background: var(--id-bg, #ffffff);
-      color: var(--id-fg, #1a1612);
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
-      font-size: 12px;
-    }
-    .payload-error {
-      font-size: 12px;
-      color: var(--id-danger, #c97c70);
-      margin-bottom: 6px;
     }
     .payload-json {
       margin: 0;
@@ -257,7 +207,6 @@ class IndexPage extends LitElement {
     this.history = [];
     this.listener = null;
     this.listenerLog = [];
-    this.expandedPushes = {};
     this.error = null;
   }
 
@@ -387,78 +336,6 @@ class IndexPage extends LitElement {
     `;
   }
 
-  _toggleExpanded(id) {
-    this.expandedPushes = {
-      ...this.expandedPushes,
-      [id]: !this.expandedPushes[id],
-    };
-  }
-
-  _renderHistory() {
-    if (this.history.length === 0) {
-      return html`<p class="empty-msg">No push attempts yet.</p>`;
-    }
-    return html`
-      <ul class="list">
-        ${this.history.map((h) => {
-          const expanded = !!this.expandedPushes[h.id];
-          const hasPayload = h.payload && Object.keys(h.payload).length > 0;
-          return html`
-            <li class="history-row">
-              <div class="history-line">
-                <span>
-                  <span class="pill ${h.status}">${h.status}</span>
-                  <span class="meta"> · ${h.page_id}</span>
-                  ${h.duration_s
-                    ? html`<span class="meta"> · ${h.duration_s}s</span>`
-                    : null}
-                </span>
-                <span class="meta-actions">
-                  <span class="meta">${this._fmtAge(h.ts)}</span>
-                  ${hasPayload || h.error
-                    ? html`<button
-                        class="expand-btn"
-                        @click=${() => this._toggleExpanded(h.id)}
-                        aria-expanded=${expanded ? "true" : "false"}
-                      >
-                        <i class="ph ph-caret-${expanded ? "up" : "down"}"></i>
-                      </button>`
-                    : null}
-                </span>
-              </div>
-              ${expanded
-                ? html`
-                    <div class="payload-card">
-                      ${h.error
-                        ? html`<div class="payload-error">
-                            <strong>error</strong>: ${h.error}
-                          </div>`
-                        : null}
-                      ${hasPayload
-                        ? html`
-                            <div class="payload-meta">
-                              published to
-                              <code>${h.topic || "(no topic)"}</code>
-                            </div>
-                            <pre class="payload-json">${JSON.stringify(
-                              h.payload,
-                              null,
-                              2
-                            )}</pre>
-                          `
-                        : html`<div class="payload-meta">
-                            no payload — push didn't reach the publish step
-                          </div>`}
-                    </div>
-                  `
-                : null}
-            </li>
-          `;
-        })}
-      </ul>
-    `;
-  }
-
   _renderListenerLog() {
     if (this.listenerLog.length === 0) {
       return html`
@@ -543,13 +420,6 @@ class IndexPage extends LitElement {
               <a href="/schedules">manage →</a>
             </div>
             ${this._renderSchedulesList()}
-          </div>
-          <div class="panel" style="grid-column: 1 / -1;">
-            <div class="panel-head">
-              <h3>Recent push history</h3>
-              <a href="/api/history">JSON →</a>
-            </div>
-            ${this._renderHistory()}
           </div>
           <div class="panel" style="grid-column: 1 / -1;">
             <div class="panel-head">

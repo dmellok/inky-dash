@@ -17,7 +17,11 @@ const JUST_DONE_WINDOW_S = 10 * 60;
 
 export default function render(host, ctx) {
   const { size } = ctx.cell;
-  const items = (ctx.data && ctx.data.items) || [];
+  const data = ctx.data || {};
+  const items = data.items || [];
+  // Only surface the list name when there's more than one list to disambiguate
+  // — single-list users see the original "TASKS LEFT" header unchanged.
+  const showListName = (data.list_count || 0) > 1 && data.list_name;
   const visible = VISIBLE_BY_SIZE[size] ?? 8;
 
   const open = items.filter((i) => !i.completed_at);
@@ -35,28 +39,38 @@ export default function render(host, ctx) {
       const isDone = !!item.completed_at;
       const icon = isDone ? "ph-check-circle-fill" : "ph-circle";
       const justDone = isDone && (nowS - item.completed_at) < JUST_DONE_WINDOW_S;
+      // Mirrors HN/news card shape: bullet on left, title in the middle,
+      // status pill on the right (DONE / JUST DONE). Open items show no pill.
+      let pill = "";
+      if (justDone) {
+        pill = `<span class="score-pill is-just"><i class="ph ph-sparkle"></i> JUST DONE</span>`;
+      } else if (isDone) {
+        pill = `<span class="score-pill"><i class="ph ph-check"></i> DONE</span>`;
+      }
       return `
-        <li class="${isDone ? "done" : "open"}">
+        <article class="card ${isDone ? "done" : "open"}">
           <i class="ph ${icon} bullet"></i>
-          <span class="text">${escapeHtml(item.text)}</span>
-          ${justDone ? `<span class="badge">JUST DONE</span>` : ""}
-        </li>
+          <div class="card-body">
+            <div class="card-title">${escapeHtml(item.text)}</div>
+          </div>
+          ${pill}
+        </article>
       `;
     })
     .join("");
 
   const moreRow =
     remaining > 0
-      ? `<li class="more">+${remaining} more</li>`
+      ? `<div class="more">+${remaining} more</div>`
       : "";
 
   const body =
     items.length === 0
-      ? `<div class="empty">
-           <i class="ph ph-check-circle-fill empty-icon"></i>
-           <div>All clear.</div>
+      ? `<div class="state-empty">
+           <i class="ph ph-check-circle-fill"></i>
+           <div class="msg">All clear.</div>
          </div>`
-      : `<ul class="list">${itemRows}${moreRow}</ul>`;
+      : `<div class="cards">${itemRows}${moreRow}</div>`;
 
   // Show progress bar only when there's work AND some of it is done — an
   // empty/full bar adds visual weight without information.
@@ -76,11 +90,12 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <link rel="stylesheet" href="/plugins/todo/client.css">
-    <div class="todo todo--${size}">
-      <div class="header">
-        <i class="ph ph-list-checks header-icon"></i>
-        <span class="title">TASKS LEFT</span>
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/todo/client.css">
+    <div class="widget todo todo--${size}">
+      <div class="head">
+        <i class="ph ph-list-checks head-icon"></i>
+        <span class="head-title">${showListName ? escapeHtml(data.list_name).toUpperCase() : "TASKS LEFT"}</span>
         ${headerCount}
       </div>
       ${progress}

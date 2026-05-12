@@ -1,0 +1,197 @@
+:host { display: block; height: 100%; }
+
+.gh {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  display: grid;
+  /* head · stat-strip · heatmap · footer */
+  grid-template-rows: auto auto 1fr auto;
+  gap: 2cqmin;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
+}
+
+/* Header strip — matches weather/note conventions. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
+  color: var(--theme-accent);
+  align-self: center;
+}
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
+}
+.head-name {
+  font-size: min(3cqw, 4.6cqh);
+  font-weight: 600;
+  color: var(--theme-accent);
+}
+.head-stat {
+  margin-left: auto;
+  font-size: min(3cqw, 4.6cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  font-variant-numeric: tabular-nums;
+}
+.head-stat-label {
+  font-weight: 500;
+  color: var(--theme-fgSoft);
+  font-size: 0.8em;
+  margin-left: 0.3em;
+}
+
+/* Grid: SVG scales to whatever space we give it. The wrapper centers it
+   vertically so a wide-but-short cell doesn't gap-out at the top. */
+.grid-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  min-width: 0;
+}
+.grid {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Cells use the theme palette so the heatmap re-skins per panel theme. */
+.gh-cell.gh-l0 { fill: var(--theme-surface2, var(--theme-surface)); }
+.gh-cell.gh-l1 { fill: color-mix(in oklab, var(--theme-accent) 25%, var(--theme-surface2, var(--theme-surface))); }
+.gh-cell.gh-l2 { fill: color-mix(in oklab, var(--theme-accent) 50%, var(--theme-surface2, var(--theme-surface))); }
+.gh-cell.gh-l3 { fill: color-mix(in oklab, var(--theme-accent) 75%, var(--theme-surface2, var(--theme-surface))); }
+.gh-cell.gh-l4 { fill: var(--theme-accent); }
+
+.gh-mtick {
+  fill: var(--theme-fgSoft);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-family: inherit;
+}
+
+/* Stat strip — sits below the header, above the heatmap. Compact cards
+   for streak / longest / best day / active days. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5cqmin;
+}
+.stat-strip .stat {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  padding: 1.2cqmin 1.5cqmin;
+  background: var(--theme-surface);
+  border-radius: max(4px, 1cqmin);
+  min-width: 0;
+}
+.stat-strip .stat-ico {
+  color: var(--theme-accent);
+  font-size: min(3.6cqw, 5.2cqh);
+  flex-shrink: 0;
+}
+.stat-strip .stat-meta { display: grid; gap: 0.2cqh; min-width: 0; }
+.stat-strip .stat-num {
+  font-size: min(3.6cqw, 5.2cqh);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-fg);
+  line-height: 1;
+}
+.stat-strip .stat-label {
+  font-size: min(1.8cqw, 2.6cqh);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--theme-fgSoft);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Footer: avg + busiest-weekday chips on the left, legend on the right. */
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1cqw;
+  flex-wrap: wrap;
+  min-height: 0;
+}
+.foot-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 1cqw 2cqw;
+  flex-wrap: wrap;
+  font-size: min(2.4cqw, 3.6cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+.foot-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+}
+.foot-stat .ph {
+  color: var(--theme-accent);
+  font-size: 1.1em;
+}
+
+.legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: min(2.2cqw, 3.4cqh);
+  color: var(--theme-fgSoft);
+  justify-self: end;
+}
+.legend svg { height: min(2.4cqw, 3.6cqh); width: auto; }
+.legend-label { font-weight: 500; }
+
+/* Narrow cells: collapse stat strip to 2 columns, hide some footer chips. */
+@container (max-width: 420px) {
+  .stat-strip { grid-template-columns: repeat(2, 1fr); gap: 1cqmin; }
+}
+@container (max-width: 320px) {
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .foot-stats { display: none; }
+}
+/* Very short cells: ditch the stat strip entirely so the heatmap breathes. */
+@container (max-height: 240px) {
+  .stat-strip { display: none; }
+}
+
+/* Smaller cells hide the header subtitle to keep the grid breathing. */
+@container (max-width: 380px) {
+  .head-stat-label { display: none; }
+  .head-name { display: none; }
+}
+
+.gh--error {
+  grid-template-rows: auto auto;
+  place-items: center;
+  text-align: center;
+  gap: 1cqh;
+  padding: 4cqmin;
+}
+.gh--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn);
+}
+.gh--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
+}

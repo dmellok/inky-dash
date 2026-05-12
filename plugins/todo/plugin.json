@@ -2,10 +2,19 @@
   "manifest_version": 1,
   "id": "todo",
   "name": "Todo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "kind": "widget",
-  "description": "Quick-entry todo list. Completed items linger 24h with strike-through, then auto-prune. Undo or hard-delete from the admin page.",
+  "description": "Quick-entry todo lists. Each cell picks which list to show. Completed items linger 24h with strike-through, then auto-prune. Manage lists at /plugins/todo/.",
   "icon": "ph-list-checks",
   "supports": { "sizes": ["xs", "sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "list",
+      "type": "select",
+      "label": "List",
+      "default": "default",
+      "choices_from": "lists"
+    }
+  ],
   "render": { "dither": "none" }
 }

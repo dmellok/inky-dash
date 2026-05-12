@@ -51,6 +51,7 @@ export default function render(host, ctx) {
     }
     host.innerHTML = `
       <link rel="stylesheet" href="/static/icons/phosphor.css">
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/countdown/client.css">
       <div class="cd cd--${stateClass}">
         <div class="head">

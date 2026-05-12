@@ -66,6 +66,12 @@ class Scheduler:
         self._thread: threading.Thread | None = None
         # In-memory: schedule_id → last fired POSIX timestamp.
         self._last_fired: dict[str, float] = {}
+        # When we first observed each enabled schedule. Cleared if the
+        # schedule gets disabled or removed, so a re-enable later starts a
+        # fresh "we're watching" window. Used to suppress oneshot backfills:
+        # if today's target was before we started watching, the next fire
+        # is tomorrow, not "right now playing catch-up."
+        self._first_seen: dict[str, float] = {}
         self._lock = threading.Lock()
 
     def start(self) -> None:
@@ -91,12 +97,13 @@ class Scheduler:
             self._stop.wait(self._tick)
 
     def find_due(self, now: datetime | None = None) -> list[Schedule]:
-        """Pure function: returns schedules that should fire at ``now``.
-
-        Public for tests and the manual ``run_due`` helper. Sorted by priority
-        descending, then id for stable ordering.
+        """Return schedules that should fire at ``now``, sorted by priority
+        descending then id. Has a tiny side effect: records each enabled
+        schedule's first-observed timestamp so oneshot backfills are
+        suppressed (see ``_observe``).
         """
         now = now or datetime.now(UTC)
+        self._observe(now)
         candidates: list[Schedule] = []
         for s in self._store.all():
             if not s.enabled:
@@ -127,7 +134,14 @@ class Scheduler:
                 if now < target:
                     continue
                 with self._lock:
+                    first_seen = self._first_seen.get(s.id)
                     last = self._last_fired.get(s.id)
+                # Suppress backfill: if we weren't watching this schedule
+                # at the moment today's target would have fired, don't
+                # fire it now. Fixes "enabling a schedule mid-day pushes
+                # the morning's missed fires through all at once."
+                if first_seen is None or first_seen > target.timestamp():
+                    continue
                 if last is not None:
                     last_dt = datetime.fromtimestamp(last, tz=UTC)
                     if last_dt.date() == now.date():
@@ -137,8 +151,23 @@ class Scheduler:
         return candidates
 
     def _tick_once(self, now: datetime) -> None:
+        self._observe(now)
         for schedule in self.find_due(now):
             self._fire(schedule, now)
+
+    def _observe(self, now: datetime) -> None:
+        """Maintain ``_first_seen``: record the moment we first noticed each
+        enabled schedule, and drop entries for ids that are now disabled or
+        deleted. Disabling then re-enabling a schedule resets its first-seen
+        window so a mid-day re-enable doesn't replay today's earlier targets.
+        """
+        enabled_ids = {s.id for s in self._store.all() if s.enabled}
+        with self._lock:
+            for sid in list(self._first_seen):
+                if sid not in enabled_ids:
+                    del self._first_seen[sid]
+            for sid in enabled_ids:
+                self._first_seen.setdefault(sid, now.timestamp())
 
     def _fire(self, schedule: Schedule, now: datetime) -> PushResult:
         logger.info("Firing schedule %s → page %s", schedule.id, schedule.page_id)
@@ -156,6 +185,7 @@ class Scheduler:
         """Synchronous one-pass fire-due — used by tests and manual triggers."""
         out: list[tuple[Schedule, PushResult]] = []
         when = now or datetime.now(UTC)
+        self._observe(when)
         for s in self.find_due(when):
             out.append((s, self._fire(s, when)))
         return out

@@ -63,7 +63,8 @@ export default async function render(host, ctx) {
 
   const sizeClass = `clock--${size}`;
   host.innerHTML = `
-    <link rel="stylesheet" href="/plugins/clock/client.css">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/clock/client.css">
     <div class="clock ${sizeClass}">
       <div class="time" aria-label="time"></div>
       ${showDate ? `<div class="date" aria-label="date"></div>` : ""}

@@ -99,8 +99,14 @@ export default function render(host, ctx) {
   }
 
   host.innerHTML = `
-    <link rel="stylesheet" href="/plugins/world_clock/client.css">
-    <div class="wc">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/world_clock/client.css">
+    <link rel="stylesheet" href="/static/icons/phosphor.css">
+    <div class="widget wc">
+      <div class="head">
+        <i class="ph ph-globe head-icon"></i>
+        <span class="head-title">WORLD CLOCK</span>
+      </div>
       <div class="clocks">${renderRows()}</div>
     </div>
   `;

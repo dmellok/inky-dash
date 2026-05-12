@@ -45,7 +45,8 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <link rel="stylesheet" href="/plugins/note/client.css">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/note/client.css">
     <div class="note" style="--note-align: ${align}; --note-weight: ${weight};">
       <div class="head">
         <i class="ph ph-note head-icon"></i>

@@ -47,6 +47,8 @@ ROOT_FOLDER_VALUE = "_root"  # encodes the data_dir root
 META_FILE = ".folders.json"
 THUMB_DIR = ".thumb_cache"
 THUMB_SIZE = (320, 240)  # bounding box for thumbnails
+ORIENT_CACHE_FILE = ".orientation_cache.json"
+SQUARE_TOLERANCE = 0.05  # ±5 % around w==h counts as square
 
 
 def _data_dir() -> Path:
@@ -170,6 +172,92 @@ def _all_folder_names(data_dir: Path) -> list[str]:
     return sorted(internal | external)
 
 
+# -- Orientation cache: w/h/mtime per image -------------------------------
+# Reading dimensions costs a Pillow open; we cache the result keyed by
+# (folder, filename, mtime) so re-renders are free and re-uploaded files
+# bust the cache automatically.
+
+
+def _orient_cache_path(data_dir: Path) -> Path:
+    return data_dir / ORIENT_CACHE_FILE
+
+
+def _load_orient_cache(data_dir: Path) -> dict[str, dict[str, Any]]:
+    path = _orient_cache_path(data_dir)
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _save_orient_cache(data_dir: Path, cache: dict[str, dict[str, Any]]) -> None:
+    data_dir.mkdir(parents=True, exist_ok=True)
+    tmp = _orient_cache_path(data_dir).with_suffix(".json.tmp")
+    try:
+        tmp.write_text(json.dumps(cache, separators=(",", ":")))
+        os.replace(tmp, _orient_cache_path(data_dir))
+    except OSError:
+        pass
+
+
+def _orientation_of(source: Path) -> tuple[int, int, str] | None:
+    """Read (w, h, orientation) from disk. ``orientation`` is one of
+    ``"portrait"``, ``"landscape"``, ``"square"``."""
+    try:
+        with Image.open(source) as img:
+            img = ImageOps.exif_transpose(img)
+            w, h = img.size
+    except (OSError, Image.UnidentifiedImageError, ValueError):
+        return None
+    if h == 0:
+        return None
+    ratio = w / h
+    if abs(ratio - 1.0) <= SQUARE_TOLERANCE:
+        orient = "square"
+    elif ratio > 1:
+        orient = "landscape"
+    else:
+        orient = "portrait"
+    return w, h, orient
+
+
+def _filter_by_orientation(
+    images: list[Path],
+    folder_segment: str,
+    desired: str,
+    data_dir: Path,
+) -> list[Path]:
+    """Return only images whose orientation matches ``desired`` ('portrait',
+    'landscape', or 'square'). Uses + updates the on-disk cache."""
+    cache = _load_orient_cache(data_dir)
+    dirty = False
+    kept: list[Path] = []
+    for p in images:
+        try:
+            mtime = int(p.stat().st_mtime)
+        except OSError:
+            continue
+        key = f"{folder_segment}/{p.name}"
+        entry = cache.get(key)
+        if not entry or entry.get("mtime") != mtime:
+            measured = _orientation_of(p)
+            if measured is None:
+                # Unreadable image — record nothing, but don't bail out either.
+                continue
+            w, h, orient = measured
+            entry = {"mtime": mtime, "w": w, "h": h, "orientation": orient}
+            cache[key] = entry
+            dirty = True
+        if entry["orientation"] == desired:
+            kept.append(p)
+    if dirty:
+        _save_orient_cache(data_dir, cache)
+    return kept
+
+
 # -- Plugin contract: fetch + choices ---------------------------------------
 
 
@@ -187,9 +275,23 @@ def fetch(
         )
         return {"error": msg, "url": None}
 
+    folder_segment = folder_name if folder_name else ROOT_FOLDER_VALUE
+    orientation = (options.get("orientation") or "any").lower()
+    if orientation in ("portrait", "landscape", "square"):
+        images = _filter_by_orientation(images, folder_segment, orientation, data_dir)
+        if not images:
+            return {
+                "error": (
+                    f"No {orientation} images in "
+                    f"'{folder_name or ROOT_FOLDER_VALUE}'."
+                ),
+                "url": None,
+            }
+
     mode = options.get("mode", "random")
     if mode == "sequential":
-        idx_file = data_dir / f".sequential_index_{folder_name or ROOT_FOLDER_VALUE}"
+        orient_suffix = f"_{orientation}" if orientation != "any" else ""
+        idx_file = data_dir / f".sequential_index_{folder_segment}{orient_suffix}"
         try:
             current = int(idx_file.read_text())
         except (FileNotFoundError, ValueError):
@@ -201,7 +303,6 @@ def fetch(
     else:
         chosen = random.choice(images)
 
-    folder_segment = folder_name if folder_name else ROOT_FOLDER_VALUE
     return {
         "url": f"/plugins/gallery/folders/{folder_segment}/{chosen.name}",
         "filename": chosen.name,

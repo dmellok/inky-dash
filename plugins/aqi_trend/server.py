@@ -32,8 +32,8 @@ def _band(aqi: float | None) -> str:
 def fetch(
     options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]
 ) -> dict[str, Any]:
-    lat = float(options.get("latitude", 51.5074))
-    lon = float(options.get("longitude", -0.1278))
+    lat = float(options.get("latitude", -37.6494))
+    lon = float(options.get("longitude", 145.1004))
 
     data_dir = Path(ctx["data_dir"])
     data_dir.mkdir(parents=True, exist_ok=True)

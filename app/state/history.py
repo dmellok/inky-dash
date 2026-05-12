@@ -119,6 +119,36 @@ class HistoryStore:
             ).fetchall()
         return [self._row_to_record(r) for r in rows]
 
+    def get(self, record_id: int) -> HistoryRecord | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT id, ts, page_id, digest, status, duration_s, error, "
+                "options_json, payload_json, topic "
+                "FROM pushes WHERE id = ?",
+                (record_id,),
+            ).fetchone()
+        return self._row_to_record(row) if row is not None else None
+
+    def delete(self, record_id: int) -> bool:
+        with self._connect() as conn:
+            cur = conn.execute("DELETE FROM pushes WHERE id = ?", (record_id,))
+            return cur.rowcount > 0
+
+    def digest_in_use(self, digest: str, *, exclude_id: int | None = None) -> bool:
+        """True if any other row still references this digest. Lets the caller
+        decide whether the underlying render PNG is safe to delete."""
+        with self._connect() as conn:
+            if exclude_id is None:
+                row = conn.execute(
+                    "SELECT 1 FROM pushes WHERE digest = ? LIMIT 1", (digest,)
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT 1 FROM pushes WHERE digest = ? AND id != ? LIMIT 1",
+                    (digest, exclude_id),
+                ).fetchone()
+        return row is not None
+
     @staticmethod
     def _row_to_record(row: tuple[Any, ...]) -> HistoryRecord:
         options_raw = json.loads(row[7])

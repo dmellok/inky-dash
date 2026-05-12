@@ -1,5 +1,11 @@
 import { LitElement, html, css } from "lit";
 import "../components/index.js";
+import {
+  isPushing,
+  onPushStateChange,
+  pushSource,
+  runWithPushLock,
+} from "../lib/push-state.js";
 
 const DAYS = [
   { id: 0, label: "Mon", short: "M" },
@@ -48,6 +54,8 @@ class SchedulesPage extends LitElement {
     editing: { state: true },
     saving: { state: true },
     firing: { state: true },
+    globalPushing: { state: true },
+    globalPushSource: { state: true },
   };
 
   static styles = css`
@@ -296,6 +304,57 @@ class SchedulesPage extends LitElement {
     .timeline-rows {
       display: grid;
       gap: 6px;
+      position: relative;
+    }
+    /* Single unified now-cursor that spans every row vertically. Uses the
+       same column layout as .timeline-row so the line's left% maps to the
+       track column exactly the way per-row markers do. */
+    .now-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 12px;
+      pointer-events: none;
+    }
+    @media (max-width: 700px) {
+      .now-overlay { display: none; }
+    }
+    .now-overlay > .spacer {}
+    .now-overlay > .track-area {
+      position: relative;
+    }
+    .now-overlay .now-line {
+      position: absolute;
+      top: -2px;
+      bottom: -2px;
+      width: 2px;
+      background: var(--id-fg, #1a1612);
+      transform: translateX(-1px);
+    }
+    .now-overlay .now-line::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: -4px;
+      width: 10px;
+      height: 10px;
+      background: var(--id-fg, #1a1612);
+      border-radius: 50%;
+    }
+    .now-overlay .now-time {
+      position: absolute;
+      top: -22px;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: var(--id-fg, #1a1612);
+      background: var(--id-surface, #ffffff);
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      white-space: nowrap;
     }
     .timeline-row {
       display: grid;
@@ -314,6 +373,19 @@ class SchedulesPage extends LitElement {
       white-space: nowrap;
     }
     .timeline-label.dim { opacity: 0.5; }
+    /* Per-row swatch dot sits in front of the schedule name so it's easy
+       to match the label to its bar on the timeline. --row-color is set
+       inline on the .timeline-row by _renderTimelineRow. */
+    .row-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      background: var(--row-color, var(--id-accent, #d97757));
+      margin-right: 8px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
     .timeline-track {
       position: relative;
       height: 22px;
@@ -326,42 +398,26 @@ class SchedulesPage extends LitElement {
       overflow: hidden;
       border: 1px solid var(--id-divider, #c8b89b);
     }
+    /* Time-of-day window: tinted by the row's colour so two overlapping
+       windows on adjacent rows don't visually merge. */
     .timeline-track .window {
       position: absolute;
       top: 0;
       bottom: 0;
-      background: rgba(125, 166, 112, 0.12);
-      border-left: 1px solid rgba(125, 166, 112, 0.4);
-      border-right: 1px solid rgba(125, 166, 112, 0.4);
+      background: color-mix(in oklab, var(--row-color, #7ea16b) 14%, transparent);
+      border-left: 1px solid color-mix(in oklab, var(--row-color, #7ea16b) 55%, transparent);
+      border-right: 1px solid color-mix(in oklab, var(--row-color, #7ea16b) 55%, transparent);
     }
     .timeline-track .marker {
       position: absolute;
       top: 4px;
       bottom: 4px;
       width: 3px;
-      background: var(--id-accent, #d97757);
+      background: var(--row-color, var(--id-accent, #d97757));
       border-radius: 2px;
       transition: opacity 120ms ease;
     }
     .timeline-track .marker.past { opacity: 0.35; }
-    .timeline-track .now {
-      position: absolute;
-      top: -2px;
-      bottom: -2px;
-      width: 2px;
-      background: var(--id-fg, #1a1612);
-      pointer-events: none;
-    }
-    .timeline-track .now::before {
-      content: "";
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      width: 10px;
-      height: 10px;
-      background: var(--id-fg, #1a1612);
-      border-radius: 50%;
-    }
     .timeline-axis {
       display: grid;
       grid-template-columns: 160px 1fr;
@@ -403,6 +459,9 @@ class SchedulesPage extends LitElement {
     this.saving = false;
     this.firing = null; // id of schedule currently firing
     this._tickInterval = null;
+    this.globalPushing = isPushing();
+    this.globalPushSource = pushSource();
+    this._unsubPushState = null;
   }
 
   async connectedCallback() {
@@ -412,11 +471,16 @@ class SchedulesPage extends LitElement {
     this._tickInterval = setInterval(() => {
       this.now = new Date();
     }, 60_000);
+    this._unsubPushState = onPushStateChange(() => {
+      this.globalPushing = isPushing();
+      this.globalPushSource = pushSource();
+    });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this._tickInterval) clearInterval(this._tickInterval);
+    this._unsubPushState?.();
   }
 
   async _load() {
@@ -503,15 +567,21 @@ class SchedulesPage extends LitElement {
   }
 
   async _fireNow(s) {
+    if (isPushing()) {
+      this.error = "Another push is already in flight. Wait for it to finish.";
+      return;
+    }
     this.firing = s.id;
     try {
-      const res = await fetch(`/api/schedules/${encodeURIComponent(s.id)}/fire`, {
-        method: "POST",
+      await runWithPushLock(`schedule:${s.id}`, async () => {
+        const res = await fetch(`/api/schedules/${encodeURIComponent(s.id)}/fire`, {
+          method: "POST",
+        });
+        const body = await res.json();
+        if (!res.ok || body.status !== "sent") {
+          this.error = `${s.name}: ${body.error || body.status}`;
+        }
       });
-      const body = await res.json();
-      if (!res.ok || body.status !== "sent") {
-        this.error = `${s.name}: ${body.error || body.status}`;
-      }
     } catch (err) {
       this.error = err.message;
     } finally {
@@ -519,91 +589,138 @@ class SchedulesPage extends LitElement {
     }
   }
 
-  // Compute the next ~24h of fire times for an interval/oneshot schedule, in
-  // hour fractions [0, 24]. Returns ordered (relative-hours-from-now)
-  // for placing markers on the timeline.
+  // Fixed timeline window: a day-band from DAY_START_H to (DAY_START_H + 24)
+  // wrapped at 24h. With DAY_START_H = 6, that's "06:00 today → 05:59
+  // tomorrow" — schedule markers stay anchored to their actual times of day,
+  // and the now-cursor slides through the band.
+  static DAY_START_H = 6;
+
+  // X-axis position (0–100) of an HH:MM within the fixed day-band.
+  _xPctFromTime(h, m) {
+    const start = SchedulesPage.DAY_START_H * 60;
+    const shifted = (h * 60 + m - start + 1440) % 1440;
+    return (shifted / 1440) * 100;
+  }
+
+  _isPastTime(h, m) {
+    return (
+      this._xPctFromTime(h, m) <
+      this._xPctFromTime(this.now.getHours(), this.now.getMinutes())
+    );
+  }
+
+  // ISO weekday (0=Mon..6=Sun) of the day-band we're currently inside.
+  // At 04:00 the active band actually started at 06:00 yesterday, so we
+  // back up a day before reading the weekday.
+  _bandDow() {
+    const dt = new Date(this.now);
+    if (dt.getHours() < SchedulesPage.DAY_START_H) {
+      dt.setDate(dt.getDate() - 1);
+    }
+    return (dt.getDay() + 6) % 7;
+  }
+
+  // Each schedule's fires within the 24h band, as {h, m, past} entries.
   _projectFires(schedule) {
-    const out = [];
-    const now = this.now;
-    const horizonMs = 24 * 3600 * 1000;
-    const isToday = (d) => {
-      const dow = (d.getDay() + 6) % 7; // JS: 0=Sun → ISO 0=Mon
-      return (schedule.days_of_week || [0, 1, 2, 3, 4, 5, 6]).includes(dow);
-    };
-    const inWindow = (d) => {
-      if (!schedule.time_of_day_start && !schedule.time_of_day_end) return true;
-      const hhmm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      const start = schedule.time_of_day_start || "00:00";
-      const end = schedule.time_of_day_end || "23:59";
-      if (start <= end) return hhmm >= start && hhmm <= end;
-      return hhmm >= start || hhmm <= end; // wrap
-    };
     if (schedule.type === "oneshot") {
-      const fires = schedule.fires_at ? new Date(schedule.fires_at) : null;
-      if (fires) {
-        const offsetH = (fires.getTime() - now.getTime()) / 3600000;
-        if (offsetH >= -1 && offsetH <= 24) out.push(offsetH);
-      }
-      return out;
+      if (!schedule.fires_at) return [];
+      const fa = new Date(schedule.fires_at);
+      const h = fa.getHours();
+      const m = fa.getMinutes();
+      return [{ h, m, past: this._isPastTime(h, m) }];
     }
-    const intervalMin = Number(schedule.interval_minutes) || 60;
-    let cursor = new Date(now.getTime());
-    let safetyMax = Math.ceil((24 * 60) / Math.max(1, intervalMin)) + 5;
-    while (safetyMax-- > 0) {
-      const offsetH = (cursor.getTime() - now.getTime()) / 3600000;
-      if (offsetH > 24) break;
-      if (isToday(cursor) && inWindow(cursor)) out.push(offsetH);
-      cursor = new Date(cursor.getTime() + intervalMin * 60_000);
+    const allowedDow = schedule.days_of_week || [0, 1, 2, 3, 4, 5, 6];
+    if (!allowedDow.includes(this._bandDow())) return [];
+    const interval = Math.max(1, Number(schedule.interval_minutes) || 60);
+    const parse = (v) => {
+      const [h, m] = v.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const startMin = parse(schedule.time_of_day_start || "00:00");
+    const endMin = parse(schedule.time_of_day_end || "23:59");
+    const fires = [];
+    if (startMin <= endMin) {
+      for (let mm = startMin; mm <= endMin; mm += interval) fires.push(mm);
+    } else {
+      for (let mm = startMin; mm < 1440; mm += interval) fires.push(mm);
+      for (let mm = 0; mm <= endMin; mm += interval) fires.push(mm);
     }
-    return out;
+    return fires.map((mm) => {
+      const h = Math.floor(mm / 60);
+      const m = mm % 60;
+      return { h, m, past: this._isPastTime(h, m) };
+    });
+  }
+
+  // 10-colour categorical palette tuned for the timeline. Picked for mutual
+  // contrast on both light and dark themes plus reasonable Spectra 6 dither
+  // performance — every colour stays distinct after quantizing to the panel.
+  static ROW_PALETTE = [
+    "#d97757", // orange
+    "#3c6e91", // deep blue
+    "#7ea16b", // sage green
+    "#b34a5a", // rose
+    "#6a4c93", // purple
+    "#2a8a8a", // teal
+    "#d4a957", // gold
+    "#c97c70", // terracotta
+    "#4a72b8", // sky blue
+    "#9b3838", // brick red
+  ];
+
+  // Stable colour per schedule id — same id always gets the same swatch
+  // even as schedules are added/removed/reordered.
+  _colorFor(scheduleId) {
+    if (!scheduleId) return SchedulesPage.ROW_PALETTE[0];
+    let h = 2166136261 >>> 0;
+    for (let i = 0; i < scheduleId.length; i++) {
+      h = Math.imul(h ^ scheduleId.charCodeAt(i), 16777619) >>> 0;
+    }
+    return SchedulesPage.ROW_PALETTE[h % SchedulesPage.ROW_PALETTE.length];
   }
 
   _renderTimelineRow(schedule) {
     const fires = schedule.enabled ? this._projectFires(schedule) : [];
-    const xPct = (offsetH) => Math.max(0, Math.min(100, (offsetH / 24) * 100));
-    // Time-of-day window highlight
-    let windowBlock = null;
+    const xPct = (v) => Math.max(0, Math.min(100, v));
+    const color = this._colorFor(schedule.id);
+    // Time-of-day window highlight, also pinned to fixed times of day.
+    // If the window straddles the band's 06:00 cut it renders as two pieces.
+    let windowBlocks = null;
     if (schedule.enabled && (schedule.time_of_day_start || schedule.time_of_day_end)) {
-      const startMins = (() => {
-        const v = schedule.time_of_day_start || "00:00";
+      const parse = (v) => {
         const [h, m] = v.split(":").map(Number);
-        return h * 60 + m;
-      })();
-      const endMins = (() => {
-        const v = schedule.time_of_day_end || "23:59";
-        const [h, m] = v.split(":").map(Number);
-        return h * 60 + m;
-      })();
-      const nowMins = this.now.getHours() * 60 + this.now.getMinutes();
-      // Convert to "hours from now": startOffsetH = (startMins - nowMins)/60 (today)
-      // For wrap-around windows, render as up to two blocks.
-      const startOffsetH = (startMins - nowMins) / 60;
-      const endOffsetH = (endMins - nowMins) / 60;
-      if (startMins <= endMins) {
-        const a = startOffsetH < 0 ? 0 : startOffsetH;
-        const b = endOffsetH < 0 ? 0 : endOffsetH;
-        if (b > a)
-          windowBlock = html`<div class="window" style="left:${xPct(a)}%; right:${100 - xPct(b)}%"></div>`;
-      }
+        return [h, m];
+      };
+      const [sh, sm] = parse(schedule.time_of_day_start || "00:00");
+      const [eh, em] = parse(schedule.time_of_day_end || "23:59");
+      const a = this._xPctFromTime(sh, sm);
+      const b = this._xPctFromTime(eh, em);
+      windowBlocks =
+        b >= a
+          ? [html`<div class="window" style="left:${xPct(a)}%; right:${100 - xPct(b)}%"></div>`]
+          : [
+              html`<div class="window" style="left:${xPct(a)}%; right:0%"></div>`,
+              html`<div class="window" style="left:0%; right:${100 - xPct(b)}%"></div>`,
+            ];
     }
     return html`
-      <div class="timeline-row">
+      <div class="timeline-row" style="--row-color: ${color};">
         <div class="timeline-label ${schedule.enabled ? "" : "dim"}">
+          <span class="row-dot" aria-hidden="true"></span>
           ${schedule.name}
           <span style="color: var(--id-fg-soft); font-size: 11px;"> · ${schedule.page_id}</span>
         </div>
         <div class="timeline-track">
-          ${windowBlock}
+          ${windowBlocks}
           ${fires.map(
-            (offsetH) => html`
+            ({ h, m, past }) => html`
               <div
-                class="marker ${offsetH < 0 ? "past" : ""}"
-                style="left: calc(${xPct(offsetH)}% - 1.5px);"
-                title="+${offsetH.toFixed(1)}h"
+                class="marker ${past ? "past" : ""}"
+                style="left: calc(${xPct(this._xPctFromTime(h, m))}% - 1.5px);"
+                title="${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}"
               ></div>
             `
           )}
-          <div class="now" style="left: 0;"></div>
         </div>
       </div>
     `;
@@ -611,17 +728,17 @@ class SchedulesPage extends LitElement {
 
   _renderTimeline() {
     const enabledSchedules = this.schedules.filter((s) => s.enabled);
+    // Axis: 8 ticks spaced 3h apart, anchored to the band start (06:00).
     const ticks = Array.from({ length: 8 }, (_, i) => {
-      const offsetH = i * 3;
-      const t = new Date(this.now.getTime() + offsetH * 3600_000);
-      return `${String(t.getHours()).padStart(2, "0")}:00`;
+      const h = (SchedulesPage.DAY_START_H + i * 3) % 24;
+      return `${String(h).padStart(2, "0")}:00`;
     });
     const lastPush = this.history && this.history.length ? this.history[0] : null;
     const liveDashboard = lastPush?.status === "sent" ? lastPush.page_id : null;
     return html`
       <div class="timeline-card">
         <div class="timeline-head">
-          <h2><i class="ph ph-clock-clockwise" style="color: var(--id-accent); margin-right: 4px;"></i>Next 24h</h2>
+          <h2><i class="ph ph-clock-clockwise" style="color: var(--id-accent); margin-right: 4px;"></i>Day · ${String(SchedulesPage.DAY_START_H).padStart(2, "0")}:00 → ${String(SchedulesPage.DAY_START_H).padStart(2, "0")}:00</h2>
           <span class="now-label">
             now ${this.now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </span>
@@ -631,15 +748,33 @@ class SchedulesPage extends LitElement {
         </div>
         ${enabledSchedules.length === 0
           ? html`<p class="timeline-empty">No enabled schedules to plot.</p>`
-          : html`
-              <div class="timeline-rows">
-                ${enabledSchedules.map((s) => this._renderTimelineRow(s))}
-              </div>
-              <div class="timeline-axis">
-                <span></span>
-                <div class="ticks">${ticks.map((t) => html`<span>${t}</span>`)}</div>
-              </div>
-            `}
+          : (() => {
+              const nowX = this._xPctFromTime(
+                this.now.getHours(),
+                this.now.getMinutes(),
+              );
+              const nowLabel = this.now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
+              return html`
+                <div class="timeline-rows">
+                  ${enabledSchedules.map((s) => this._renderTimelineRow(s))}
+                  <div class="now-overlay">
+                    <div class="spacer"></div>
+                    <div class="track-area">
+                      <div class="now-line" style="left: ${nowX}%;">
+                        <span class="now-time">${nowLabel}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-axis">
+                  <span></span>
+                  <div class="ticks">${ticks.map((t) => html`<span>${t}</span>`)}</div>
+                </div>
+              `;
+            })()}
       </div>
     `;
   }
@@ -676,9 +811,20 @@ class SchedulesPage extends LitElement {
           ${s.enabled ? "On" : "Off"}
         </label>
         <div class="actions">
-          <id-button @click=${() => this._fireNow(s)} ?disabled=${this.firing === s.id}>
+          <id-button
+            @click=${() => this._fireNow(s)}
+            ?disabled=${this.firing === s.id ||
+              (this.globalPushing && this.firing !== s.id)}
+            title=${this.globalPushing && this.firing !== s.id
+              ? `Another push is in flight${this.globalPushSource ? ` (${this.globalPushSource})` : ""}`
+              : "Fire this schedule once, now"}
+          >
             <i class="ph ph-paper-plane-tilt"></i>
-            ${this.firing === s.id ? "Firing…" : "Fire now"}
+            ${this.firing === s.id
+              ? "Firing…"
+              : this.globalPushing
+                ? "Push in flight"
+                : "Fire now"}
           </id-button>
         </div>
         <div class="actions">

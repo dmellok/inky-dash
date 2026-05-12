@@ -16,6 +16,7 @@ export default function render(host, ctx) {
 
   if (cells.length === 0) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/calibration/client.css">
       <div class="cal cal--empty">
         <i class="ph ph-warning-circle"></i>
@@ -47,6 +48,7 @@ export default function render(host, ctx) {
     .join("");
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/calibration/client.css">
     <div class="cal">
       <div class="caption">

@@ -1,16 +1,8 @@
-:host { display: block; height: 100%; }
+/* Chrome (.widget, .head) comes from /static/style/widget-base.css.
+   Local rules below are world-clock-specific only. */
 
 .wc {
-  height: 100%;
-  width: 100%;
-  background: var(--theme-bg);
-  color: var(--theme-fg);
-  padding: 3cqmin;
-  box-sizing: border-box;
-  container-type: size;
-  font-family: inherit;
-  display: flex;
-  flex-direction: column;
+  grid-template-rows: auto 1fr;
 }
 
 .clocks {
@@ -23,7 +15,6 @@
 
 .row {
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   padding: 2cqmin 2.5cqmin;
   display: grid;

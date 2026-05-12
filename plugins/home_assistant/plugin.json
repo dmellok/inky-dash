@@ -1,0 +1,50 @@
+{
+  "manifest_version": 1,
+  "id": "home_assistant",
+  "name": "Home Assistant",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Tile of up to 8 Home Assistant entities — current state + friendly name + unit. Talks to a HA REST API; set the URL + long-lived access token in settings.",
+  "icon": "ph-house-line",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "entities",
+      "type": "string",
+      "label": "Entity IDs (comma-separated)",
+      "default": "sensor.outside_temperature, sensor.indoor_humidity"
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "HOME"
+    },
+    {
+      "name": "layout",
+      "type": "select",
+      "label": "Layout",
+      "default": "auto",
+      "choices": [
+        { "value": "auto", "label": "Auto (grid)" },
+        { "value": "list", "label": "List (one per row)" },
+        { "value": "hero", "label": "Hero (first entity big)" }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "name": "base_url",
+      "type": "string",
+      "label": "Home Assistant URL",
+      "default": "http://homeassistant.local:8123"
+    },
+    {
+      "name": "token",
+      "type": "string",
+      "label": "Long-lived access token",
+      "secret": true
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

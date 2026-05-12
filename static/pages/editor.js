@@ -1,5 +1,11 @@
 import { LitElement, html, css } from "lit";
 import "../components/index.js";
+import {
+  isPushing,
+  onPushStateChange,
+  pushSource,
+  runWithPushLock,
+} from "../lib/push-state.js";
 
 // Fallback panel dims (Spectra 6 13.3" landscape native). Real panel dims
 // come from /api/app/settings on connectedCallback; these only matter if the
@@ -100,6 +106,39 @@ function detectLayout(cells, panel) {
   return null;
 }
 
+// Group themes into Light / Medium / Dark buckets based on their bg
+// lightness. Uses Rec.709 luminance, with thresholds picked so the
+// existing 36 core themes split roughly evenly into the three groups.
+// Falls back to the theme's declared `mode` field for legacy themes that
+// don't have a usable bg colour.
+function themeBucket(theme) {
+  const hex = theme?.palette?.bg || "";
+  const m = /^#?([0-9a-f]{6})/i.exec(hex);
+  if (!m) return theme?.mode === "dark" ? "dark" : "light";
+  const r = parseInt(m[1].slice(0, 2), 16) / 255;
+  const g = parseInt(m[1].slice(2, 4), 16) / 255;
+  const b = parseInt(m[1].slice(4, 6), 16) / 255;
+  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  if (L >= 0.78) return "light";
+  if (L <= 0.32) return "dark";
+  return "medium";
+}
+
+const THEME_SECTIONS = [
+  { key: "light", label: "Light" },
+  { key: "medium", label: "Medium" },
+  { key: "dark", label: "Dark" },
+];
+
+function groupThemes(themes) {
+  const groups = { light: [], medium: [], dark: [] };
+  for (const t of themes || []) groups[themeBucket(t)].push(t);
+  for (const g of Object.values(groups)) {
+    g.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return groups;
+}
+
 class IdEditor extends LitElement {
   static properties = {
     pageId: { type: String, attribute: "page-id" },
@@ -118,6 +157,8 @@ class IdEditor extends LitElement {
     previewLoading: { state: true },
     pushing: { state: true },
     pushResult: { state: true },
+    globalPushing: { state: true },
+    globalPushSource: { state: true },
     previewMode: { state: true },
     previewKey: { state: true },
     appPanel: { state: true },
@@ -463,6 +504,7 @@ class IdEditor extends LitElement {
       font-style: italic;
       letter-spacing: 0.04em;
     }
+
     /* Toggle switch — replaces native checkbox styling. */
     label.checkbox input[type="checkbox"] {
       appearance: none;
@@ -687,13 +729,11 @@ class IdEditor extends LitElement {
     this.previewKey = 0;
     this.pushing = false;
     this.pushResult = null;
-    this.showHelp = false;
-    this.showOnboarding =
-      typeof localStorage !== "undefined" &&
-      localStorage.getItem("inky_onboarded_v1") !== "yes";
+    this.globalPushing = isPushing();
+    this.globalPushSource = pushSource();
+    this._unsubPushState = null;
     this.appPanel = null; // { model, orientation, width, height }
     this.iconPickerOpen = false;
-    this._onKeydown = this._onKeydown.bind(this);
     this._onBeforeUnload = this._onBeforeUnload.bind(this);
   }
 
@@ -726,8 +766,11 @@ class IdEditor extends LitElement {
 
   async connectedCallback() {
     super.connectedCallback();
-    window.addEventListener("keydown", this._onKeydown);
     window.addEventListener("beforeunload", this._onBeforeUnload);
+    this._unsubPushState = onPushStateChange(() => {
+      this.globalPushing = isPushing();
+      this.globalPushSource = pushSource();
+    });
     try {
       const [widgetsRes, themesRes, fontsRes, appRes, panelsRes] =
         await Promise.all([
@@ -915,6 +958,11 @@ class IdEditor extends LitElement {
     this.saved = false;
   }
 
+  _selectCell(idx) {
+    if (this.selectedCell === idx) return;
+    this.selectedCell = idx;
+  }
+
   _setPageFont(fontId) {
     this.page = { ...this.page, font: fontId };
     this.saved = false;
@@ -1019,16 +1067,25 @@ class IdEditor extends LitElement {
     // Push the in-memory draft state to the panel WITHOUT persisting it
     // back to the page store. Server stages the page under a transient id,
     // pushes, then deletes it.
+    if (isPushing()) {
+      this.pushResult = {
+        ok: false,
+        error: "Another push is already in flight. Wait for it to finish.",
+      };
+      return;
+    }
     this.pushing = true;
     this.pushResult = null;
     try {
-      const res = await fetch("/api/pages/push-inline", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ page: this.page, dither: this.dither }),
+      await runWithPushLock(`editor:${this.page?.id ?? ""}`, async () => {
+        const res = await fetch("/api/pages/push-inline", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ page: this.page, dither: this.dither }),
+        });
+        const body = await res.json();
+        this.pushResult = { ok: res.ok, ...body };
       });
-      const body = await res.json();
-      this.pushResult = { ok: res.ok, ...body };
     } catch (err) {
       this.pushResult = { ok: false, error: err.message };
     } finally {
@@ -1070,8 +1127,8 @@ class IdEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._resizeObserver?.disconnect();
-    window.removeEventListener("keydown", this._onKeydown);
     window.removeEventListener("beforeunload", this._onBeforeUnload);
+    this._unsubPushState?.();
     if (this._previewTimer) clearTimeout(this._previewTimer);
     // Best-effort cleanup so abandoned previews don't shadow saved data.
     if (this.page) {
@@ -1092,50 +1149,6 @@ class IdEditor extends LitElement {
       } catch {
         /* ignore */
       }
-    }
-  }
-
-  _onKeydown(event) {
-    // Don't intercept when the user is typing in a text input.
-    const tag = (event.target?.tagName || "").toLowerCase();
-    const inEditable = ["input", "textarea", "select"].includes(tag);
-
-    const meta = event.metaKey || event.ctrlKey;
-    if (meta && (event.key === "s" || event.key === "S")) {
-      event.preventDefault();
-      this._save();
-      return;
-    }
-    if (meta && event.key === "Enter") {
-      event.preventDefault();
-      this._send();
-      return;
-    }
-    if (event.key === "Escape" && (this.showHelp || this.showOnboarding)) {
-      event.preventDefault();
-      this._dismissOverlays();
-      return;
-    }
-    if (event.key === "?" && !inEditable) {
-      event.preventDefault();
-      this.showHelp = !this.showHelp;
-      return;
-    }
-    if (!inEditable && /^[1-9]$/.test(event.key)) {
-      const idx = Number(event.key) - 1;
-      if (this.page && idx < this.page.cells.length) {
-        this.selectedCell = idx;
-      }
-    }
-  }
-
-  _dismissOverlays() {
-    this.showHelp = false;
-    this.showOnboarding = false;
-    try {
-      localStorage.setItem("inky_onboarded_v1", "yes");
-    } catch {
-      /* ignore */
     }
   }
 
@@ -1172,8 +1185,12 @@ class IdEditor extends LitElement {
     const cacheBust = this.previewKey || this.lastSavedAt || "initial";
     const composeUrl = `/compose/${id}?for_push=1&t=${cacheBust}`;
     // Match the composer's gap inset so the click targets sit on top of the
-    // visually-shrunken cells in the iframe.
-    const halfGap = (this.page.gap || 0) / 2;
+    // visually-shrunken cells in the iframe. Sides on the panel edge inset
+    // by gap/2; sides facing another cell inset by gap/4 so cell-to-cell
+    // and cell-to-edge gaps look identical.
+    const gap = this.page.gap || 0;
+    const outerPad = Math.floor(gap / 2);
+    const innerPad = Math.floor(gap / 4);
     const panelW = this.page.panel.w;
     const panelH = this.page.panel.h;
     return html`<div
@@ -1183,10 +1200,14 @@ class IdEditor extends LitElement {
       <iframe src=${composeUrl} title="Live preview"></iframe>
       <div class="cell-overlay">
         ${cells.map((c, i) => {
-          const x = c.x + halfGap;
-          const y = c.y + halfGap;
-          const w = Math.max(1, c.w - halfGap * 2);
-          const h = Math.max(1, c.h - halfGap * 2);
+          const left = c.x === 0 ? outerPad : innerPad;
+          const top = c.y === 0 ? outerPad : innerPad;
+          const right = c.x + c.w === panelW ? outerPad : innerPad;
+          const bottom = c.y + c.h === panelH ? outerPad : innerPad;
+          const x = c.x + left;
+          const y = c.y + top;
+          const w = Math.max(1, c.w - left - right);
+          const h = Math.max(1, c.h - top - bottom);
           return html`
             <div
               class="cell-hit"
@@ -1195,7 +1216,7 @@ class IdEditor extends LitElement {
                      top: ${(y / panelH) * 100}%;
                      width: ${(w / panelW) * 100}%;
                      height: ${(h / panelH) * 100}%;"
-              @click=${() => (this.selectedCell = i)}
+              @click=${() => this._selectCell(i)}
             >
               <span class="cell-hit-label">${i + 1} · ${c.plugin}</span>
             </div>
@@ -1238,13 +1259,20 @@ class IdEditor extends LitElement {
               this._setCellOverride(this.selectedCell, "theme", e.target.value || null)}
           >
             <option value="" ?selected=${!cell.theme}>Inherit page</option>
-            ${this.themes.map(
-              (t) => html`
-                <option value=${t.id} ?selected=${t.id === cell.theme}>
-                  ${t.name}
-                </option>
-              `
-            )}
+            ${(() => {
+              const groups = groupThemes(this.themes);
+              return THEME_SECTIONS.map((s) => {
+                const list = groups[s.key];
+                if (!list.length) return null;
+                return html`<optgroup label=${s.label}>
+                  ${list.map(
+                    (t) => html`<option value=${t.id} ?selected=${t.id === cell.theme}>
+                      ${t.name}
+                    </option>`,
+                  )}
+                </optgroup>`;
+              });
+            })()}
           </select>
         </id-form-row>
         <id-form-row label="Font override">
@@ -1437,18 +1465,24 @@ class IdEditor extends LitElement {
               variant="primary"
               ?disabled=${this.saving || this.pushing || this.saved}
               @click=${() => this._save()}
-              title="Save (⌘S)"
+              title="Save"
             >
               <i class="ph ph-floppy-disk"></i>
               ${this.saving ? "Saving…" : this.saved ? "Saved" : "Save"}
             </id-button>
             <id-button
-              ?disabled=${this.pushing || this.saving}
+              ?disabled=${this.pushing || this.saving || this.globalPushing}
               @click=${() => this._send()}
-              title="Send to panel without saving (⌘↵)"
+              title=${this.globalPushing
+                ? `Another push is in flight${this.globalPushSource ? ` (${this.globalPushSource})` : ""}`
+                : "Send to panel without saving"}
             >
               <i class="ph ph-paper-plane-tilt"></i>
-              ${this.pushing ? "Sending…" : "Send"}
+              ${this.pushing
+                ? "Sending…"
+                : this.globalPushing
+                  ? "Push in flight"
+                  : "Send"}
             </id-button>
           </div>
         </div>
@@ -1569,7 +1603,29 @@ class IdEditor extends LitElement {
           : null}
         <div class="grid">
           <div class="sidebar-col">
-            <id-card heading="Page" subheading="Font + matting + spacing applied to every cell.">
+            <id-card heading="Page" subheading="Theme + font + matting + spacing applied to every cell.">
+              <id-form-row label="Theme" hint="Sets the --theme-* CSS variables every widget paints with.">
+                <select @change=${(e) => this._setPageTheme(e.target.value)}>
+                  ${this.themes.length === 0
+                    ? html`<option>(no themes loaded)</option>`
+                    : null}
+                  ${(() => {
+                    const groups = groupThemes(this.themes);
+                    const current = this.page.theme || "default";
+                    return THEME_SECTIONS.map((s) => {
+                      const list = groups[s.key];
+                      if (!list.length) return null;
+                      return html`<optgroup label=${s.label}>
+                        ${list.map(
+                          (t) => html`<option value=${t.id} ?selected=${t.id === current}>
+                            ${t.name}
+                          </option>`,
+                        )}
+                      </optgroup>`;
+                    });
+                  })()}
+                </select>
+              </id-form-row>
               <id-form-row label="Font">
                 <select @change=${(e) => this._setPageFont(e.target.value)}>
                   ${this.fonts.length === 0
@@ -1626,8 +1682,6 @@ class IdEditor extends LitElement {
           ${this._renderPreviewPane()}
         </div>
       </div>
-      ${this.showOnboarding ? this._renderOnboarding() : null}
-      ${this.showHelp ? this._renderHelp() : null}
       <id-icon-picker
         ?open=${this.iconPickerOpen}
         .value=${this.page?.icon || null}
@@ -1637,61 +1691,6 @@ class IdEditor extends LitElement {
     `;
   }
 
-  _renderOnboarding() {
-    return html`
-      <div class="overlay" @click=${() => this._dismissOverlays()}>
-        <div class="overlay-card" @click=${(e) => e.stopPropagation()}>
-          <h3>Welcome to Inky Dash</h3>
-          <p style="color: var(--id-fg-soft); margin: 0 0 12px;">
-            A quick tour of what's here:
-          </p>
-          <ol style="margin: 0 0 12px; padding-left: 20px; line-height: 1.7;">
-            <li>Pick a <strong>layout</strong> (top of the page) to split the panel into cells.</li>
-            <li>Click any cell in the live preview to <strong>edit it</strong> on the right.</li>
-            <li>Set <strong>theme</strong>, <strong>font</strong>, <strong>gap</strong>, <strong>radius</strong> per page.</li>
-            <li><strong>Save</strong> persists your edits. <strong>Send without saving</strong> pushes the current draft to the panel without committing.</li>
-          </ol>
-          <p style="color: var(--id-fg-soft); font-size: 13px; margin: 0 0 8px;">
-            Press <kbd>?</kbd> any time to see all shortcuts.
-          </p>
-          <div class="overlay-actions">
-            <id-button variant="primary" @click=${() => this._dismissOverlays()}>
-              <i class="ph ph-check"></i> Got it
-            </id-button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  _renderHelp() {
-    const platform =
-      typeof navigator !== "undefined" && /mac/i.test(navigator.platform)
-        ? "⌘"
-        : "Ctrl";
-    return html`
-      <div class="overlay" @click=${() => (this.showHelp = false)}>
-        <div class="overlay-card" @click=${(e) => e.stopPropagation()}>
-          <h3>Keyboard shortcuts</h3>
-          <div class="overlay-shortcuts">
-            <span><kbd>${platform}</kbd>+<kbd>S</kbd></span><span>Save changes</span>
-            <span><kbd>${platform}</kbd>+<kbd>↵</kbd></span><span>Send draft to panel (without saving)</span>
-            <span><kbd>1</kbd>–<kbd>9</kbd></span><span>Select cell N</span>
-            <span><kbd>?</kbd></span><span>Toggle this help</span>
-            <span><kbd>Esc</kbd></span><span>Close overlays</span>
-          </div>
-          <p style="color: var(--id-fg-soft); font-size: 12px; margin: 12px 0 0;">
-            Edits stay local until you click <strong>Save</strong>.
-          </p>
-          <div class="overlay-actions">
-            <id-button @click=${() => (this.showHelp = false)}>
-              <i class="ph ph-x"></i> Close
-            </id-button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 }
 
 customElements.define("id-editor", IdEditor);

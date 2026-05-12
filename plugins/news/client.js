@@ -33,8 +33,9 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <link rel="stylesheet" href="/plugins/news/client.css">
-    <div class="news">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/news/client.css">
+    <div class="widget news">
       <div class="head">
         <i class="ph ph-newspaper head-icon"></i>
         <span class="head-title">NEWS</span>
@@ -42,15 +43,32 @@ export default function render(host, ctx) {
         <span class="head-time">${escapeHtml(now)}</span>
       </div>
       ${error
-        ? `<div class="news-error"><i class="ph ph-warning-circle"></i> ${escapeHtml(error)}</div>`
+        ? `<div class="state-error"><i class="ph ph-warning-circle"></i><span class="msg">${escapeHtml(error)}</span></div>`
         : items.length === 0
-          ? `<div class="news-empty">No items.</div>`
-          : `<ul class="list">${items.slice(0, visible).map((item) => `
-              <li class="row">
-                <div class="row-title">${escapeHtml(item.title)}</div>
-                <div class="row-meta"><i class="ph ph-clock"></i> ${escapeHtml(fmtAge(item.published))}</div>
-              </li>
-            `).join("")}</ul>`}
+          ? `<div class="state-empty"><i class="ph ph-newspaper"></i><span class="msg">No items.</span></div>`
+          : `<div class="cards">
+              ${items.slice(0, visible).map((item, i) => {
+                const age = fmtAge(item.published);
+                const metaParts = [
+                  item.author ? `by ${escapeHtml(item.author)}` : null,
+                  item.source ? escapeHtml(item.source) : null,
+                ].filter(Boolean);
+                return `
+                  <article class="card">
+                    <span class="rank">${i + 1}</span>
+                    <div class="card-body">
+                      <div class="card-title">${escapeHtml(item.title)}</div>
+                      ${metaParts.length
+                        ? `<div class="card-meta">${metaParts.join(" · ")}</div>`
+                        : ""}
+                    </div>
+                    ${age
+                      ? `<span class="score-pill"><i class="ph ph-clock"></i> ${escapeHtml(age)}</span>`
+                      : ""}
+                  </article>
+                `;
+              }).join("")}
+            </div>`}
     </div>
   `;
 

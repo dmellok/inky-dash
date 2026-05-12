@@ -11,6 +11,7 @@ export default function render(host, ctx) {
 
   if (!url) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/unsplash/client.css">
       <link rel="stylesheet" href="/static/icons/phosphor.css">
       <div class="usp empty">
@@ -38,6 +39,7 @@ export default function render(host, ctx) {
   }
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/unsplash/client.css">
     <link rel="stylesheet" href="/static/icons/phosphor.css">
     <div class="usp scale-${scale}">

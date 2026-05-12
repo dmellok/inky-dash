@@ -1,0 +1,56 @@
+{
+  "manifest_version": 1,
+  "id": "radar",
+  "name": "Weather radar",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Live rain radar centered on a lat/lon. Uses RainViewer for the radar layer and CartoDB Positron for the basemap. Full-bleed.",
+  "icon": "ph-cloud-rain",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "lat",
+      "type": "string",
+      "label": "Latitude",
+      "default": "-37.6494"
+    },
+    {
+      "name": "lon",
+      "type": "string",
+      "label": "Longitude",
+      "default": "145.1004"
+    },
+    {
+      "name": "zoom",
+      "type": "select",
+      "label": "Zoom",
+      "default": "7",
+      "choices": [
+        { "value": "5", "label": "Country" },
+        { "value": "6", "label": "Region" },
+        { "value": "7", "label": "Metro area" },
+        { "value": "8", "label": "City" },
+        { "value": "9", "label": "Neighbourhood" }
+      ]
+    },
+    {
+      "name": "label",
+      "type": "string",
+      "label": "Label (optional)",
+      "default": "South Morang"
+    },
+    {
+      "name": "basemap",
+      "type": "select",
+      "label": "Basemap",
+      "default": "light",
+      "choices": [
+        { "value": "light", "label": "Light (Positron)" },
+        { "value": "dark", "label": "Dark Matter" },
+        { "value": "voyager", "label": "Voyager" },
+        { "value": "none", "label": "None (radar only)" }
+      ]
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "needs_network": true, "full_bleed": true }
+}

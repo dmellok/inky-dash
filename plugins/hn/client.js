@@ -37,8 +37,9 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
-    <link rel="stylesheet" href="/plugins/hn/client.css">
-    <div class="hn">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
+      <link rel="stylesheet" href="/plugins/hn/client.css">
+    <div class="widget hn">
       <div class="head">
         <i class="ph ph-flame head-icon"></i>
         <span class="head-title">HACKER NEWS</span>
@@ -46,24 +47,32 @@ export default function render(host, ctx) {
         <span class="head-time">${escapeHtml(now)}</span>
       </div>
       ${error
-        ? `<div class="hn-error"><i class="ph ph-warning-circle"></i> ${escapeHtml(error)}</div>`
+        ? `<div class="state-error"><i class="ph ph-warning-circle"></i><span class="msg">${escapeHtml(error)}</span></div>`
         : stories.length === 0
-          ? `<div class="hn-empty">No stories.</div>`
-          : `<ol class="list">
-              ${stories.slice(0, visible).map((s, i) => `
-                <li class="row">
-                  <span class="rank">${i + 1}</span>
-                  <div class="entry">
-                    <div class="entry-title">${escapeHtml(s.title)}</div>
-                    <div class="entry-meta">
-                      <span class="meta-score"><i class="ph ph-arrow-fat-up"></i> ${s.score}</span>
-                      <span class="meta-host"><i class="ph ph-link"></i> ${escapeHtml(s.url ? hostname(s.url) : "news.ycombinator.com")}</span>
-                      <span class="meta-comments"><i class="ph ph-chat-circle"></i> ${s.comments}</span>
+          ? `<div class="state-empty"><i class="ph ph-flame"></i><span class="msg">No stories.</span></div>`
+          : `<div class="cards">
+              ${stories.slice(0, visible).map((s, i) => {
+                const host = s.url ? hostname(s.url) : "news.ycombinator.com";
+                const metaParts = [
+                  `${s.score} pts`,
+                  `${s.comments} comments`,
+                  s.by ? `by ${escapeHtml(s.by)}` : null,
+                  escapeHtml(host),
+                ].filter(Boolean);
+                return `
+                  <article class="card">
+                    <span class="rank">${i + 1}</span>
+                    <div class="card-body">
+                      <div class="card-title">${escapeHtml(s.title)}</div>
+                      <div class="card-meta">${metaParts.join(" · ")}</div>
                     </div>
-                  </div>
-                </li>
-              `).join("")}
-            </ol>`}
+                    <span class="score-pill">
+                      <i class="ph ph-arrow-fat-up"></i> ${s.score}
+                    </span>
+                  </article>
+                `;
+              }).join("")}
+            </div>`}
     </div>
   `;
 

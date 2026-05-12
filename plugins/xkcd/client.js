@@ -4,6 +4,7 @@ export default function render(host, ctx) {
 
   if (data.error || !data.img) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/xkcd/client.css">
       <link rel="stylesheet" href="/static/icons/phosphor.css">
       <div class="xkcd error">
@@ -32,6 +33,7 @@ export default function render(host, ctx) {
     : "";
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/xkcd/client.css">
     <div class="xkcd${altText ? " has-alt" : ""}">
       ${titleBar}

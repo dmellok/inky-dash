@@ -1,0 +1,207 @@
+:host { display: block; height: 100%; }
+
+.ha {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 2cqmin;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
+}
+
+/* Header strip — matches weather/note/aqi_trend. */
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
+  color: var(--theme-accent);
+  align-self: center;
+}
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
+}
+.partial-note {
+  margin-left: auto;
+  font-size: min(2.4cqw, 3.6cqh);
+  color: var(--theme-warn, var(--theme-accent));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+/* Grid layout — 2 cols, dropping to 1 on narrow cells. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2cqmin;
+  align-content: start;
+}
+@container (max-width: 320px) {
+  .grid { grid-template-columns: 1fr; }
+}
+
+.tile {
+  display: grid;
+  gap: 0.4cqh;
+  padding: 2cqmin 2.5cqmin;
+  background: var(--theme-surface);
+  border-radius: max(4px, 1.2cqmin);
+  min-width: 0;
+}
+.tile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-width: 0;
+}
+.tile-head .ico {
+  color: var(--theme-accent);
+  font-size: min(3.6cqw, 5.4cqh);
+  flex-shrink: 0;
+}
+.name {
+  font-size: min(2.4cqw, 3.6cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tile-body {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3em;
+  min-width: 0;
+}
+.value {
+  font-size: min(5cqw, 7.5cqh);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.unit {
+  font-size: 0.5em;
+  color: var(--theme-fgSoft);
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+/* Binary-ish entities (lights, doors, locks) — render as a pill so the
+   ON/OFF/LOCKED states read at a glance instead of as text. */
+.state-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.7em;
+  border-radius: 999px;
+  background: var(--theme-surface2, var(--theme-surface));
+  font-size: min(3.4cqw, 5.2cqh);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--theme-fgSoft);
+}
+.state-chip.is-on {
+  background: var(--theme-accent);
+  color: var(--theme-bg);
+  border-color: var(--theme-accent);
+}
+
+/* List layout — one entity per row. */
+.list { display: grid; gap: 1.5cqmin; align-content: start; }
+.row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5cqw;
+  align-items: center;
+  padding: 1.5cqmin 2cqmin;
+  background: var(--theme-surface);
+  border-bottom: max(2px, 0.2cqmin) solid var(--theme-divider);
+}
+.row .ico {
+  color: var(--theme-accent);
+  font-size: min(3.4cqw, 5cqh);
+}
+.row .name {
+  text-transform: none;
+  color: var(--theme-fg);
+  font-weight: 600;
+  font-size: min(3cqw, 4.6cqh);
+}
+.row .value {
+  font-size: min(3.4cqw, 5.2cqh);
+}
+
+/* Hero layout — first entity oversized. */
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+  padding: 1cqh 0 2cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+  margin-bottom: 1cqh;
+}
+.hero-ico {
+  font-size: min(18cqw, 28cqh);
+  color: var(--theme-accent);
+  line-height: 1;
+}
+.hero-meta { display: grid; gap: 0.4cqh; min-width: 0; }
+.hero-name {
+  font-size: min(2.8cqw, 4cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fgSoft);
+  text-transform: uppercase;
+}
+.hero-val {
+  font-size: min(12cqw, 18cqh);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.hero-val .unit {
+  font-size: 0.35em;
+  margin-left: 0.15em;
+  vertical-align: super;
+}
+
+.empty {
+  display: grid;
+  place-items: center;
+  color: var(--theme-fgSoft);
+  font-style: italic;
+  font-size: min(3cqw, 4.5cqh);
+}
+.empty .ph { font-size: min(8cqw, 12cqh); color: var(--theme-accent); margin-bottom: 1cqh; }
+
+.ha--error {
+  grid-template-rows: auto auto;
+  place-items: center;
+  text-align: center;
+}
+.ha--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn, var(--theme-accent));
+}
+.ha--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
+}

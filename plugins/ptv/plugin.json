@@ -1,0 +1,58 @@
+{
+  "manifest_version": 1,
+  "id": "ptv",
+  "name": "Melbourne PTV",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Live PTV departures (train, tram, bus, V/Line) for a chosen stop. Requires a free PTV developer ID + key, requested from the Victorian Government data portal. Use /plugins/ptv/ to look up stop IDs.",
+  "icon": "ph-train",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "stop_id",
+      "type": "string",
+      "label": "Stop ID",
+      "default": ""
+    },
+    {
+      "name": "route_type",
+      "type": "select",
+      "label": "Mode",
+      "default": "0",
+      "choices": [
+        { "value": "0", "label": "Train (Metro)" },
+        { "value": "1", "label": "Tram" },
+        { "value": "2", "label": "Bus" },
+        { "value": "3", "label": "V/Line" },
+        { "value": "4", "label": "Night Bus" }
+      ]
+    },
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title (optional)",
+      "default": ""
+    },
+    {
+      "name": "max_results",
+      "type": "number",
+      "label": "Max departures",
+      "default": 6
+    }
+  ],
+  "settings": [
+    {
+      "name": "devid",
+      "type": "string",
+      "label": "PTV developer ID",
+      "secret": true
+    },
+    {
+      "name": "api_key",
+      "type": "string",
+      "label": "PTV API key",
+      "secret": true
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

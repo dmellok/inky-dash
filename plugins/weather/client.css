@@ -12,6 +12,9 @@
   box-sizing: border-box;
   container-type: size;
   font-family: inherit;
+  /* Belt-and-braces: never let internal content (chart curve, daily bars)
+     bleed into the cell below if the layout math is off. */
+  overflow: hidden;
 }
 
 /* Header strip — small icon + WEATHER label + place (accent) + time, with
@@ -102,7 +105,6 @@
   gap: 1.5cqw;
   padding: 1.5cqmin 2cqmin;
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   min-width: 0;
 }
@@ -243,7 +245,6 @@
   gap: 1.5cqw;
   padding: 1.5cqmin 2cqmin;
   background: var(--theme-surface);
-  border: max(2px, 0.25cqmin) solid var(--theme-divider);
   border-radius: max(4px, 1.2cqmin);
   min-width: 0;
 }
@@ -290,17 +291,30 @@
    entirely. Hero + stats sizes step down at each tier so the chart can
    actually grow without overflowing. */
 
-/* Half-mode (≤700px tall): hide daily, swap in today/tomorrow card row,
-   bump chart slot height and tighten the hero/stats. */
-@container (max-height: 700px) {
+/* Compact-height mode (≤1000px tall): tightened so the chart fits inside
+   the cell instead of bleeding past it. Covers the 1200×800 half-cell on
+   a portrait Spectra 6 panel AND the 1200×960 hero-top cell (60/40 split).
+   We hide both the daily forecast list AND the today/tomorrow card row —
+   at these heights neither fits without overflow. */
+@container (max-height: 1000px) {
   .daily { display: none; }
-  .day-row { display: grid; }
-  .hourly-block { height: 36cqh; min-height: 140px; }
-  .hero-icon { font-size: min(18cqw, 26cqh); }
-  .hero-temp { font-size: min(14cqw, 22cqh); }
-  .condition { font-size: min(5cqw, 8.5cqh); }
-  .stat .ph { font-size: min(4cqw, 6.5cqh); }
-  .stat-value { font-size: min(3cqw, 4.6cqh); }
+  .day-row { display: none; }
+  /* Drop the trailing empty grid track (was reserved for daily / day-row
+     which we just hid) so the hourly block hugs the cell bottom — no
+     dead-space padding under the icon row. The hourly-block itself takes
+     the leftover 1fr so the chart grows to fill the gap. */
+  .wx { grid-template-rows: auto auto auto auto 1fr; }
+  .hourly-block { height: auto; min-height: 160px; }
+  /* Now that we have room, the tick row icons + HH:MM can grow back up. */
+  .hour-tick .ph { font-size: min(4cqw, 6cqh); }
+  .hour-tick-time { font-size: min(2.2cqw, 3.4cqh); }
+  .hero-icon { font-size: min(12cqw, 16cqh); }
+  .hero-temp { font-size: min(10cqw, 14cqh); }
+  .condition { font-size: min(3.5cqw, 5.5cqh); }
+  .feels { font-size: min(2cqw, 2.8cqh); }
+  .stat .ph { font-size: min(3cqw, 4.4cqh); }
+  .stat-value { font-size: min(2.6cqw, 3.8cqh); }
+  .stat-label { font-size: min(1.8cqw, 2.6cqh); }
 }
 
 /* Quarter view (≤460px tall): hide day-row entirely so the chart owns

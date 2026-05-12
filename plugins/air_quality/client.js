@@ -34,6 +34,7 @@ export default function render(host, ctx) {
   if (data && data.error) {
     host.innerHTML = `
       <link rel="stylesheet" href="/static/icons/phosphor.css">
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/air_quality/client.css">
       <div class="aq aq--error">
         <i class="ph ph-warning-circle"></i>
@@ -49,6 +50,7 @@ export default function render(host, ctx) {
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/icons/phosphor.css">
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/air_quality/client.css">
     <div class="aq band-${band.token}">
       <div class="head">

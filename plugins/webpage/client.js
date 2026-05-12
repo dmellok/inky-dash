@@ -12,6 +12,7 @@ export default function render(host, ctx) {
 
   if (!url) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/webpage/client.css">
       <link rel="stylesheet" href="/static/icons/phosphor.css">
       <div class="page error">
@@ -29,6 +30,7 @@ export default function render(host, ctx) {
   // cell. scroll_x/y allow framing a specific portion of long pages.
   const inverseScale = 1 / zoom;
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/webpage/client.css">
     <div class="page">
       <iframe

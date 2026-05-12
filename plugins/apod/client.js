@@ -12,6 +12,7 @@ export default function render(host, ctx) {
 
   if (!url) {
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/apod/client.css">
       <div class="apod empty">
         <i class="ph ph-planet"></i>
@@ -37,6 +38,7 @@ export default function render(host, ctx) {
   else if (data.date) captionParts.push(escapeHtml(data.date));
 
   host.innerHTML = `
+    <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/apod/client.css">
     <link rel="stylesheet" href="/static/icons/phosphor.css">
     <div class="apod scale-${scale}">

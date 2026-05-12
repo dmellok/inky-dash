@@ -6,12 +6,6 @@ const LINKS = [
   { href: "/editor", id: "editor", label: "Dashboards", icon: "ph-cube" },
   { href: "/schedules", id: "schedules", label: "Schedules", icon: "ph-clock-clockwise" },
   { href: "/themes", id: "themes", label: "Themes", icon: "ph-palette" },
-  {
-    href: "/plugins/calibration/",
-    id: "calibration",
-    label: "Calibration",
-    icon: "ph-eyedropper-sample",
-  },
   { href: "/settings", id: "settings", label: "Settings", icon: "ph-gear" },
 ];
 

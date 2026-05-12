@@ -8,9 +8,9 @@
   "icon": "ph-wind",
   "supports": { "sizes": ["md", "lg"] },
   "cell_options": [
-    { "name": "latitude", "type": "number", "label": "Latitude", "default": 51.5074 },
-    { "name": "longitude", "type": "number", "label": "Longitude", "default": -0.1278 },
-    { "name": "label", "type": "string", "label": "Place label", "default": "London" }
+    { "name": "latitude", "type": "number", "label": "Latitude", "default": -37.6494 },
+    { "name": "longitude", "type": "number", "label": "Longitude", "default": 145.1004 },
+    { "name": "label", "type": "string", "label": "Place label", "default": "South Morang" }
   ],
   "render": { "dither": "none", "needs_network": true }
 }

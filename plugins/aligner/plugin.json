@@ -1,0 +1,37 @@
+{
+  "manifest_version": 1,
+  "id": "aligner",
+  "name": "Frame aligner",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Alignment target for mounting the panel in a picture frame with a paper mat. Draws concentric rectangles around the cell edge in dark Spectra-6-friendly colours so you can see which ring the mat opening lands on. Pure client render — no network.",
+  "icon": "ph-frame-corners",
+  "supports": { "sizes": ["lg", "md", "sm", "xs"] },
+  "cell_options": [
+    {
+      "name": "ring_count",
+      "type": "number",
+      "label": "Number of rings",
+      "default": 10
+    },
+    {
+      "name": "ring_thickness_px",
+      "type": "number",
+      "label": "Ring thickness (px)",
+      "default": 10
+    },
+    {
+      "name": "show_labels",
+      "type": "boolean",
+      "label": "Show offset labels",
+      "default": true
+    },
+    {
+      "name": "show_crosshair",
+      "type": "boolean",
+      "label": "Show centre crosshair",
+      "default": true
+    }
+  ],
+  "render": { "dither": "none", "full_bleed": true }
+}

@@ -2,15 +2,39 @@
   "manifest_version": 1,
   "id": "themes_core",
   "name": "Core themes",
-  "version": "0.6.0",
+  "version": "0.7.1",
   "kind": "theme",
-  "description": "35 hand-curated themes: 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, plus 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. Midtones target a tinted-paper bg around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
+  "description": "36 hand-curated themes: a clean white 'Paper' default plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
   "supports": {
-    "sizes": ["xs", "sm", "md", "lg"]
+    "sizes": [
+      "xs",
+      "sm",
+      "md",
+      "lg"
+    ]
   },
   "themes": [
     {
       "id": "default",
+      "name": "Paper",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f8f6f3",
+        "surface2": "#efeae3",
+        "fg": "#1a1612",
+        "fgSoft": "#5a4f44",
+        "muted": "#9a8e80",
+        "accent": "#d97757",
+        "accentSoft": "#aa5a3f",
+        "divider": "#d8cfc2",
+        "danger": "#c97c70",
+        "warn": "#d4a957",
+        "ok": "#7da670"
+      }
+    },
+    {
+      "id": "linen",
       "name": "Linen",
       "mode": "light",
       "palette": {
@@ -205,8 +229,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#1a1612",
-        "surface": "#241e18",
-        "surface2": "#2e261d",
+        "surface": "#352f2a",
+        "surface2": "#4a443c",
         "fg": "#f5e8d8",
         "fgSoft": "#c8b89b",
         "muted": "#8b7e70",
@@ -224,8 +248,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0e1420",
-        "surface": "#18202c",
-        "surface2": "#222a38",
+        "surface": "#262e39",
+        "surface2": "#3b424f",
         "fg": "#d8e0ec",
         "fgSoft": "#98a4b4",
         "muted": "#5a6878",
@@ -243,8 +267,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0a1a0e",
-        "surface": "#122418",
-        "surface2": "#1a2e22",
+        "surface": "#233428",
+        "surface2": "#37483e",
         "fg": "#d8e8d0",
         "fgSoft": "#98ac90",
         "muted": "#607060",
@@ -262,8 +286,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#150e22",
-        "surface": "#1f1830",
-        "surface2": "#2a223e",
+        "surface": "#2e273e",
+        "surface2": "#433c54",
         "fg": "#e8d8e8",
         "fgSoft": "#b098b8",
         "muted": "#786080",
@@ -281,8 +305,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#161616",
-        "surface": "#202020",
-        "surface2": "#2a2a2a",
+        "surface": "#303030",
+        "surface2": "#444444",
         "fg": "#e0e0e0",
         "fgSoft": "#a0a0a0",
         "muted": "#707070",
@@ -490,8 +514,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#1a0a08",
-        "surface": "#241410",
-        "surface2": "#321e18",
+        "surface": "#332420",
+        "surface2": "#493832",
         "fg": "#d8eaee",
         "fgSoft": "#98aab0",
         "muted": "#607078",
@@ -509,8 +533,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#08121e",
-        "surface": "#14202c",
-        "surface2": "#1f2a38",
+        "surface": "#202c37",
+        "surface2": "#36404c",
         "fg": "#ecd8c0",
         "fgSoft": "#b0987a",
         "muted": "#786050",
@@ -528,8 +552,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#1e1408",
-        "surface": "#2a1d10",
-        "surface2": "#382818",
+        "surface": "#392d21",
+        "surface2": "#4f4133",
         "fg": "#e0d4f0",
         "fgSoft": "#a898b8",
         "muted": "#786080",
@@ -547,8 +571,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0a1e10",
-        "surface": "#102818",
-        "surface2": "#1a3422",
+        "surface": "#223829",
+        "surface2": "#364d3d",
         "fg": "#f0d8e8",
         "fgSoft": "#b098a8",
         "muted": "#786068",
@@ -566,8 +590,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#150e22",
-        "surface": "#1f1830",
-        "surface2": "#2a223e",
+        "surface": "#2e273e",
+        "surface2": "#433c54",
         "fg": "#d8f0c0",
         "fgSoft": "#98a880",
         "muted": "#607060",
@@ -585,8 +609,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0a0a14",
-        "surface": "#14141f",
-        "surface2": "#1f1f2a",
+        "surface": "#23232e",
+        "surface2": "#383842",
         "fg": "#ffe8f0",
         "fgSoft": "#c098a8",
         "muted": "#806068",
@@ -604,8 +628,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0e0820",
-        "surface": "#18102a",
-        "surface2": "#221838",
+        "surface": "#292139",
+        "surface2": "#3e3551",
         "fg": "#f0e0ff",
         "fgSoft": "#b098c8",
         "muted": "#786080",
@@ -623,8 +647,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#050a05",
-        "surface": "#0a140a",
-        "surface2": "#122a14",
+        "surface": "#1b251b",
+        "surface2": "#273d29",
         "fg": "#c0ffc0",
         "fgSoft": "#8ac88a",
         "muted": "#607060",
@@ -642,8 +666,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#100820",
-        "surface": "#1a1030",
-        "surface2": "#241840",
+        "surface": "#2a213f",
+        "surface2": "#3f3558",
         "fg": "#ffe0f8",
         "fgSoft": "#c098b0",
         "muted": "#806878",
@@ -661,8 +685,8 @@
       "mode": "dark",
       "palette": {
         "bg": "#0a0810",
-        "surface": "#14101e",
-        "surface2": "#1f182c",
+        "surface": "#24212e",
+        "surface2": "#3a3446",
         "fg": "#d0ffd0",
         "fgSoft": "#98c098",
         "muted": "#607060",

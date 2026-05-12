@@ -14,6 +14,7 @@ from flask import Blueprint, abort, current_app, jsonify, render_template, reque
 from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
+from app.image_ops import blurred_fit
 from app.mqtt_bridge import MqttBridge
 from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
@@ -654,6 +655,33 @@ def api_push_page_inline() -> tuple[Response, int] | Response:
     return response, 502
 
 
+@bp.delete("/api/history/<int:history_id>")
+def api_delete_history(history_id: int) -> tuple[str, int]:
+    return ("", 204) if _push_manager().delete_history(history_id) else ("", 404)
+
+
+@bp.post("/api/history/<int:history_id>/resend")
+def api_resend_history(history_id: int) -> tuple[Response, int] | Response:
+    result = _push_manager().republish(history_id)
+    response = jsonify(
+        {
+            "status": result.status,
+            "digest": result.digest,
+            "url": result.url,
+            "error": result.error,
+            "duration_s": round(result.duration_s, 3),
+            "history_id": result.history_id,
+        }
+    )
+    if result.status == "sent":
+        return response
+    if result.status == "busy":
+        return response, 409
+    if result.status == "not_found":
+        return response, 404
+    return response, 502
+
+
 @bp.get("/api/history")
 def api_history() -> Response:
     raw_limit = request.args.get("limit", "50")
@@ -698,6 +726,11 @@ def schedules_page() -> str:
 
 @bp.get("/send")
 def send_page() -> str:
+    return render_template("send.html")
+
+
+@bp.get("/send/history")
+def send_history_page() -> str:
     return render_template("send.html")
 
 
@@ -752,6 +785,29 @@ def api_fire_schedule(schedule_id: str) -> tuple[Response, int] | Response:
             "duration_s": round(result.duration_s, 3),
         }
     )
+
+
+def _apply_blurred_fit(
+    image_bytes: bytes, scale: str | None
+) -> tuple[bytes, str | None, str | None]:
+    """If ``scale == "blurred"``, server-side composite the image into a
+    panel-sized PNG (blurred cover-fit bg + aspect-preserving fg centred)
+    and rewrite the scale to ``"fit"`` so the listener just centres a
+    panel-sized image it can render natively. Pass-through otherwise.
+
+    Returns ``(new_image_bytes, new_scale, error_message)``.
+    """
+    if scale != "blurred":
+        return image_bytes, scale, None
+    panel = _app_settings_store().load().panel
+    target_w, target_h = panel.render_dimensions()
+    try:
+        composed = blurred_fit(
+            image_bytes, target_w=target_w, target_h=target_h
+        )
+    except Exception as err:  # noqa: BLE001 — Pillow surfaces a few flavours
+        return image_bytes, scale, f"blurred composite: {err}"
+    return composed, "fit", None
 
 
 def _push_options_from_body(body: dict[str, Any]) -> tuple[PushOptions | None, str | None]:
@@ -845,6 +901,9 @@ def api_preview_url() -> tuple[Response, int] | Response:
             raw = resp.read()
     except Exception as err:  # noqa: BLE001
         return jsonify({"error": f"download: {err}"}), 502
+    raw, _, blur_err = _apply_blurred_fit(raw, body.get("scale"))
+    if blur_err is not None:
+        return jsonify({"error": blur_err}), 400
     png, qerr = _quantize_or_400(raw, body.get("dither", "floyd-steinberg"))
     if qerr is not None:
         return jsonify({"error": qerr}), 400
@@ -877,6 +936,9 @@ def api_preview_file() -> tuple[Response, int] | Response:
     raw = upload.read()
     if not raw:
         return jsonify({"error": "file is empty"}), 400
+    raw, _, blur_err = _apply_blurred_fit(raw, request.form.get("scale"))
+    if blur_err is not None:
+        return jsonify({"error": blur_err}), 400
     png, err = _quantize_or_400(raw, request.form.get("dither", "floyd-steinberg"))
     if err is not None:
         return jsonify({"error": err}), 400
@@ -911,6 +973,11 @@ def api_send_url() -> tuple[Response, int] | Response:
     dither = body.get("dither", "floyd-steinberg")
     if dither not in _VALID_DITHER_MODES:
         return jsonify({"error": f"invalid dither mode: {dither!r}"}), 400
+    # "blurred" isn't a listener scale mode — strip it out of the body so
+    # PushOptions validation passes, then re-composite the image below.
+    blur = body.get("scale") == "blurred"
+    if blur:
+        body = {**body, "scale": "fit"}
     options, err = _push_options_from_body(body)
     if err is not None:
         return jsonify({"error": err}), 400
@@ -920,6 +987,10 @@ def api_send_url() -> tuple[Response, int] | Response:
             image_bytes = resp.read()
     except Exception as err:  # noqa: BLE001
         return jsonify({"error": f"download: {err}"}), 502
+    if blur:
+        image_bytes, _, blur_err = _apply_blurred_fit(image_bytes, "blurred")
+        if blur_err is not None:
+            return jsonify({"error": blur_err}), 400
     result = _push_manager().push_image(
         image_bytes,
         source_label=f"url:{url[:80]}",
@@ -956,7 +1027,11 @@ def api_send_webpage() -> tuple[Response, int] | Response:
 
 @bp.post("/api/send/file")
 def api_send_file() -> tuple[Response, int] | Response:
-    """Upload an image file directly (multipart/form-data)."""
+    """Upload an image file directly (multipart/form-data).
+
+    Optional form fields: ``dither``, ``scale``, ``rotate``, ``bg``,
+    ``saturation`` — picked up the same way as the JSON-body endpoints.
+    """
     if "file" not in request.files:
         return jsonify({"error": "expected a 'file' part in multipart body"}), 400
     upload = request.files["file"]
@@ -968,9 +1043,41 @@ def api_send_file() -> tuple[Response, int] | Response:
     image_bytes = upload.read()
     if not image_bytes:
         return jsonify({"error": "uploaded file is empty"}), 400
+
+    # Build a dict from the same option keys ``_push_options_from_body`` uses,
+    # casting numeric fields where present.
+    form_opts: dict[str, Any] = {}
+    for field_name in ("scale", "bg"):
+        if field_name in request.form:
+            form_opts[field_name] = request.form.get(field_name)
+    if "rotate" in request.form:
+        try:
+            form_opts["rotate"] = int(request.form.get("rotate") or 0)
+        except (TypeError, ValueError):
+            return jsonify({"error": "rotate must be an integer"}), 400
+    if "saturation" in request.form:
+        try:
+            form_opts["saturation"] = float(request.form.get("saturation") or 0)
+        except (TypeError, ValueError):
+            return jsonify({"error": "saturation must be a number"}), 400
+    # "blurred" isn't a listener scale mode — pre-composite server-side and
+    # downgrade the published scale to "fit" so PushOptions validation is
+    # happy and the listener treats the panel-sized PNG as ready-to-show.
+    blur = form_opts.get("scale") == "blurred"
+    if blur:
+        form_opts["scale"] = "fit"
+    options, err = _push_options_from_body(form_opts)
+    if err is not None:
+        return jsonify({"error": err}), 400
+    if blur:
+        image_bytes, _, blur_err = _apply_blurred_fit(image_bytes, "blurred")
+        if blur_err is not None:
+            return jsonify({"error": blur_err}), 400
+
     result = _push_manager().push_image(
         image_bytes,
         source_label=f"file:{upload.filename}",
+        options=options,
         dither=cast_dither(dither),
     )
     return _send_response(result)

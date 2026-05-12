@@ -16,6 +16,18 @@
       "choices_from": "folders"
     },
     {
+      "name": "orientation",
+      "type": "select",
+      "label": "Orientation",
+      "default": "any",
+      "choices": [
+        { "value": "any", "label": "Any" },
+        { "value": "portrait", "label": "Portrait" },
+        { "value": "landscape", "label": "Landscape" },
+        { "value": "square", "label": "Square" }
+      ]
+    },
+    {
       "name": "mode",
       "type": "select",
       "label": "Selection",

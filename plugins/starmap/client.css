@@ -1,0 +1,120 @@
+:host { display: block; height: 100%; }
+
+.sky {
+  height: 100%;
+  width: 100%;
+  background: var(--theme-bg);
+  color: var(--theme-fg);
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 2cqmin;
+  padding: 4cqmin;
+  box-sizing: border-box;
+  container-type: size;
+  font-family: inherit;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5cqw;
+  padding-bottom: 1cqh;
+  border-bottom: max(2px, 0.3cqmin) solid var(--theme-divider);
+}
+.head-icon {
+  font-size: min(4cqw, 6cqh);
+  color: var(--theme-accent);
+  align-self: center;
+}
+.head-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--theme-fg);
+}
+.head-place {
+  font-size: min(3cqw, 4.6cqh);
+  font-weight: 600;
+  color: var(--theme-accent);
+}
+.head-time {
+  margin-left: auto;
+  font-size: min(2.8cqw, 4.2cqh);
+  color: var(--theme-fgSoft);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-wrap {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  min-width: 0;
+}
+.chart {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.horizon {
+  fill: var(--theme-surface);
+  stroke: var(--theme-divider);
+  stroke-width: 1.2;
+}
+.alt-ring {
+  fill: none;
+  stroke: var(--theme-divider);
+  stroke-width: 0.4;
+  stroke-dasharray: 0.8 1.5;
+  opacity: 0.7;
+}
+.alt-cross {
+  stroke: var(--theme-divider);
+  stroke-width: 0.3;
+  stroke-dasharray: 0.5 1.5;
+  opacity: 0.55;
+}
+.con-line {
+  stroke: var(--theme-accent);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+.star {
+  fill: var(--theme-fg);
+}
+.star-label {
+  fill: var(--theme-fgSoft);
+  font-size: 3.2px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.cardinal {
+  fill: var(--theme-fg);
+  font-size: 6px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+.moon-dot {
+  fill: var(--theme-fg);
+}
+.moon-glow {
+  fill: none;
+  stroke: var(--theme-fg);
+  stroke-width: 0.5;
+  opacity: 0.4;
+}
+
+.sky--error {
+  grid-template-rows: auto auto;
+  place-items: center;
+  text-align: center;
+}
+.sky--error .ph {
+  font-size: min(20cqw, 30cqh);
+  color: var(--theme-warn, var(--theme-accent));
+}
+.sky--error .msg {
+  font-size: min(3cqw, 4.5cqh);
+  color: var(--theme-fgSoft);
+}

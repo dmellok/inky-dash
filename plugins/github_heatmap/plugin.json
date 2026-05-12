@@ -1,0 +1,30 @@
+{
+  "manifest_version": 1,
+  "id": "github_heatmap",
+  "name": "GitHub heatmap",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Daily commit activity for a GitHub user as the familiar contributions heatmap. Uses the free github-contributions-api; no auth required.",
+  "icon": "ph-git-commit",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "username",
+      "type": "string",
+      "label": "GitHub username",
+      "default": ""
+    },
+    {
+      "name": "range",
+      "type": "select",
+      "label": "Range",
+      "default": "year",
+      "choices": [
+        { "value": "year", "label": "Last 12 months" },
+        { "value": "6mo", "label": "Last 6 months" },
+        { "value": "3mo", "label": "Last 3 months" }
+      ]
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}

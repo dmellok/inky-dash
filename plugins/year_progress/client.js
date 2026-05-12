@@ -47,8 +47,15 @@ export default function render(host, ctx) {
     }
 
     host.innerHTML = `
+      <link rel="stylesheet" href="/static/style/widget-base.css">
       <link rel="stylesheet" href="/plugins/year_progress/client.css">
-      <div class="yp">
+      <div class="widget yp">
+        <div class="head">
+          <i class="ph ph-calendar-blank head-icon"></i>
+          <span class="head-title">YEAR</span>
+          <span class="head-place">${year}</span>
+          <span class="head-time">${fmtFullDate(now)}</span>
+        </div>
         <div class="hero">
           <div class="hero-num">${day}</div>
           <div class="hero-of">/ ${total}</div>
@@ -79,7 +86,6 @@ export default function render(host, ctx) {
           </div>
         </div>
 
-        <div class="footer">${fmtFullDate(now)}</div>
       </div>
     `;
   }
