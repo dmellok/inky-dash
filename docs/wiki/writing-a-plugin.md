@@ -61,6 +61,40 @@ Two things that aren't obvious at first:
 
 ---
 
+## The shadow-root contract
+
+When the composer mounts your widget it attaches an **empty** shadow root and hands it to you as `host`. Nothing else is in there — no inherited page CSS, no auto-linked stylesheets, no parent fonts. Whatever you want inside the shadow root, you put there. Whatever you forget will just be missing.
+
+The two consequences worth burning into your brain before you start splitting things into files:
+
+1. **CSS doesn't load itself.** Any `client.css` you write must be linked explicitly from your `client.js` — there is no auto-injection from `plugin.json`. The two canonical patterns:
+
+   ```js
+   // Pattern A — set the whole tree at once via innerHTML (most plugins do this).
+   host.innerHTML = `
+     <link rel="stylesheet" href="/static/style/widget-base.css">
+     <link rel="stylesheet" href="/plugins/myplugin/client.css">
+     <div class="widget">…</div>
+   `;
+   ```
+
+   ```js
+   // Pattern B — DOM API (useful when you build up nodes dynamically).
+   const link = document.createElement("link");
+   link.rel = "stylesheet";
+   link.href = "/plugins/myplugin/client.css";
+   host.appendChild(link);
+   host.appendChild(myWrapperEl);
+   ```
+
+   If you forget the link, your widget renders with *every browser default* — no flex, no fonts, no theme colours, everything stacked at the top-left. The most common symptom is "it renders, but it looks like the 1996 web".
+
+2. **The shadow root is fully isolated.** `document.querySelector` will not find anything inside your shadow root, and your widget cannot reach `document` to find anything in the page either. Don't try — even when it works in a one-off test, it will silently break under the Playwright screenshot loop or when two cells use your plugin on the same page.
+
+The other half of the contract — `host.host.dataset.rendered = "true"` — is what gates the screenshot. Set it once you've painted the synchronous part of the widget; if you have async work (image loads, font loads), `await` them first.
+
+---
+
 ## Adding configuration
 
 Most widgets want at least one knob per cell. Declare them under `cell_options` in the manifest, and the editor will render the right input control in its sidebar.
@@ -235,7 +269,7 @@ Per-cell theme overrides are picked up automatically — a cell that sets `theme
 
 ### Shared widget chrome
 
-To avoid each widget reinventing the same header strip and stat-tile shapes, link the shared baseline before your own CSS:
+To avoid each widget reinventing the same header strip and stat-tile shapes, link the shared baseline before your own CSS. (As covered in [The shadow-root contract](#the-shadow-root-contract), *all* stylesheets — yours and the shared one — must be linked from your `client.js`; the platform does not auto-inject anything.)
 
 ```html
 <link rel="stylesheet" href="/static/style/widget-base.css">
@@ -326,6 +360,24 @@ For server-side logic — `fetch()`, `choices()`, blueprint endpoints — add re
 - **Default to flat surfaces.** Cards in this app don't have outlines — they rely on the surface-vs-bg tonal step for their boundary. Use `.tile` or `.stat` from the shared CSS and you'll match.
 - **Phosphor icons** are available everywhere — `<i class="ph ph-name"></i>` after linking `/static/icons/phosphor.css`. Browse the full set at [phosphoricons.com](https://phosphoricons.com).
 - **Spectra 6 has six inks**: black, white, red, green, blue, yellow, plus orange. Floyd–Steinberg dithering blends these into perceived mids. Avoid hairlines — anything thinner than 2px tends to disappear into the dither.
+
+---
+
+## Common pitfalls
+
+Quick lookup by symptom. If your widget is misbehaving, scan this list first.
+
+- **"My widget renders but has no styling at all — looks like the 1996 web."** You forgot to `<link rel="stylesheet" href="/plugins/<id>/client.css">` from `client.js`. The shadow root starts empty; the platform doesn't auto-load `client.css` based on `plugin.json`. See [The shadow-root contract](#the-shadow-root-contract).
+
+- **"My text is enormous / fills the whole cell."** `cqw` / `cqh` / `cqmin` units resolve against the **nearest ancestor with `container-type`**, not always what you think. The cell element already has `container-type: size`, so `cqh` on a top-level element correctly resolves to "% of cell height". But the moment you set `container-type` on an inner wrapper, every descendant's `cqh` now resolves against *that wrapper's* height instead. Either don't set `container-type` redundantly on inner elements, or expect the resolution scope to change and re-tune your sizes accordingly.
+
+- **"The push pipeline screenshots a blank cell."** You forgot `host.host.dataset.rendered = "true"`. The Playwright screenshot loop waits for that attribute as the "ready to capture" signal. If you only set it inside a promise callback that hasn't resolved yet, the screenshot fires too early — `await` your async work *first*, set the flag *last*.
+
+- **"My fonts metrics drift / split-text or hinge tricks land in the wrong place."** Default fallback fonts (`sans-serif`, `Helvetica`, `Arial`) have different cap-height and x-height metrics across systems. If your visual depends on glyphs landing at specific positions (split-flap clocks, vertical alignment of icons with text), pick a specific font from `plugins/<font>/plugin.json`, link it explicitly, and verify on at least Chromium + the actual panel render.
+
+- **"Two cells with my plugin interfere with each other."** You're reaching outside the shadow root somewhere — `document.querySelector`, global state on `window`, a singleton in the module's top-level scope. Each cell mount must be fully self-contained. Module-level constants are fine; module-level *mutable state* is not.
+
+- **"`fetch()` runs every second in the editor."** The editor calls `fetch()` on every cell-options change for live preview, so anything expensive (HTTP, image processing) needs caching in `ctx["data_dir"]`. Check `ctx["preview"]` if you want different behaviour for editor vs push.
 
 ---
 
