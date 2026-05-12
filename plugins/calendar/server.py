@@ -1,39 +1,84 @@
-"""Calendar widget — pulls VEVENT entries from an ICS feed and hands the
-client an ordered list of upcoming events.
+"""Calendar widget — pulls VEVENT entries from one or more ICS feeds and
+hands the client an ordered list of upcoming events tagged with the source
+calendar's name + colour.
 
-We deliberately don't depend on a heavy ICS library here. The ICS format is
-line-based (RFC 5545) and our needs are narrow: parse VEVENT blocks for
+Multi-calendar config (under /settings as ``calendars``, one line per feed):
+
+    Work     | https://calendar.google.com/.../basic.ics | #d97757
+    Personal | https://www.icloud.com/.../home.ics       | #3c6e91
+    Holidays | https://.../holidays.ics
+
+Colour is optional — auto-assigned from a small categorical palette if
+omitted. The legacy single-feed setting (``feed_url``) is still honoured
+for backwards compatibility; it's used only when ``calendars`` is empty.
+
+We deliberately don't depend on a heavy ICS library here. The ICS format
+is line-based (RFC 5545) and our needs are narrow: parse VEVENT blocks for
 SUMMARY / DTSTART / DTEND / LOCATION. Recurring events (RRULE) and TZID
 parameters with non-UTC timezones aren't expanded — calendars with simple
-non-recurring events work out of the box; for recurring-event support, swap
-in the ``icalendar`` package if you need it.
+non-recurring events work out of the box; for recurring-event support,
+swap in the ``icalendar`` package if you need it.
 
-The fetched payload is cached on disk under ``data/plugins/calendar/`` with
-a settings-configurable TTL (default 15 min).
+Each feed is cached separately on disk under
+``data/plugins/calendar/<hash>.json`` with a settings-configurable TTL
+(default 15 min). A network failure on any one feed falls back to whatever
+was last cached for that feed, so a single bad URL doesn't blank the cell.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
 import time
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-_CACHE_FILENAME = "feed.json"
+logger = logging.getLogger(__name__)
+
 _DEFAULT_TTL_MIN = 15
 _HORIZON_DAYS = 60  # how far ahead we keep events around
+
+# Categorical palette — same hues as the schedules timeline so colour
+# choices stay visually consistent across the app. Auto-assigned in order.
+_AUTO_COLOURS = [
+    "#d97757",  # orange
+    "#3c6e91",  # deep blue
+    "#7ea16b",  # sage green
+    "#b34a5a",  # rose
+    "#6a4c93",  # purple
+    "#2a8a8a",  # teal
+    "#d4a957",  # gold
+    "#c97c70",  # terracotta
+    "#4a72b8",  # sky blue
+    "#9b3838",  # brick red
+]
+
+
+@dataclass(frozen=True)
+class CalendarSource:
+    name: str
+    url: str
+    colour: str
 
 
 def fetch(
     options: dict[str, Any], settings: dict[str, Any], *, ctx: dict[str, Any]
 ) -> dict[str, Any]:
-    """Return upcoming events from the configured ICS feed."""
-    feed_url = (settings.get("feed_url") or "").strip()
-    if not feed_url:
-        return {"error": "Set the ICS feed URL in /settings."}
+    """Return upcoming events from every configured ICS feed, tagged with
+    their source calendar's name + colour."""
+    sources = _parse_sources(settings)
+    if not sources:
+        return {
+            "error": (
+                "No calendars configured. Add lines under /settings → Calendar "
+                "in the form `Name | https://.../feed.ics | #hex`."
+            )
+        }
 
     try:
         ttl_min = max(1, int(settings.get("cache_ttl_minutes") or _DEFAULT_TTL_MIN))
@@ -47,24 +92,87 @@ def fetch(
 
     data_dir = Path(ctx["data_dir"])
     data_dir.mkdir(parents=True, exist_ok=True)
-    cache = data_dir / _CACHE_FILENAME
 
-    # Try the cache before hitting the network.
-    cached_events = _read_cache(cache, ttl_min)
-    if cached_events is None:
-        try:
-            ics_text = _download(feed_url)
-        except urllib.error.URLError as err:
-            # Network failed — fall back to whatever's on disk, if anything.
-            stale = _read_cache(cache, ttl_min=10_000)
-            if stale is not None:
-                return _shape(stale, event_count, note=f"stale (network: {err.reason})")
-            return {"error": f"Couldn't fetch ICS feed: {err.reason}"}
-        events = _parse_ics(ics_text)
-        _write_cache(cache, events)
-        cached_events = events
+    all_events: list[dict[str, Any]] = []
+    notes: list[str] = []
+    calendars_meta: list[dict[str, str]] = []
+    for src in sources:
+        cache = data_dir / f"feed_{_hash_url(src.url)}.json"
+        events, note = _fetch_source(src, cache, ttl_min)
+        if note:
+            notes.append(note)
+        for ev in events:
+            ev["cal_name"] = src.name
+            ev["cal_colour"] = src.colour
+        all_events.extend(events)
+        calendars_meta.append({"name": src.name, "colour": src.colour})
 
-    return _shape(cached_events, event_count)
+    payload = _shape(all_events, event_count)
+    payload["calendars"] = calendars_meta
+    if notes:
+        payload["note"] = " · ".join(notes)
+    return payload
+
+
+def _parse_sources(settings: dict[str, Any]) -> list[CalendarSource]:
+    """Parse the multi-line ``calendars`` field. Falls back to the legacy
+    single-feed ``feed_url`` when ``calendars`` is empty."""
+    raw = (settings.get("calendars") or "").strip()
+    sources: list[CalendarSource] = []
+    if raw:
+        for i, line in enumerate(raw.splitlines()):
+            cleaned = line.strip()
+            if not cleaned or cleaned.startswith("#"):
+                continue
+            parts = [p.strip() for p in cleaned.split("|")]
+            if len(parts) < 2:
+                # Tolerate "just a URL" lines by auto-naming them.
+                if cleaned.startswith(("http://", "https://", "webcal://")):
+                    parts = [f"Calendar {i + 1}", cleaned]
+                else:
+                    continue
+            name, url = parts[0], parts[1]
+            colour = parts[2] if len(parts) >= 3 and parts[2] else ""
+            if not colour or not _looks_like_hex(colour):
+                colour = _AUTO_COLOURS[len(sources) % len(_AUTO_COLOURS)]
+            sources.append(CalendarSource(name=name, url=url, colour=colour))
+    if not sources:
+        legacy = (settings.get("feed_url") or "").strip()
+        if legacy:
+            sources.append(CalendarSource(name="Calendar", url=legacy, colour=_AUTO_COLOURS[0]))
+    return sources
+
+
+def _looks_like_hex(value: str) -> bool:
+    if not value.startswith("#") or len(value) not in (4, 7):
+        return False
+    return all(c in "0123456789abcdefABCDEF" for c in value[1:])
+
+
+def _hash_url(url: str) -> str:
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()[:12]
+
+
+def _fetch_source(
+    src: CalendarSource, cache: Path, ttl_min: int
+) -> tuple[list[dict[str, Any]], str | None]:
+    """Return (events, note). Fresh cache → events with no note. Network
+    fail with stale cache → stale events with a note. Hard fail → empty
+    + note describing the failure (so the cell still renders the rest)."""
+    cached = _read_cache(cache, ttl_min)
+    if cached is not None:
+        return cached, None
+    try:
+        ics_text = _download(src.url)
+    except urllib.error.URLError as err:
+        stale = _read_cache(cache, ttl_min=10_000)
+        if stale is not None:
+            return stale, f"{src.name}: stale ({err.reason})"
+        logger.warning("calendar fetch failed for %s: %s", src.url, err)
+        return [], f"{src.name}: {err.reason}"
+    events = _parse_ics(ics_text)
+    cache.write_text(json.dumps(events))
+    return events, None
 
 
 # ---------------------------------------------------------------------------
@@ -196,13 +304,7 @@ def _read_cache(cache: Path, ttl_min: int) -> list[dict[str, Any]] | None:
         return None
 
 
-def _write_cache(cache: Path, events: list[dict[str, Any]]) -> None:
-    cache.write_text(json.dumps(events))
-
-
-def _shape(
-    events: list[dict[str, Any]], event_count: int, note: str | None = None
-) -> dict[str, Any]:
+def _shape(events: list[dict[str, Any]], event_count: int) -> dict[str, Any]:
     """Filter to upcoming events + take the first N. Client renders the
     month grid itself from today's date; the server just supplies the
     agenda items."""
@@ -220,7 +322,4 @@ def _shape(
             continue  # too far in the future to bother showing
         upcoming.append(e)
     upcoming.sort(key=lambda e: e["start_iso"])
-    payload: dict[str, Any] = {"events": upcoming[:event_count]}
-    if note:
-        payload["note"] = note
-    return payload
+    return {"events": upcoming[:event_count]}

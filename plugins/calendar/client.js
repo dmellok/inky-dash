@@ -139,47 +139,80 @@ export default function render(host, ctx) {
     .map((d) => `<div class="dow">${d}</div>`)
     .join("");
 
-  // Agenda — each event is a flat surface card, same shape language as
-  // the hn / news / todo widgets. An empty state pops in when there's
-  // nothing in the next 60 days.
+  // Agenda — each event is a flat surface card with a coloured strip
+  // along the left edge identifying its source calendar. An empty state
+  // pops in when there's nothing in the next 60 days.
   const events = data.events || [];
+  const calendars = data.calendars || [];
+  const showCalLegend = calendars.length > 1;
   const agenda = events.length
     ? events
-        .map(
-          (e) => `
-        <article class="event">
-          <div class="event-title">${escapeHtml(e.title)}</div>
-          <div class="event-meta">
-            <span><i class="ph ph-clock"></i> ${escapeHtml(formatStart(e))}</span>
-            ${e.location
-              ? `<span class="event-loc"><i class="ph ph-map-pin"></i> ${escapeHtml(e.location)}</span>`
-              : ""}
+        .map((e) => {
+          const colour = e.cal_colour || "var(--theme-accent)";
+          return `
+        <article class="event" style="--cal-colour: ${escapeHtml(colour)};">
+          <div class="event-body">
+            <div class="event-title">${escapeHtml(e.title)}</div>
+            <div class="event-meta">
+              <span><i class="ph ph-clock"></i> ${escapeHtml(formatStart(e))}</span>
+              ${showCalLegend && e.cal_name
+                ? `<span class="event-cal">${escapeHtml(e.cal_name)}</span>`
+                : ""}
+              ${e.location
+                ? `<span class="event-loc"><i class="ph ph-map-pin"></i> ${escapeHtml(e.location)}</span>`
+                : ""}
+            </div>
           </div>
-        </article>`,
-        )
+        </article>`;
+        })
         .join("")
     : `<div class="event-empty">
          <i class="ph ph-confetti"></i>
          <span>Nothing on the agenda.</span>
        </div>`;
 
+  // Legend: tiny coloured chip + calendar name, one per source. Only
+  // shown when at least two calendars are wired up.
+  const legend = showCalLegend
+    ? `<div class="cal-legend">
+         ${calendars
+           .map(
+             (c) =>
+               `<span class="cal-chip">
+                  <span class="cal-swatch" style="background: ${escapeHtml(c.colour)}"></span>
+                  ${escapeHtml(c.name)}
+                </span>`,
+           )
+           .join("")}
+       </div>`
+    : "";
+
   const noteBar = data.note
     ? `<div class="cal-note"><i class="ph ph-warning"></i> ${escapeHtml(data.note)}</div>`
     : "";
+
+  const yearLabel = today.getFullYear();
 
   host.innerHTML = `
     <link rel="stylesheet" href="/static/style/widget-base.css">
     <link rel="stylesheet" href="/plugins/calendar/client.css">
     <link rel="stylesheet" href="/static/icons/phosphor.css">
     <div class="widget cal">
+      <div class="head">
+        <i class="ph ph-calendar-blank head-icon"></i>
+        <span class="head-title">${escapeHtml(monthLabel)}</span>
+        <span class="head-place">${yearLabel}</span>
+      </div>
       ${noteBar}
       <div class="cal-grid">
         <section class="month">
-          <header class="month-head">${escapeHtml(monthLabel)}</header>
           <div class="dow-row">${weekdayCells}</div>
           <div class="days">${dayCells}</div>
         </section>
-        <section class="agenda">${agenda}</section>
+        <section class="agenda-wrap">
+          <div class="agenda">${agenda}</div>
+          ${legend}
+        </section>
       </div>
     </div>
   `;

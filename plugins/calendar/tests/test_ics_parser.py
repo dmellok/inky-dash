@@ -8,6 +8,7 @@ all-day DATE values, and the SUMMARY/LOCATION text-value escape rules.
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 _SERVER = importlib.util.spec_from_file_location(
@@ -16,6 +17,7 @@ _SERVER = importlib.util.spec_from_file_location(
 )
 assert _SERVER is not None and _SERVER.loader is not None
 calendar_server = importlib.util.module_from_spec(_SERVER)
+sys.modules["calendar_server"] = calendar_server
 _SERVER.loader.exec_module(calendar_server)
 
 

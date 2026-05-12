@@ -1,24 +1,21 @@
-/* Chrome (.widget, .state-error) comes from widget-base.css. Calendar-
-   specific layout below. Month grid sits to the left in landscape, on top
-   in portrait — driven by a single container query on the cell aspect. */
+/* Chrome (.widget, .head, .head-*, .state-error) comes from
+   widget-base.css. Calendar-specific layout below. The month grid sits
+   to the left in landscape cells and on top in portrait cells — driven
+   by a single container query on the cell aspect ratio. */
 
 .cal {
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto 1fr;
   gap: 2cqmin;
 }
 
-/* Default (landscape / wide) layout: calendar | agenda side-by-side. The
-   container query below flips to a stacked layout when the cell is
-   taller than it is wide. */
+/* Default (landscape / wide) layout: calendar | agenda side-by-side.
+   Portrait cells (height ≥ width) stack the agenda below the grid. */
 .cal-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   gap: 3cqmin;
   min-height: 0;
 }
-
-/* Portrait cells: stack the calendar on top of the agenda. The container
-   query targets cells where height > width. */
 @container (aspect-ratio < 1 / 1) {
   .cal-grid {
     grid-template-columns: 1fr;
@@ -30,16 +27,9 @@
 
 .month {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto 1fr;
   gap: 1.5cqmin;
   min-width: 0;
-}
-
-.month-head {
-  font-size: min(4cqw, 6cqh);
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--theme-fg);
 }
 
 .dow-row,
@@ -47,9 +37,7 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
 }
-
 .dow-row {
-  gap: 0;
   margin-bottom: 0.5cqh;
 }
 .dow {
@@ -76,8 +64,6 @@
   color: var(--theme-fg);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  /* The today circle is drawn via a pseudo-element so the number sits
-     over the accent fill without padding maths. */
   position: relative;
 }
 .day.is-outside { color: var(--theme-fgSoft); opacity: 0.5; }
@@ -96,6 +82,14 @@
 
 /* --- Agenda ------------------------------------------------------ */
 
+.agenda-wrap {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 1cqh;
+  min-height: 0;
+  min-width: 0;
+}
+
 .agenda {
   display: grid;
   gap: 1.5cqmin;
@@ -104,14 +98,27 @@
   overflow: hidden;
 }
 
+/* Per-event card with a 4-px coloured strip on the left edge identifying
+   the source calendar. The colour comes through as the inline custom
+   property --cal-colour that client.js sets per event. */
 .event {
-  display: grid;
-  gap: 0.5cqh;
-  padding: 2cqmin 2.5cqmin;
+  position: relative;
+  padding: 2cqmin 2.5cqmin 2cqmin 3.2cqmin;
   background: var(--theme-surface);
   border-radius: max(8px, 1.6cqmin);
   min-width: 0;
+  overflow: hidden;
 }
+.event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: max(4px, 0.8cqmin);
+  background: var(--cal-colour, var(--theme-accent));
+}
+.event-body { display: grid; gap: 0.5cqh; min-width: 0; }
 .event-title {
   font-size: min(3cqw, 4.6cqh);
   font-weight: 700;
@@ -131,7 +138,15 @@
   font-variant-numeric: tabular-nums;
   flex-wrap: wrap;
 }
-.event-meta .ph { color: var(--theme-accent); font-size: 1.1em; }
+.event-meta .ph { color: var(--cal-colour, var(--theme-accent)); font-size: 1.1em; }
+.event-cal {
+  /* Tiny chip showing which calendar this came from. Sits next to the
+     time in the meta line; the strip-on-the-left already conveys the
+     colour, so the chip here is just the label. */
+  color: var(--theme-fgSoft);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 .event-loc {
   white-space: nowrap;
   overflow: hidden;
@@ -154,7 +169,30 @@
   font-size: min(8cqw, 12cqh);
 }
 
-/* Stale-cache / partial-error note appears just above the grid. */
+/* Calendar legend below the agenda when more than one source is wired up. */
+.cal-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1cqmin 2cqw;
+  padding-top: 0.5cqh;
+  font-size: min(2.2cqw, 3.4cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+}
+.cal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  white-space: nowrap;
+}
+.cal-swatch {
+  display: inline-block;
+  width: min(2.4cqw, 3.4cqh);
+  height: min(2.4cqw, 3.4cqh);
+  border-radius: 3px;
+}
+
+/* Stale-cache / partial-error note above the grid. */
 .cal-note {
   font-size: min(2.2cqw, 3.4cqh);
   color: var(--theme-warn, var(--theme-accent));
@@ -163,3 +201,40 @@
   gap: 0.4em;
 }
 .cal-note .ph { color: var(--theme-warn, var(--theme-accent)); }
+
+/* --- Portrait overrides ----------------------------------------- */
+/* Portrait cells stack the agenda below the month grid; both compete
+   for vertical space. Flatten the day aspect ratio so the grid takes
+   roughly half the height, and compact event cards so 3 events + the
+   legend fit comfortably underneath. Placed at the bottom of the file
+   so these rules win the cascade against the regular .day / .event /
+   .agenda rules above. */
+@container (aspect-ratio < 1 / 1) {
+  .day {
+    aspect-ratio: 7 / 5;
+    font-size: min(3.4cqw, 4cqh);
+  }
+  .month { min-height: 0; }
+  .event {
+    padding: 1.4cqmin 1.8cqmin 1.4cqmin 2.6cqmin;
+    border-radius: max(6px, 1.2cqmin);
+  }
+  .event-body { gap: 0.3cqh; }
+  .event-title {
+    font-size: min(2.6cqw, 3.6cqh);
+    -webkit-line-clamp: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event-meta {
+    font-size: min(1.9cqw, 2.6cqh);
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  .agenda { gap: 1cqmin; }
+  .cal-legend {
+    font-size: min(1.9cqw, 2.6cqh);
+    gap: 0.6cqmin 1.4cqw;
+  }
+}

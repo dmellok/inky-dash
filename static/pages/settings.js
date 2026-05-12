@@ -416,6 +416,21 @@ class SettingsPage extends LitElement {
       `;
     }
 
+    if (field.type === "textarea") {
+      return html`
+        <div class="form-row">
+          <label class="field" for=${`f-${pluginId}-${field.name}`}>${field.label}</label>
+          <textarea
+            id=${`f-${pluginId}-${field.name}`}
+            rows="6"
+            .value=${String(value)}
+            @input=${onInput}
+            style="font: inherit; font-size: 13px; font-family: ui-monospace, 'SF Mono', Menlo, monospace;"
+          ></textarea>
+        </div>
+      `;
+    }
+
     return html`
       <div class="form-row">
         <label class="field" for=${`f-${pluginId}-${field.name}`}>${field.label}</label>
