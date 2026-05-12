@@ -1,0 +1,50 @@
+{
+  "manifest_version": 1,
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Month grid + upcoming events from an ICS feed (Google Calendar, iCloud, Outlook, any standard .ics URL). Layout switches automatically: events on the right in landscape cells, below the grid in portrait cells.",
+  "icon": "ph-calendar-blank",
+  "supports": { "sizes": ["md", "lg"] },
+  "cell_options": [
+    {
+      "name": "event_count",
+      "type": "number",
+      "label": "Upcoming events to show",
+      "default": 3
+    },
+    {
+      "name": "week_start",
+      "type": "select",
+      "label": "Week starts on",
+      "default": "sun",
+      "choices": [
+        { "value": "sun", "label": "Sunday" },
+        { "value": "mon", "label": "Monday" }
+      ]
+    },
+    {
+      "name": "highlight_today",
+      "type": "boolean",
+      "label": "Highlight today with accent circle",
+      "default": true
+    }
+  ],
+  "settings": [
+    {
+      "name": "feed_url",
+      "type": "string",
+      "label": "ICS feed URL",
+      "default": "",
+      "secret": true
+    },
+    {
+      "name": "cache_ttl_minutes",
+      "type": "number",
+      "label": "Cache TTL (minutes)",
+      "default": 15
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}
