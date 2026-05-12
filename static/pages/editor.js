@@ -29,6 +29,14 @@ const LAYOUTS = {
       { x: 0, y: 1, w: 1, h: 1 },
     ],
   },
+  "1x3": {
+    label: "3 rows",
+    cells: [
+      { x: 0, y: 0, w: 1, h: 1 },
+      { x: 0, y: 1, w: 1, h: 1 },
+      { x: 0, y: 2, w: 1, h: 1 },
+    ],
+  },
   "2x2": {
     label: "2×2 grid",
     cells: [
@@ -72,6 +80,18 @@ const LAYOUTS = {
       { x: 0, y: 0, w: 2, h: 1 },
       { x: 0, y: 1, w: 2, h: 1 },
       { x: 2, y: 0, w: 3, h: 2 },
+    ],
+  },
+  // 2-col × 8-row grid: hero-top spans 2×3, two middle cells span 1×2
+  // each, hero-bottom spans 2×3. Heights: 37.5% / 25% / 37.5% — the
+  // classic "weather hero, twin stats row, list hero" dashboard shape.
+  "hero-sandwich": {
+    label: "Hero sandwich",
+    cells: [
+      { x: 0, y: 0, w: 2, h: 3 },
+      { x: 0, y: 3, w: 1, h: 2 },
+      { x: 1, y: 3, w: 1, h: 2 },
+      { x: 0, y: 5, w: 2, h: 3 },
     ],
   },
 };
