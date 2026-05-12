@@ -1,0 +1,89 @@
+{
+  "manifest_version": 1,
+  "id": "qr",
+  "name": "QR Code",
+  "version": "1.0.0",
+  "kind": "widget",
+  "description": "QR code for sharing a link, joining a WiFi network, or showing arbitrary text. Encoded entirely on-device — nothing leaves the panel. Pairs with the camera apps on iOS and Android (WiFi mode auto-prompts to join).",
+  "icon": "ph-qr-code",
+  "supports": {
+    "sizes": ["xs", "sm", "md", "lg"]
+  },
+  "cell_options": [
+    {
+      "name": "mode",
+      "type": "select",
+      "label": "Content type",
+      "default": "url",
+      "choices": [
+        { "value": "url", "label": "URL / link" },
+        { "value": "wifi", "label": "WiFi credentials" },
+        { "value": "text", "label": "Plain text" }
+      ]
+    },
+    {
+      "name": "url",
+      "type": "string",
+      "label": "URL (URL mode)",
+      "default": "https://example.com"
+    },
+    {
+      "name": "text",
+      "type": "textarea",
+      "label": "Text (text mode)",
+      "default": ""
+    },
+    {
+      "name": "wifi_ssid",
+      "type": "string",
+      "label": "WiFi SSID (WiFi mode)",
+      "default": ""
+    },
+    {
+      "name": "wifi_password",
+      "type": "string",
+      "label": "WiFi password (WiFi mode)",
+      "default": ""
+    },
+    {
+      "name": "wifi_security",
+      "type": "select",
+      "label": "WiFi security (WiFi mode)",
+      "default": "WPA",
+      "choices": [
+        { "value": "WPA", "label": "WPA / WPA2 / WPA3" },
+        { "value": "WEP", "label": "WEP" },
+        { "value": "nopass", "label": "Open (no password)" }
+      ]
+    },
+    {
+      "name": "wifi_hidden",
+      "type": "boolean",
+      "label": "WiFi SSID is hidden",
+      "default": false
+    },
+    {
+      "name": "caption",
+      "type": "string",
+      "label": "Caption (under the QR; leave blank to auto-derive)",
+      "default": ""
+    },
+    {
+      "name": "error_correction",
+      "type": "select",
+      "label": "Error correction",
+      "default": "M",
+      "choices": [
+        { "value": "L", "label": "Low (~7% redundancy)" },
+        { "value": "M", "label": "Medium (~15%)" },
+        { "value": "Q", "label": "Quartile (~25%)" },
+        { "value": "H", "label": "High (~30%)" }
+      ]
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": false,
+    "full_bleed": false
+  }
+}

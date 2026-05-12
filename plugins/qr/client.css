@@ -1,0 +1,57 @@
+/* Chrome (.widget, .state-error) comes from widget-base.css. QR-specific
+   layout below: label on top, QR centred in a square frame, caption
+   beneath. Everything sizes off cqmin so the widget keeps its aspect
+   regardless of cell shape. */
+
+.qr {
+  grid-template-rows: auto 1fr auto;
+  gap: 2cqmin;
+  padding: 3cqmin;
+  place-items: center;
+}
+
+.qr-label {
+  display: flex;
+  align-items: center;
+  gap: 1cqmin;
+  font-size: min(3cqw, 4cqh);
+  font-weight: 700;
+  color: var(--theme-fgSoft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.qr-label .ph {
+  font-size: 1.2em;
+  color: var(--theme-accent);
+}
+
+/* The frame is a square that fills the larger of the two cell axes
+   while staying inside the cell. ``aspect-ratio: 1/1`` + ``min(...)``
+   on width keeps it perfectly square even in long landscape cells. */
+.qr-frame {
+  width: min(90cqmin, 100%);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  /* The SVG itself paints its own light-fill rect; this padding gives
+     the dark modules visual breathing room against the rest of the
+     widget without altering the QR's required quiet zone. */
+  padding: 0;
+}
+.qr-frame svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.qr-caption {
+  font-size: min(2.6cqw, 3.6cqh);
+  font-weight: 600;
+  color: var(--theme-fg);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
