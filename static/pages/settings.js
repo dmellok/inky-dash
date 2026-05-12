@@ -163,6 +163,56 @@ class SettingsPage extends LitElement {
       outline: 2px solid var(--id-accent, #b06750);
       outline-offset: 2px;
     }
+    /* Pill toggle — same pattern as /schedules. Used by the HA card. */
+    label.switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    label.switch input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 38px;
+      height: 22px;
+      background: var(--id-divider, #c8b89b);
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      margin: 0;
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+    label.switch input[type="checkbox"]::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+      transition: transform 150ms ease;
+    }
+    label.switch input[type="checkbox"]:checked {
+      background: var(--id-accent, #b06750);
+    }
+    label.switch input[type="checkbox"]:checked::before {
+      transform: translateX(16px);
+    }
+    label.switch input[type="checkbox"]:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    label.switch input[type="checkbox"]:focus-visible {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 2px;
+    }
+    label.switch .switch-label {
+      font-weight: 600;
+      color: var(--id-fg, #1a1612);
+    }
     .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
     .empty {
       padding: 24px;
@@ -734,15 +784,14 @@ class SettingsPage extends LitElement {
         <div class="form-row">
           <label class="field">Discovery</label>
           <div>
-            <label class="switch" style="display: flex; align-items: center; gap: 8px;">
+            <label class="switch">
               <input
                 type="checkbox"
                 ?checked=${enabled}
                 ?disabled=${!mqttConfigured}
                 @change=${(e) => this._setApp("ha.enabled", e.target.checked)}
-                style="accent-color: var(--id-accent);"
               />
-              <span>${enabled ? "Enabled" : "Disabled"}</span>
+              <span class="switch-label">${enabled ? "On" : "Off"}</span>
             </label>
             <small class="field-help">
               ${mqttConfigured
