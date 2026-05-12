@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
 from app.image_ops import blurred_fit
-from app.mqtt_bridge import MqttBridge
+from app.mqtt_bridge import MqttBridge, NullBridge
 from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
 from app.quantizer import DitherMode, apply_underscan, quantize_to_png
@@ -1208,6 +1208,38 @@ def api_save_app_settings() -> tuple[Response, int] | Response:
         new_bridge = build_bridge_from_settings(new_settings)
         pm.set_bridge(new_bridge)
         current_app.config["MQTT_BRIDGE"] = new_bridge
+        # HA discovery holds a reference to the old bridge; rebuild it so
+        # it publishes through the new one. Stop the old instance first
+        # (publishes availability=offline + tears down retained configs).
+        old_ha = current_app.config.get("HA_DISCOVERY")
+        if old_ha is not None:
+            old_ha.stop()
+        from app.ha_discovery import HomeAssistantDiscovery
+
+        new_ha = HomeAssistantDiscovery(
+            bridge=new_bridge,
+            push_manager=pm,
+            page_store=_store(),
+            base_url=new_settings.base_url,
+        )
+        current_app.config["HA_DISCOVERY"] = new_ha
+        if new_settings.ha.enabled and not isinstance(new_bridge, NullBridge):
+            new_ha.start()
+
+    # HA discovery toggle on/off (independent of MQTT change). Also push
+    # base_url updates through so the device's configuration_url + the
+    # image URL prefix stay current.
+    ha_disco = current_app.config.get("HA_DISCOVERY")
+    if ha_disco is not None:
+        ha_disco.set_base_url(new_settings.base_url)
+        was_enabled = existing.ha.enabled
+        now_enabled = new_settings.ha.enabled
+        bridge = current_app.config.get("MQTT_BRIDGE")
+        bridge_real = bridge is not None and not isinstance(bridge, NullBridge)
+        if now_enabled and not was_enabled and bridge_real:
+            ha_disco.start()
+        elif was_enabled and not now_enabled:
+            ha_disco.stop()
 
     return jsonify(_mask_password(new_settings))
 

@@ -9,17 +9,28 @@ mypy --strict applies via re-export through ``app.state``.
 
 from __future__ import annotations
 
+import contextlib
 import json
+import logging
 import os
+import threading
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from app.state.page_model import Page
 
+logger = logging.getLogger(__name__)
+
 
 class PageStore:
     def __init__(self, path: Path) -> None:
         self.path = path
+        # Change listeners — invoked after a successful upsert or delete so
+        # downstream services (HA discovery) can republish per-page entities.
+        # Listener exceptions are logged + swallowed; they can't block a save.
+        self._listener_lock = threading.Lock()
+        self._listeners: list[Callable[[], None]] = []
 
     def _load_raw(self) -> list[dict[str, Any]]:
         if not self.path.exists():
@@ -56,6 +67,7 @@ class PageStore:
         else:
             raw.append(new_record)
         self._save_raw(raw)
+        self._notify()
 
     def delete(self, page_id: str) -> bool:
         raw = self._load_raw()
@@ -63,4 +75,26 @@ class PageStore:
         if len(kept) == len(raw):
             return False
         self._save_raw(kept)
+        self._notify()
         return True
+
+    # -- Change listeners -------------------------------------------------
+
+    def add_listener(self, callback: Callable[[], None]) -> None:
+        """Register a function to be called after every page upsert/delete."""
+        with self._listener_lock:
+            if callback not in self._listeners:
+                self._listeners.append(callback)
+
+    def remove_listener(self, callback: Callable[[], None]) -> None:
+        with self._listener_lock, contextlib.suppress(ValueError):
+            self._listeners.remove(callback)
+
+    def _notify(self) -> None:
+        with self._listener_lock:
+            listeners = list(self._listeners)
+        for cb in listeners:
+            try:
+                cb()
+            except Exception:  # noqa: BLE001
+                logger.exception("PageStore listener %r raised", cb)

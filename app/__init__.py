@@ -6,6 +6,7 @@ from flask import Flask, abort, render_template, send_from_directory
 from werkzeug.wrappers import Response
 
 from app import admin, composer, plugin_loader
+from app.ha_discovery import HomeAssistantDiscovery
 from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
 from app.push import PushManager
 from app.scheduler import Scheduler
@@ -135,6 +136,21 @@ def create_app(
         underscan=app_settings.panel.underscan,
     )
     app.config["PUSH_MANAGER"] = push_manager
+
+    # HA autodiscovery — opt-in via Settings → Home Assistant. Always
+    # instantiated so the admin can flip it on/off without re-creating
+    # objects, but only ``start()``-ed if currently enabled AND the
+    # broker is real (not NullBridge — discovery configs would just
+    # raise on every publish otherwise).
+    ha_discovery = HomeAssistantDiscovery(
+        bridge=bridge_impl,
+        push_manager=push_manager,
+        page_store=page_store,
+        base_url=app_settings.base_url,
+    )
+    app.config["HA_DISCOVERY"] = ha_discovery
+    if app_settings.ha.enabled and not isinstance(bridge_impl, NullBridge):
+        ha_discovery.start()
 
     schedule_store = ScheduleStore(data_path / "core" / "schedules.json")
     app.config["SCHEDULE_STORE"] = schedule_store

@@ -15,6 +15,7 @@ import json
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
@@ -23,6 +24,10 @@ import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
 logger = logging.getLogger(__name__)
+
+# Topic + payload handler. Handlers are called from the network thread —
+# they should be fast and non-blocking.
+SubscribeHandler = Callable[[str, bytes], None]
 
 # How many recent inky/status messages to keep around for the debug log.
 STATUS_LOG_CAPACITY = 50
@@ -43,6 +48,12 @@ class MqttBridge(Protocol):
         self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False
     ) -> None: ...
 
+    def subscribe(self, topic: str, handler: SubscribeHandler, *, qos: int = 1) -> None:
+        """Attach a handler for one MQTT topic (or wildcard). Handler runs on
+        the network thread — keep it fast. Calling twice with the same topic
+        replaces the previous handler."""
+        ...
+
     @property
     def listener_status(self) -> ListenerStatus | None: ...
 
@@ -58,6 +69,11 @@ class NullBridge:
 
     def publish(self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False) -> None:
         raise RuntimeError("MQTT not configured; set MQTT_HOST to enable push")
+
+    def subscribe(self, topic: str, handler: SubscribeHandler, *, qos: int = 1) -> None:
+        # No broker, no messages — silently no-op. Subscribers shouldn't
+        # have to special-case the unconfigured state.
+        return
 
     @property
     def listener_status(self) -> ListenerStatus | None:
@@ -91,6 +107,12 @@ class PahoBridge:
         self._status_log: collections.deque[ListenerStatus] = collections.deque(
             maxlen=STATUS_LOG_CAPACITY
         )
+        # External topic subscriptions registered via subscribe(). Keyed by
+        # exact topic string (MQTT wildcards in the key still work — we
+        # match against incoming msg.topic with paho's topic_matches_sub).
+        # Replacing a handler for the same topic just overwrites.
+        self._subscriptions: dict[str, SubscribeHandler] = {}
+        self._connected = False
 
         self._client = mqtt.Client(
             callback_api_version=CallbackAPIVersion.VERSION2,
@@ -111,10 +133,30 @@ class PahoBridge:
         # rc is ReasonCode in v2 callback API
         logger.info("MQTT connected (rc=%s); subscribing to %s", rc, self._status_topic)
         client.subscribe(self._status_topic, qos=1)
+        # Re-subscribe to any topics added before/across a reconnect — paho
+        # drops broker-side subs on disconnect, but our handler dict survives.
+        with self._lock:
+            self._connected = True
+            for topic in self._subscriptions:
+                client.subscribe(topic, qos=1)
 
     def _on_message(self, _client: mqtt.Client, _userdata: Any, msg: mqtt.MQTTMessage) -> None:
-        if msg.topic != self._status_topic:
+        # Built-in: listener status. Handle inline before falling through to
+        # user-registered subscribers so it stays cheap.
+        if msg.topic == self._status_topic:
+            self._handle_status(msg)
             return
+        with self._lock:
+            handlers = list(self._subscriptions.items())
+        for sub_topic, handler in handlers:
+            if not mqtt.topic_matches_sub(sub_topic, msg.topic):
+                continue
+            try:
+                handler(msg.topic, msg.payload)
+            except Exception:  # noqa: BLE001 — never let a handler crash the network thread
+                logger.exception("MQTT subscriber for %s raised", sub_topic)
+
+    def _handle_status(self, msg: mqtt.MQTTMessage) -> None:
         try:
             raw = json.loads(msg.payload.decode())
         except (json.JSONDecodeError, UnicodeDecodeError) as err:
@@ -131,6 +173,14 @@ class PahoBridge:
         with self._lock:
             self._latest_status = status
             self._status_log.appendleft(status)
+
+    def subscribe(self, topic: str, handler: SubscribeHandler, *, qos: int = 1) -> None:
+        with self._lock:
+            self._subscriptions[topic] = handler
+            already_connected = self._connected
+        if already_connected:
+            self._client.subscribe(topic, qos=qos)
+        # If not yet connected, _on_connect will subscribe on session start.
 
     def publish(self, topic: str, payload: bytes, *, qos: int = 1, retain: bool = False) -> None:
         info = self._client.publish(topic, payload, qos=qos, retain=retain)

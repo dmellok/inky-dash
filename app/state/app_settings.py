@@ -131,6 +131,21 @@ class MqttSettings(BaseModel):
     client_id: str = "inky-dash-companion"
 
 
+class HomeAssistantSettings(BaseModel):
+    """Home Assistant MQTT autodiscovery integration toggle.
+
+    When ``enabled``, ``app.ha_discovery`` publishes retained config payloads
+    to the broker so HA auto-creates a device with one button per saved
+    dashboard, a select for the active page, an image entity for the most
+    recent render, and diagnostic sensors. Reuses the broker already
+    configured for ``inky/update``; no separate connection.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+
+
 class AppSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -138,6 +153,7 @@ class AppSettings(BaseModel):
     base_url: str = DEFAULT_BASE_URL
     panel: PanelSettings = Field(default_factory=PanelSettings)
     appearance: AppearanceSettings = Field(default_factory=AppearanceSettings)
+    ha: HomeAssistantSettings = Field(default_factory=HomeAssistantSettings)
 
 
 def initial_from_env() -> AppSettings:

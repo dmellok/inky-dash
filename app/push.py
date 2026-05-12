@@ -13,11 +13,13 @@ mypy --strict applies to this module — see pyproject.toml.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -95,6 +97,11 @@ class PushManager:
         self._renders_cap = renders_cap
         self._rotate_quarters = rotate_quarters % 4
         self._underscan = max(0, underscan)
+        # Push listeners — invoked synchronously after every push attempt
+        # (success or failure). Listeners must be fast; their exceptions are
+        # logged and swallowed so a bad subscriber can't break a push.
+        self._listener_lock = threading.Lock()
+        self._listeners: list[Callable[[PushResult], None]] = []
         self._lock = threading.Lock()
         # Debounce: reject a *successful* push that's identical to one we
         # just published, within this short window. Guards against runaway
@@ -139,6 +146,30 @@ class PushManager:
             options=asdict(opts),
         )
 
+    # -- Push listeners ----------------------------------------------------
+    # Side-channel notifications for "something pushed (or tried to)".
+    # HA discovery uses this to update its sensors + image URL. Only fires
+    # for actual push attempts — not busy-shortcuts.
+
+    def add_listener(self, callback: Callable[[PushResult], None]) -> None:
+        """Register a function to be called once per push attempt."""
+        with self._listener_lock:
+            if callback not in self._listeners:
+                self._listeners.append(callback)
+
+    def remove_listener(self, callback: Callable[[PushResult], None]) -> None:
+        with self._listener_lock, contextlib.suppress(ValueError):
+            self._listeners.remove(callback)
+
+    def _notify(self, result: PushResult) -> None:
+        with self._listener_lock:
+            listeners = list(self._listeners)
+        for cb in listeners:
+            try:
+                cb(result)
+            except Exception:  # noqa: BLE001
+                logger.exception("Push listener %r raised", cb)
+
     def push(
         self,
         page_id: str,
@@ -164,9 +195,10 @@ class PushManager:
             result = self._push_locked(page_id, opts, dither)
             if result.status == "sent":
                 self._record_push(signature)
-            return result
         finally:
             self._lock.release()
+        self._notify(result)
+        return result
 
     def _push_locked(self, page_id: str, opts: PushOptions, dither: DitherMode) -> PushResult:
         started = time.monotonic()
@@ -362,9 +394,10 @@ class PushManager:
             result = self._push_bytes_locked(image_bytes, source_label, opts, dither)
             if result.status == "sent":
                 self._record_push(signature)
-            return result
         finally:
             self._lock.release()
+        self._notify(result)
+        return result
 
     def push_webpage(
         self,
@@ -396,6 +429,7 @@ class PushManager:
                 raw = render_to_png(
                     RenderRequest(url=url, viewport_w=viewport_w, viewport_h=viewport_h)
                 )
+                result = self._push_bytes_locked(raw, f"webpage:{url[:80]}", opts, dither)
             except Exception as err:  # noqa: BLE001
                 duration = time.monotonic() - started
                 history_id = self._history.record(
@@ -406,19 +440,19 @@ class PushManager:
                     error=f"render: {err}",
                     options=asdict(opts),
                 )
-                return PushResult(
+                result = PushResult(
                     status="failed",
                     error=f"render: {err}",
                     duration_s=duration,
                     history_id=history_id,
                     options=asdict(opts),
                 )
-            result = self._push_bytes_locked(raw, f"webpage:{url[:80]}", opts, dither)
             if result.status == "sent":
                 self._record_push(signature)
-            return result
         finally:
             self._lock.release()
+        self._notify(result)
+        return result
 
     def republish(self, history_id: int) -> PushResult:
         """Re-publish a previously-rendered artifact straight from the renders
@@ -495,7 +529,7 @@ class PushManager:
                     payload=payload,
                     topic=self._topic,
                 )
-                return PushResult(
+                result = PushResult(
                     status="failed",
                     digest=record.digest,
                     url=public_url,
@@ -504,28 +538,31 @@ class PushManager:
                     history_id=new_id,
                     options=asdict(opts),
                 )
-            duration = time.monotonic() - started
-            new_id = self._history.record(
-                page_id=record.page_id,
-                digest=record.digest,
-                status="sent",
-                duration_s=duration,
-                error=None,
-                options=asdict(opts),
-                payload=payload,
-                topic=self._topic,
-            )
-            self._record_push(signature)
-            return PushResult(
-                status="sent",
-                digest=record.digest,
-                url=public_url,
-                duration_s=duration,
-                history_id=new_id,
-                options=asdict(opts),
-            )
+            else:
+                duration = time.monotonic() - started
+                new_id = self._history.record(
+                    page_id=record.page_id,
+                    digest=record.digest,
+                    status="sent",
+                    duration_s=duration,
+                    error=None,
+                    options=asdict(opts),
+                    payload=payload,
+                    topic=self._topic,
+                )
+                self._record_push(signature)
+                result = PushResult(
+                    status="sent",
+                    digest=record.digest,
+                    url=public_url,
+                    duration_s=duration,
+                    history_id=new_id,
+                    options=asdict(opts),
+                )
         finally:
             self._lock.release()
+        self._notify(result)
+        return result
 
     def delete_history(self, history_id: int) -> bool:
         """Delete a history row and, if no other rows still reference its

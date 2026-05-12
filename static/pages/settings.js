@@ -716,6 +716,68 @@ class SettingsPage extends LitElement {
     `;
   }
 
+  _renderHomeAssistantCard() {
+    if (!this.appDraft) return null;
+    const draft = this.appDraft;
+    const ha = draft.ha || { enabled: false };
+    const enabled = !!ha.enabled;
+    const mqttHost = (draft.mqtt && draft.mqtt.host) || "";
+    const mqttConfigured = mqttHost.trim().length > 0;
+    const isSaving = this.saving.app;
+    const isSaved = this.saved.app;
+    const err = this.error.app;
+    return html`
+      <id-card
+        heading="Home Assistant"
+        subheading="MQTT autodiscovery — expose dashboards + diagnostics to HA"
+      >
+        <div class="form-row">
+          <label class="field">Discovery</label>
+          <div>
+            <label class="switch" style="display: flex; align-items: center; gap: 8px;">
+              <input
+                type="checkbox"
+                ?checked=${enabled}
+                ?disabled=${!mqttConfigured}
+                @change=${(e) => this._setApp("ha.enabled", e.target.checked)}
+                style="accent-color: var(--id-accent);"
+              />
+              <span>${enabled ? "Enabled" : "Disabled"}</span>
+            </label>
+            <small class="field-help">
+              ${mqttConfigured
+                ? html`Publishes retained config payloads to
+                    <code>homeassistant/.../inky_dash/...</code> so HA auto-creates
+                    a device with one button per saved dashboard, a select for
+                    the active page, an image entity that tracks the last
+                    render, and diagnostic sensors (last push, push count,
+                    last error, busy). Reuses the same broker as
+                    <code>inky/update</code>.`
+                : html`<i class="ph ph-warning"></i>
+                    Configure an MQTT host below first — HA discovery needs a
+                    live broker to publish to.`}
+            </small>
+          </div>
+        </div>
+        <div class="actions">
+          <id-button
+            variant="primary"
+            ?disabled=${isSaving}
+            @click=${() => this._saveApp()}
+          >
+            <i class="ph ph-floppy-disk"></i>
+            ${isSaving ? "Saving…" : "Save Home Assistant"}
+          </id-button>
+          ${err
+            ? html`<span class="save-status error">${err}</span>`
+            : isSaved
+              ? html`<span class="save-status ok"><i class="ph ph-check-circle"></i> saved</span>`
+              : null}
+        </div>
+      </id-card>
+    `;
+  }
+
   _renderAppSettings() {
     if (!this.appDraft) return null;
     const draft = this.appDraft;
@@ -855,6 +917,7 @@ class SettingsPage extends LitElement {
       ${this._renderAppearanceCard()}
       ${this._renderPanelCard()}
       ${this._renderAppSettings()}
+      ${this._renderHomeAssistantCard()}
       <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--id-fg-soft); margin: 24px 0 12px;">
         Plugins
       </h2>
