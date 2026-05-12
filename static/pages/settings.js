@@ -608,7 +608,12 @@ class SettingsPage extends LitElement {
   _renderPanelCard() {
     if (!this.appDraft) return null;
     const draft = this.appDraft;
-    const panel = draft.panel || { model: "spectra_6_13_3", orientation: "landscape" };
+    const panel = draft.panel || {
+      model: "spectra_6_13_3",
+      orientation: "landscape",
+      underscan: 0,
+    };
+    const underscan = Number.isFinite(Number(panel.underscan)) ? Number(panel.underscan) : 0;
     const spec = this.panelCatalog.find((p) => p.id === panel.model);
     const w = spec?.width ?? 0;
     const h = spec?.height ?? 0;
@@ -663,6 +668,32 @@ class SettingsPage extends LitElement {
                     the panel's native pixel grid.`
                 : html`Native pixel orientation — no rotation. Dashboards
                     compose at <strong>${renderDims}</strong>.`}
+            </small>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field" for="panel-underscan">Underscan</label>
+          <div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <input
+                id="panel-underscan"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                .value=${String(underscan)}
+                @input=${(e) =>
+                  this._setApp("panel.underscan", Number(e.target.value))}
+                style="flex: 1;"
+              />
+              <span
+                style="min-width: 48px; text-align: right; font-variant-numeric: tabular-nums;"
+              >${underscan} px</span>
+            </div>
+            <small class="field-help">
+              Insets every pushed frame by this many pixels on each edge, filling the
+              border with white. Use to compensate for a physical mat or bezel that
+              occludes the outer rim of the panel.
             </small>
           </div>
         </div>

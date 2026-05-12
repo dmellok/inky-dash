@@ -5,6 +5,7 @@ from PIL import Image
 
 from app.quantizer import (
     SPECTRA_6_PALETTE,
+    apply_underscan,
     quantize,
     quantize_to_png,
     rotate_png,
@@ -106,6 +107,56 @@ def test_rotate_png_full_revolution_returns_original_dims() -> None:
     out = rotate_png(buf.getvalue(), quarters=4)
     img = Image.open(io.BytesIO(out))
     assert img.size == (12, 8)
+
+
+def test_apply_underscan_zero_is_passthrough() -> None:
+    import io
+
+    src = Image.new("RGB", (40, 30), (0, 128, 255))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = apply_underscan(buf.getvalue(), underscan=0)
+    assert out == buf.getvalue()
+
+
+def test_apply_underscan_preserves_outer_dimensions() -> None:
+    import io
+
+    src = Image.new("RGB", (40, 30), (0, 128, 255))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = apply_underscan(buf.getvalue(), underscan=5)
+    img = Image.open(io.BytesIO(out))
+    assert img.size == (40, 30)
+
+
+def test_apply_underscan_fills_border_with_fill_colour() -> None:
+    """A solid-blue source with 4px underscan should have a 4px white ring
+    on every edge and (mostly) blue content in the centre."""
+    import io
+
+    src = Image.new("RGB", (40, 30), (0, 128, 255))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = apply_underscan(buf.getvalue(), underscan=4, fill="#ffffff")
+    img = Image.open(io.BytesIO(out)).convert("RGB")
+    # Corner pixels — all four corners — should be white from the fill.
+    for x, y in [(0, 0), (39, 0), (0, 29), (39, 29)]:
+        assert img.getpixel((x, y)) == (255, 255, 255)
+    # A pixel well inside the inset region should still be the source colour.
+    assert img.getpixel((20, 15)) == (0, 128, 255)
+
+
+def test_apply_underscan_clamps_when_inset_exceeds_half() -> None:
+    """Underscan ≥ half the panel collapses to a no-op rather than producing
+    a zero-sized inner image (which would crash PIL.resize)."""
+    import io
+
+    src = Image.new("RGB", (10, 10), (255, 0, 0))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    out = apply_underscan(buf.getvalue(), underscan=20)
+    assert out == buf.getvalue()
 
 
 def test_rotate_png_pixel_position_after_clockwise_quarter() -> None:

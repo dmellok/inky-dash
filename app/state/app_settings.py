@@ -92,6 +92,11 @@ class PanelSettings(BaseModel):
 
     model: str = DEFAULT_PANEL_MODEL
     orientation: Orientation = "landscape"
+    # Pixels to inset rendered content from each edge before publishing,
+    # to compensate for a physical mat / bezel that occludes the outer
+    # rim of the panel. The cropped-out area is filled with white at push
+    # time. 0 disables the effect.
+    underscan: int = Field(default=0, ge=0, le=200)
 
     def spec(self) -> PanelModelSpec:
         return PANEL_MODELS.get(self.model, PANEL_MODELS[DEFAULT_PANEL_MODEL])

@@ -18,7 +18,7 @@ from app.image_ops import blurred_fit
 from app.mqtt_bridge import MqttBridge
 from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
-from app.quantizer import DitherMode, quantize_to_png
+from app.quantizer import DitherMode, apply_underscan, quantize_to_png
 from app.renderer import RenderRequest, render_to_png
 from app.scheduler import Scheduler
 from app.state import (
@@ -849,11 +849,16 @@ def _quantize_or_400(raw: bytes, dither_arg: str) -> tuple[bytes, str | None]:
     """Quantize raw render bytes for preview display. The pre-publish rotation
     that ships to MQTT is **not** applied — previews show the dashboard in
     its composition orientation (upright to the viewer). The push pipeline
-    handles rotation separately when it actually sends to the panel."""
+    handles rotation separately when it actually sends to the panel.
+
+    Underscan inset IS applied here so the preview accurately reflects the
+    final framed-by-mat appearance the panel will show."""
     if dither_arg not in _VALID_DITHER_MODES:
         return b"", f"invalid dither mode: {dither_arg!r}"
     try:
-        return quantize_to_png(raw, dither=cast_dither(dither_arg)), None
+        underscan = _app_settings_store().load().panel.underscan
+        inset = apply_underscan(raw, underscan=underscan)
+        return quantize_to_png(inset, dither=cast_dither(dither_arg)), None
     except Exception as err:  # noqa: BLE001
         return b"", f"quantize: {err}"
 
@@ -1173,6 +1178,7 @@ def api_save_app_settings() -> tuple[Response, int] | Response:
     pm.set_base_url(new_settings.base_url)
     pm.set_topic(new_settings.mqtt.topic_update)
     pm.set_rotate_quarters(new_settings.panel.rotate_quarters())
+    pm.set_underscan(new_settings.panel.underscan)
 
     # When the panel changes (orientation OR model — i.e. the active
     # resolution changed), every page must follow. The panel setting is

@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Literal
 
 from app.mqtt_bridge import MqttBridge
-from app.quantizer import DitherMode, rotate_png
+from app.quantizer import DitherMode, apply_underscan, rotate_png
 from app.renderer import RenderRequest, render_to_png
 from app.state.history import HistoryStore
 from app.state.page_store import PageStore
@@ -82,6 +82,7 @@ class PushManager:
         topic: str = "inky/update",
         renders_cap: int = 500,
         rotate_quarters: int = 0,
+        underscan: int = 0,
         debounce_seconds: float = 5.0,
     ) -> None:
         self._bridge = bridge
@@ -93,6 +94,7 @@ class PushManager:
         self._topic = topic
         self._renders_cap = renders_cap
         self._rotate_quarters = rotate_quarters % 4
+        self._underscan = max(0, underscan)
         self._lock = threading.Lock()
         # Debounce: reject a *successful* push that's identical to one we
         # just published, within this short window. Guards against runaway
@@ -199,7 +201,8 @@ class PushManager:
             # primaries for its hardware). Dither argument is preserved on
             # the API for backward-compat but is a no-op for the bytes —
             # the listener decides how to dither.
-            quantized = rotate_png(raw, quarters=self._rotate_quarters)
+            inset = apply_underscan(raw, underscan=self._underscan)
+            quantized = rotate_png(inset, quarters=self._rotate_quarters)
         except Exception as err:  # noqa: BLE001 — surface any renderer failure
             duration = time.monotonic() - started
             history_id = self._history.record(
@@ -317,6 +320,11 @@ class PushManager:
         """Set the pre-publish rotation. ``quarters`` is mod-4 number of 90° turns."""
         with self._lock:
             self._rotate_quarters = quarters % 4
+
+    def set_underscan(self, underscan: int) -> None:
+        """Set the per-edge inset (px) applied to every published frame."""
+        with self._lock:
+            self._underscan = max(0, underscan)
 
     # ------------------------------------------------------------------
     # Send-page entry points: arbitrary image bytes / arbitrary URL render.
@@ -549,7 +557,8 @@ class PushManager:
         """
         started = time.monotonic()
         try:
-            quantized = rotate_png(image_bytes, quarters=self._rotate_quarters)
+            inset = apply_underscan(image_bytes, underscan=self._underscan)
+            quantized = rotate_png(inset, quarters=self._rotate_quarters)
         except Exception as err:  # noqa: BLE001
             duration = time.monotonic() - started
             history_id = self._history.record(

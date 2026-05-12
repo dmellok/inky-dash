@@ -132,6 +132,7 @@ def create_app(
         base_url=app_settings.base_url,
         topic=app_settings.mqtt.topic_update,
         rotate_quarters=app_settings.panel.rotate_quarters(),
+        underscan=app_settings.panel.underscan,
     )
     app.config["PUSH_MANAGER"] = push_manager
 

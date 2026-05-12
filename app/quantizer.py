@@ -88,3 +88,30 @@ def rotate_png(png_bytes: bytes, *, quarters: int) -> bytes:
     out = io.BytesIO()
     rotated.save(out, format="PNG", optimize=True)
     return out.getvalue()
+
+
+def apply_underscan(png_bytes: bytes, *, underscan: int, fill: str = "#ffffff") -> bytes:
+    """Inset the image by ``underscan`` pixels on every edge, padding the
+    border with ``fill``.
+
+    Used to compensate for a physical mat / bezel covering the outer rim of
+    the panel. The original W×H is preserved; content is downscaled to
+    (W-2u, H-2u) and pasted at (u, u) so the published frame still matches
+    the panel's native pixel grid. ``underscan=0`` is a no-op pass-through.
+    """
+    if underscan <= 0:
+        return png_bytes
+    img = Image.open(io.BytesIO(png_bytes)).convert("RGB")
+    w, h = img.size
+    inner_w = w - 2 * underscan
+    inner_h = h - 2 * underscan
+    if inner_w <= 0 or inner_h <= 0:
+        # Underscan exceeds half the panel — silently clamp to a no-op
+        # rather than collapsing the render to a single colour.
+        return png_bytes
+    inner = img.resize((inner_w, inner_h), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (w, h), fill)
+    canvas.paste(inner, (underscan, underscan))
+    out = io.BytesIO()
+    canvas.save(out, format="PNG", optimize=True)
+    return out.getvalue()
