@@ -91,6 +91,7 @@ class ThemesPage extends LitElement {
     editingMode: { state: true },
     editingPalette: { state: true },
     saving: { state: true },
+    bucketFilter: { state: true },
   };
 
   static styles = css`
@@ -150,6 +151,41 @@ class ThemesPage extends LitElement {
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--id-fg-soft, #5a4f44);
+    }
+    /* Segmented picker that filters the theme list down to one bucket.
+       46+ themes are too many on screen at once; the picker lets the
+       user dive straight into White / Light / Medium / Dark / Mine. */
+    .bucket-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px 0 8px;
+    }
+    .bucket-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      background: transparent;
+      color: var(--id-fg, #1a1612);
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background 100ms ease, border-color 100ms ease;
+    }
+    .bucket-chip:hover { border-color: var(--id-accent, #b06750); }
+    .bucket-chip[data-active="true"] {
+      background: var(--id-accent, #b06750);
+      border-color: var(--id-accent, #b06750);
+      color: var(--id-accent-fg, #ffffff);
+    }
+    .bucket-chip .count {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      opacity: 0.7;
     }
     .theme-row {
       display: flex;
@@ -536,6 +572,7 @@ class ThemesPage extends LitElement {
     this.editingMode = "light";
     this.editingPalette = { ...STARTER_PALETTE };
     this.saving = false;
+    this.bucketFilter = "all";
   }
 
   async connectedCallback() {
@@ -959,21 +996,70 @@ class ThemesPage extends LitElement {
             </div>
             ${(() => {
               const groups = { white: [], light: [], medium: [], dark: [] };
-              for (const t of this.themes) groups[themeBucket(t)].push(t);
+              const mine = [];
+              for (const t of this.themes) {
+                groups[themeBucket(t)].push(t);
+                if (t.is_user) mine.push(t);
+              }
               for (const arr of Object.values(groups)) {
                 arr.sort((a, b) => a.name.localeCompare(b.name));
               }
-              return THEME_SECTIONS.map((s) => {
-                const list = groups[s.key];
-                if (!list.length) return null;
-                return html`
-                  <div class="bucket-head">
-                    <span class="bucket-label">${s.label}</span>
-                    <span class="bucket-count">${list.length}</span>
-                  </div>
-                  ${list.map((t) => this._renderListRow(t))}
-                `;
-              });
+              mine.sort((a, b) => a.name.localeCompare(b.name));
+              // Filter chips: All + each populated bucket + Mine (only
+              // shown when the user has saved at least one theme).
+              const chips = [
+                { key: "all", label: "All", count: this.themes.length },
+                ...THEME_SECTIONS
+                  .filter((s) => groups[s.key].length > 0)
+                  .map((s) => ({ key: s.key, label: s.label, count: groups[s.key].length })),
+              ];
+              if (mine.length) {
+                chips.push({ key: "mine", label: "Mine", count: mine.length });
+              }
+              const visibleSections = (() => {
+                if (this.bucketFilter === "all") {
+                  return THEME_SECTIONS.map((s) => ({ ...s, list: groups[s.key] }));
+                }
+                if (this.bucketFilter === "mine") {
+                  return [{ key: "mine", label: "Mine", list: mine }];
+                }
+                const section = THEME_SECTIONS.find((s) => s.key === this.bucketFilter);
+                return section ? [{ ...section, list: groups[section.key] }] : [];
+              })();
+              return html`
+                <div class="bucket-picker" role="tablist">
+                  ${chips.map(
+                    (c) => html`
+                      <button
+                        type="button"
+                        class="bucket-chip"
+                        data-active=${this.bucketFilter === c.key ? "true" : "false"}
+                        role="tab"
+                        aria-selected=${this.bucketFilter === c.key}
+                        @click=${() => (this.bucketFilter = c.key)}
+                      >
+                        ${c.label}
+                        <span class="count">${c.count}</span>
+                      </button>
+                    `
+                  )}
+                </div>
+                ${visibleSections.map((s) => {
+                  if (!s.list.length) return null;
+                  // When a single bucket is filtered the section header is
+                  // redundant with the active chip — hide it then.
+                  const header =
+                    this.bucketFilter === "all"
+                      ? html`
+                          <div class="bucket-head">
+                            <span class="bucket-label">${s.label}</span>
+                            <span class="bucket-count">${s.list.length}</span>
+                          </div>
+                        `
+                      : null;
+                  return html`${header}${s.list.map((t) => this._renderListRow(t))}`;
+                })}
+              `;
             })()}
           </div>
 
