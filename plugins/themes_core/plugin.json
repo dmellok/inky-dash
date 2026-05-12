@@ -2,9 +2,9 @@
   "manifest_version": 1,
   "id": "themes_core",
   "name": "Core themes",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "kind": "theme",
-  "description": "46 hand-curated themes: a clean white 'Paper' default, 6 bold-accent white-bg themes (Cobalt, Flame, Magenta, Kelly, Royal, Cherry), 4 vibrant-fg themes that render typography in saturated ink rather than neutral grey (Ink: navy on cream; Burgundy: wine on parchment; Embers: orange on deep brown; Cyber: electric green on near-black), plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
+  "description": "49 hand-curated themes: a clean white 'Paper' default, 6 bold-accent white-bg themes (Cobalt, Flame, Magenta, Kelly, Royal, Cherry), 7 vibrant-fg themes that render typography in saturated ink rather than neutral grey — 2 light (Ink: navy on cream; Burgundy: wine on parchment) and 5 dark (Embers: orange on deep brown; Cyber: electric green; Reef: salmon-coral; Flamingo: pink with cyan accent; Peach: warm peach with cherry accent), plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
   "supports": {
     "sizes": [
       "xs",
@@ -886,6 +886,63 @@
         "ok": "#00ff88",
         "accent": "#ff00aa",
         "accentSoft": "#c00080"
+      }
+    },
+    {
+      "id": "reef",
+      "name": "Reef",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a0608",
+        "surface": "#1a1012",
+        "surface2": "#2a1c1f",
+        "fg": "#ff6f61",
+        "fgSoft": "#d05a4f",
+        "muted": "#7a4540",
+        "divider": "#3a2428",
+        "danger": "#ff3060",
+        "warn": "#ffb030",
+        "ok": "#66dd88",
+        "accent": "#ffb088",
+        "accentSoft": "#d08868"
+      }
+    },
+    {
+      "id": "flamingo",
+      "name": "Flamingo",
+      "mode": "dark",
+      "palette": {
+        "bg": "#0a0510",
+        "surface": "#1c0e1c",
+        "surface2": "#2e1a30",
+        "fg": "#ff7eb6",
+        "fgSoft": "#d068a0",
+        "muted": "#80506a",
+        "divider": "#3a2030",
+        "danger": "#ff3366",
+        "warn": "#ffcc44",
+        "ok": "#88dd88",
+        "accent": "#00ddcc",
+        "accentSoft": "#00a09a"
+      }
+    },
+    {
+      "id": "peach",
+      "name": "Peach",
+      "mode": "dark",
+      "palette": {
+        "bg": "#100808",
+        "surface": "#1f1010",
+        "surface2": "#321a1a",
+        "fg": "#ffb088",
+        "fgSoft": "#cc8868",
+        "muted": "#806050",
+        "divider": "#3a2424",
+        "danger": "#ff3344",
+        "warn": "#ffdd55",
+        "ok": "#88cc88",
+        "accent": "#e63060",
+        "accentSoft": "#a82048"
       }
     }
   ]
