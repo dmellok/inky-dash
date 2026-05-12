@@ -130,12 +130,12 @@ _ADMIN_TEMPLATE = """
       {% endfor %}
     </ul>
     <p>
-      The plugin contract lives in
-      <a href="/docs/v4-plugins.md"><code>docs/v4-plugins.md</code></a>;
-      the usage tutorial lives in
+      Usage tutorial lives in
       <a href="https://github.com/dmellok/inky-dash/wiki/Writing-a-plugin">
         the wiki
-      </a>.
+      </a>;
+      a worked example exercising every contract feature lives in the repo at
+      <code>plugins/example_full/</code> (this widget).
     </p>
   </div>
 </body></html>

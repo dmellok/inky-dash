@@ -1,6 +1,6 @@
 """Pydantic ↔ JSON Schema parity tests.
 
-The JSON Schema is the documented source of truth (v4-brief §10). Pydantic
+The JSON Schema (schema/page.schema.json) is the documented source of truth. Pydantic
 models in app/page_model.py are hand-aligned. These tests assert both accept
 the same examples and reject the same bad data, so drift is caught on PR.
 """

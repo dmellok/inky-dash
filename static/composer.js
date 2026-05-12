@@ -1,6 +1,6 @@
 // Composer bootstrap. For each .cell on the page, attach a shadow DOM and
 // call the plugin's default-export render function with the documented ctx
-// shape (see docs/v4-plugins.md).
+// shape (see the Writing-a-plugin wiki page).
 //
 // Theme palette and font family are resolved server-side by app/composer.py;
 // CSS custom properties (--theme-*) and font-family are already on the cell's

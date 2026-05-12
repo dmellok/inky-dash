@@ -228,7 +228,7 @@ def test_render() -> str:
     """Test-mode route: mount one plugin into a known cell size.
 
     Available when the app is in debug or testing mode. The smoke-test pattern
-    in v4-plugins.md relies on this route.
+    in the plugin contract relies on this route.
     """
     if not (current_app.debug or current_app.testing):
         abort(404)

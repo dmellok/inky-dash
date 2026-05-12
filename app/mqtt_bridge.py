@@ -1,6 +1,6 @@
 """MQTT publisher + listener-status subscriber.
 
-The wire format is frozen (v4-brief §"MQTT contract — frozen interface"). This
+The wire format is frozen (byte-for-byte identical to v3, see docs/architecture.md). This
 module is the only place that talks to the broker. ``MqttBridge`` is a
 ``Protocol`` so tests can substitute a fake without touching paho-mqtt.
 

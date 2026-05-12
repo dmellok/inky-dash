@@ -8,7 +8,7 @@ M3 launches a fresh browser per call (~1–2 s overhead). A long-lived
 singleton is the obvious optimisation — punted until the latency bites in
 the editor's preview loop.
 
-mypy --strict applies to this module per v4-brief §6.
+mypy --strict applies to this module — see pyproject.toml.
 """
 
 from __future__ import annotations

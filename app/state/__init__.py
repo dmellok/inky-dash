@@ -1,6 +1,6 @@
 """Persistent state: page model, page store, future schedules + history.
 
-mypy --strict applies to ``app.state.*`` per v4-brief §6.
+mypy --strict applies to ``app.state.*`` — see pyproject.toml.
 """
 
 from __future__ import annotations

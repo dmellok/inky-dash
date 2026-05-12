@@ -4,7 +4,7 @@ The Pimoroni Inky Impression "Spectra 6" panel renders ~7 distinct ink
 primaries; everything in between has to be dithered. Pillow handles the
 heavy lifting via ``Image.quantize(palette=…, dither=…)``.
 
-Themes are NOT restricted to the gamut (v4-brief §3): off-gamut colours
+Themes are NOT restricted to the gamut: off-gamut colours
 often dither into pleasing results on the panel. The /calibrate page (later
 milestone) helps curate which off-gamut sRGB colours are worth picking.
 """

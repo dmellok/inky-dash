@@ -2,7 +2,7 @@
 
 A plugin is a folder under `plugins/<id>/` that Inky Dash discovers on startup. Drop a folder in, restart the server, and your widget shows up in the editor's plugin dropdown next to all the built-ins.
 
-This page is the **tutorial**. The formal contract lives in [`docs/v4-plugins.md`](../v4-plugins.md). Two reference plugins ship with the repo to copy-paste from:
+This page is the **tutorial**. For the canonical reference, look at the two example plugins that ship in the repo:
 
 - [`plugins/example_minimal/`](../../plugins/example_minimal/) — six required manifest fields + a 10-line `client.js`. The smallest possible widget.
 - [`plugins/example_full/`](../../plugins/example_full/) — every contract feature in one place: all cell-option types, a static dropdown, a dynamic `choices_from` dropdown, plugin-level settings (one secret), a server-side `fetch()` + `choices()` + Flask admin blueprint, theme-aware CSS via `widget-base.css`, and a smoke test.
@@ -57,7 +57,7 @@ Restart the dev server (`python -m app`), open the editor, pick "Hello" from the
 Two things that aren't obvious at first:
 
 - **`host` is a `ShadowRoot`, not the cell element.** `host.host` is the cell element itself. The `data-rendered="true"` attribute on the cell tells the Playwright screenshot pipeline the cell is finished painting — skip it and the panel push will fire before your render has stabilised.
-- **CSS variables `--theme-*` come for free.** The composer injects the current theme palette as CSS variables onto the cell, so any widget that uses `var(--theme-bg)` / `var(--theme-fg)` / `var(--theme-accent)` etc. immediately participates in the theme system. The full token list is in [`docs/v4-plugins.md#theming`](../v4-plugins.md).
+- **CSS variables `--theme-*` come for free.** The composer injects the current theme palette as CSS variables onto the cell, so any widget that uses `var(--theme-bg)` / `var(--theme-fg)` / `var(--theme-accent)` etc. immediately participates in the theme system. See the [Theming and design tokens](#theming-and-design-tokens) section below for the full token list.
 
 ---
 
@@ -331,7 +331,8 @@ For server-side logic — `fetch()`, `choices()`, blueprint endpoints — add re
 
 ## Where to look next
 
-- [`docs/v4-plugins.md`](../v4-plugins.md) — formal contract spec
+- [`docs/architecture.md`](../architecture.md) — how the pieces fit together
+- [`schema/plugin.schema.json`](../../schema/plugin.schema.json) — formal manifest schema (source of truth for which fields exist)
 - [`plugins/example_minimal/`](../../plugins/example_minimal/) — minimum viable widget
 - [`plugins/example_full/`](../../plugins/example_full/) — every feature in one place
 - [`plugins/clock/`](../../plugins/clock/) — a real ~80-line widget with no `server.py`

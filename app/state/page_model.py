@@ -1,10 +1,10 @@
 """Pydantic models for the page schema.
 
 The JSON Schema at ``schema/page.schema.json`` is the source of truth (see
-v4-brief §10). These models are hand-aligned with it; a test asserts both
+schema/page.schema.json). These models are hand-aligned with it; a test asserts both
 accept/reject the same example data so drift is caught.
 
-mypy --strict applies to ``app.state.*`` per v4-brief §6; this module is
+mypy --strict applies to ``app.state.*`` — see pyproject.toml; this module is
 re-exported via ``app.state``.
 """
 

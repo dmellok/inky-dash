@@ -8,7 +8,7 @@ The loader runs once at app startup. Errors don't raise — they're collected on
 the registry so the admin UI can surface them and the rest of the app keeps
 working.
 
-mypy --strict applies to this module per v4-brief §6.
+mypy --strict applies to this module — see pyproject.toml.
 """
 
 from __future__ import annotations

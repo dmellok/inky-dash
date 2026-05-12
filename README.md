@@ -2,7 +2,7 @@
 
 Flask companion that composes dashboards in the browser, renders them through Playwright + Pillow, and pushes them to a Pimoroni Inky Impression e-ink panel over MQTT. Drop a folder under `plugins/` and you have a new widget; drop another and you have a new theme. The Pi-side listener lives in [dmellok/inky-dash-listener](https://github.com/dmellok/inky-dash-listener) — the MQTT wire format is byte-for-byte identical to v3, so the same listener works on both.
 
-This is **v4**. The v3 → v4 rationale lives in [`docs/v4-brief.md`](docs/v4-brief.md); the plugin contract lives in [`docs/v4-plugins.md`](docs/v4-plugins.md); the v3 source is archived at the [`v3-final`](https://github.com/dmellok/inky-dash/tree/v3-final) tag.
+This is **v4**. Architecture overview in [`docs/architecture.md`](docs/architecture.md); usage tutorial in the [wiki](https://github.com/dmellok/inky-dash/wiki/Writing-a-plugin); two reference plugins live at [`plugins/example_minimal/`](plugins/example_minimal/) and [`plugins/example_full/`](plugins/example_full/). The v3 source is archived at the [`v3-final`](https://github.com/dmellok/inky-dash/tree/v3-final) tag.
 
 ![Editor — live preview + cell config sidebar](docs/screenshots/page-editor.png)
 
@@ -143,9 +143,9 @@ app/                Flask application
   image_ops.py      Server-side composites for the send pipeline (blurred-fit)
   mqtt_bridge.py    paho-mqtt publisher + listener-status subscriber; NullBridge fallback
 docs/
-  v4-brief.md       Build brief + milestone roadmap
-  v4-plugins.md     Plugin contract
+  architecture.md   How the pieces fit together (Flask + Lit + Playwright + MQTT)
   screenshots/      Documentation screenshots (used by this README)
+  wiki/             Source for the GitHub wiki pages
 plugins/<id>/       Drop-a-folder plugin (kind=widget|theme|font|admin)
 schema/             JSON Schemas (plugin manifest, page model)
 static/
@@ -170,7 +170,7 @@ A widget is a folder under `plugins/<id>/` with:
 - `client.css` — widget styling (link `/static/style/widget-base.css` for the shared chrome)
 - `server.py` (optional) — declares `fetch(options, settings, ctx)` for data, plus optional Flask `blueprint()` for an admin UI
 
-See [`docs/v4-plugins.md`](docs/v4-plugins.md) for the full contract.
+See the [wiki tutorial](https://github.com/dmellok/inky-dash/wiki/Writing-a-plugin) for a walkthrough and [`plugins/example_full/`](plugins/example_full/) for a worked example exercising every contract feature.
 
 ## License
 

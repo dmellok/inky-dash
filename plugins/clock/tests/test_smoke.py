@@ -1,6 +1,6 @@
 """Smoke test for the clock plugin: renders without errors at every supported size.
 
-Pattern reused by every bundled plugin; see docs/v4-plugins.md → "Smoke test".
+Pattern reused by every bundled plugin; see the wiki tutorial → "Testing".
 """
 
 from __future__ import annotations

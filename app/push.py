@@ -1,6 +1,6 @@
 """Single-flight push pipeline: render → quantize → write artifact → publish.
 
-The MQTT wire format is frozen (v4-brief §"MQTT contract"). This module
+The MQTT wire format is frozen (byte-for-byte identical to v3, see docs/architecture.md). This module
 constructs valid payloads, persists each render as a content-addressed PNG
 under ``data/core/renders/``, and records every attempt in the history.
 
@@ -8,7 +8,7 @@ Concurrency: one push at a time. Concurrent attempts return ``status="busy"``
 rather than queuing — keeps the model simple and the UI honest about what's
 happening.
 
-mypy --strict applies to this module per v4-brief §6.
+mypy --strict applies to this module — see pyproject.toml.
 """
 
 from __future__ import annotations
