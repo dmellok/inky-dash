@@ -33,8 +33,8 @@ ruff check . && ruff format --check . && mypy && pytest
 ## What's in the box
 
 - **Dashboard editor** — split the panel into cells from a layout picker, click a cell to configure its widget + theme + font in the sidebar, live preview rendered in an iframe. Saved pages live in [`data/core/pages.json`](data/core/pages.json).
-- **27 widget plugins** — clock, weather, todo, world clock, year-progress, sun & moon, AQI, AQI trend, HN, news (RSS), gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, countdown, note, xkcd, webpage screenshot, calibration, frame aligner.
-- **36 hand-curated themes** — Paper / Linen / Mist / Sage / Bloom / Slate / Kraft / Moss / Coral / Dusk / Lavender + 15 monochromatic + 5 neon (Hotwire / Plasma / Matrix / Synthwave / Toxic). Each grouped into Light · Medium · Dark in the picker. Build your own at `/themes`.
+- **30 widget plugins** — clock, flip clock, weather, calendar, todo (multi-list), world clock, year-progress, sun & moon, AQI, AQI trend, HN, Reddit, news (RSS), gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, QR code (URL / WiFi / text), countdown, note, xkcd, webpage screenshot, calibration, frame aligner.
+- **49 hand-curated themes** — bucketed into **White** (6 bold-accent stark-white themes), **Light** (Paper / Linen / Mist / Ink / Burgundy / …), **Medium**, and **Dark** (Cyber / Embers / Reef / Flamingo / Peach + 15 monochrome + 5 neon). 7 of them put the typography itself in saturated ink rather than neutral grey. Build your own at `/themes`.
 - **Schedules** — one-shot daily-at-HH:MM or every-N-minutes, with day-of-week + time-of-day-window guards. Backfill-safe (won't replay a day's worth of fires when re-enabled mid-day).
 - **Send page** — push any image, saved dashboard, image URL, or arbitrary webpage to the panel right now. Includes fit modes (fit / fill / stretch / center / blurred-bg) for one-off images, plus a history tab with thumbnails, resend, delete, and a click-to-zoom lightbox.
 - **Per-cell theme overrides** — each cell can paint in its own theme without affecting siblings.
@@ -49,6 +49,22 @@ Click any cell in the live-preview to edit it. Theme, font, and matting apply to
 | ![Editor list page](docs/screenshots/page-editor-list.png) | ![Editor with a dashboard open](docs/screenshots/page-editor.png) |
 
 The cell sidebar surfaces every option each plugin declares in its manifest — text fields, numbers, booleans, selects, and dynamic dropdowns (e.g. todo's list picker, gallery's folder picker). Per-cell colour overrides let you nudge individual tokens (`accent`, `surface`, `divider`, etc.) without forking the theme.
+
+## Dashboards in the wild
+
+Five sample 1200×1600 dashboards, each leaning on a different theme to show how the design language reskins. The screenshots below are the same Playwright render the panel actually receives; the data (groceries, reading list, today, home) comes from real lists managed at `/plugins/todo/`.
+
+| Good morning — **Paper** | Cyber desk — **Cyber** | Ink study — **Ink** |
+|---|---|---|
+| ![Paper dashboard](docs/screenshots/dash-paper-morning.png) | ![Cyber dashboard](docs/screenshots/dash-cyber-desk.png) | ![Ink dashboard](docs/screenshots/dash-ink-study.png) |
+| Weather hero · Groceries list · HN top stories · Year-progress footer. The default white-cream palette — what you get out of the box. | Big 24h clock · GitHub contributions heatmap · HN feed. The terminal/synthwave vibe: electric green typography, magenta accent, JetBrains Mono throughout. | Calendar with Phases of the Moon · Reading list · Year progress · Marginalia quote. Navy fountain-pen ink on warm cream — academic, monochromatic, calm. |
+
+| Embers evening — **Embers** | Cherry pop — **Cherry** | |
+|---|---|---|
+| ![Embers dashboard](docs/screenshots/dash-embers-evening.png) | ![Cherry dashboard](docs/screenshots/dash-cherry-pop.png) | |
+| Weather · Sun & moon · Home chores · r/EarthPorn. Warm orange ink on a deep brown bg — pairs naturally with the Spectra 6 orange primary. | Headline clock · Today list (with done items struck through) · Weather · 234-day countdown to New Year. White bg + a single bold cherry-red accent. | |
+
+The five pages are saved as `show-paper-morning`, `show-cyber-desk`, `show-ink-study`, `show-embers-evening`, `show-cherry-pop` — open any of them at `/editor/<id>` and remix them as a starting point for your own.
 
 ## Widgets
 
@@ -113,7 +129,11 @@ The History tab is the live `PushManager` history with thumbnails of every publi
 
 ## Themes
 
-36 themes grouped by lightness — Light (paper, mist, sage, …) · Medium (linen, kraft, moss, …) · Dark (ember, midnight, plasma, …). The theme picker shows a preview mock that paints with every palette token so any theme regression is visible immediately. Build a new theme at `/themes`; user-created ones are saved alongside the built-ins.
+49 themes bucketed by background lightness — **White** (the 6 stark-white-bg bold-accent themes: Cobalt / Flame / Magenta / Kelly / Royal / Cherry), **Light** (Paper / Linen / Ink / Burgundy / …), **Medium**, and **Dark** (Cyber / Embers / Reef / Flamingo / Peach + 15 monochrome + 5 neon). A chip picker at the top of `/themes` filters down to one bucket at a time, plus a "Mine" filter for user-saved themes once any exist.
+
+Seven themes are designed around a **vibrant foreground colour** — the typography itself prints in saturated ink rather than neutral grey: Ink (navy on cream), Burgundy (wine on parchment), Embers (orange on brown), Cyber (electric green on near-black), and the coral family (Reef / Flamingo / Peach). On Spectra 6 these dither into the actual coloured inks rather than collapsing to a near-black.
+
+The theme picker shows a compact preview mock — built from the same flat-surface widget chrome the real cells use — so any palette regression in a single token is visible immediately. Build a new theme at `/themes`; user-created ones save alongside the built-ins and bucket into "Mine" in the picker.
 
 ![Themes page](docs/screenshots/page-themes.png)
 
