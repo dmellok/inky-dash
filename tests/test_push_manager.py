@@ -249,9 +249,7 @@ def test_lru_eviction_drops_oldest(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert len(surviving) == 3
 
 
-def test_identical_push_within_debounce_returns_busy(
-    tmp_path: Path, fake_render: None
-) -> None:
+def test_identical_push_within_debounce_returns_busy(tmp_path: Path, fake_render: None) -> None:
     """Five rapid pushes of the same page collapse to one — the rest get
     ``status="busy"`` with a debounce error. Guards against runaway clients
     (e.g. a cross-tab Send race producing 5 pushes in 41 s)."""
@@ -275,9 +273,7 @@ def test_identical_push_within_debounce_returns_busy(
     assert len(bridge.published) == 1
 
 
-def test_debounce_lets_different_pages_through(
-    tmp_path: Path, fake_render: None
-) -> None:
+def test_debounce_lets_different_pages_through(tmp_path: Path, fake_render: None) -> None:
     """Debounce keys off page_id + options, so pushing page A then page B
     in quick succession should not block page B."""
     bridge = FakeBridge()

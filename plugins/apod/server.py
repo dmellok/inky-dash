@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Any
 
 CACHE_TTL = 60 * 60  # 1 hour
-LOOKBACK_DAYS = 14   # how far to search back if today's APOD is a video
+LOOKBACK_DAYS = 14  # how far to search back if today's APOD is a video
 DEMO_KEY = "DEMO_KEY"
 
 

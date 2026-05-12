@@ -30,7 +30,6 @@ from __future__ import annotations
 import json
 import re
 import time
-import uuid
 from pathlib import Path
 from typing import Any
 
@@ -95,7 +94,9 @@ def _compute_cells(saturation: int) -> list[dict[str, Any]]:
     return cells
 
 
-VALID_CELL_IDS = {f"{ROW_LABELS[r]}{c + 1}" for r in range(len(HUES)) for c in range(len(LIGHTNESS))}
+VALID_CELL_IDS = {
+    f"{ROW_LABELS[r]}{c + 1}" for r in range(len(HUES)) for c in range(len(LIGHTNESS))
+}
 
 
 # ------------------------------------------------------------------ storage
@@ -117,7 +118,10 @@ def _new_calibration(cal_id: str, name: str) -> dict[str, Any]:
 
 
 def _default_state() -> dict[str, Any]:
-    return {"active_id": "default", "calibrations": {"default": _new_calibration("default", "Default")}}
+    return {
+        "active_id": "default",
+        "calibrations": {"default": _new_calibration("default", "Default")},
+    }
 
 
 def _migrate_calibration(cal: dict[str, Any]) -> dict[str, Any]:
@@ -1477,16 +1481,32 @@ def blueprint() -> Blueprint:
 
 
 _DEFAULT_LIGHT = {
-    "bg": "#e8d8be", "surface": "#ffffff", "surface2": "#f5e8d8",
-    "fg": "#1a1612", "fgSoft": "#5a4f44", "muted": "#8b7e70",
-    "accent": "#d97757", "accentSoft": "#aa5a3f", "divider": "#c8b89b",
-    "danger": "#c97c70", "warn": "#d4a957", "ok": "#7da670",
+    "bg": "#e8d8be",
+    "surface": "#ffffff",
+    "surface2": "#f5e8d8",
+    "fg": "#1a1612",
+    "fgSoft": "#5a4f44",
+    "muted": "#8b7e70",
+    "accent": "#d97757",
+    "accentSoft": "#aa5a3f",
+    "divider": "#c8b89b",
+    "danger": "#c97c70",
+    "warn": "#d4a957",
+    "ok": "#7da670",
 }
 _DEFAULT_DARK = {
-    "bg": "#1a1612", "surface": "#241e18", "surface2": "#2e261d",
-    "fg": "#f5e8d8", "fgSoft": "#c8b89b", "muted": "#8b7e70",
-    "accent": "#d97757", "accentSoft": "#e89a7b", "divider": "#5a4f44",
-    "danger": "#c97c70", "warn": "#d4a957", "ok": "#7da670",
+    "bg": "#1a1612",
+    "surface": "#241e18",
+    "surface2": "#2e261d",
+    "fg": "#f5e8d8",
+    "fgSoft": "#c8b89b",
+    "muted": "#8b7e70",
+    "accent": "#d97757",
+    "accentSoft": "#e89a7b",
+    "divider": "#5a4f44",
+    "danger": "#c97c70",
+    "warn": "#d4a957",
+    "ok": "#7da670",
 }
 
 
@@ -1651,33 +1671,33 @@ def _build_pool(
 #      red-seeded theme can pick a pale-red cell rather than collapsing to
 #      whichever cell happens to be lightest regardless of hue.
 LIGHT_TOKENS: dict[str, tuple[str, float]] = {
-    "bg":         ("neutral",                       0.83),
-    "surface":    ("neutral",                       0.88),
-    "surface2":   ("neutral-variant",               0.73),
-    "fg":         ("neutral-complement",            0.22),
-    "fgSoft":     ("neutral-complement",            0.40),
-    "muted":      ("neutral-variant-complement",    0.50),
-    "divider":    ("neutral-variant-complement",    0.68),
-    "accent":     ("primary",                       0.55),
-    "accentSoft": ("secondary",                     0.55),
-    "danger":     ("error",                         0.55),
-    "warn":       ("warn",                          0.65),
-    "ok":         ("ok",                            0.55),
+    "bg": ("neutral", 0.83),
+    "surface": ("neutral", 0.88),
+    "surface2": ("neutral-variant", 0.73),
+    "fg": ("neutral-complement", 0.22),
+    "fgSoft": ("neutral-complement", 0.40),
+    "muted": ("neutral-variant-complement", 0.50),
+    "divider": ("neutral-variant-complement", 0.68),
+    "accent": ("primary", 0.55),
+    "accentSoft": ("secondary", 0.55),
+    "danger": ("error", 0.55),
+    "warn": ("warn", 0.65),
+    "ok": ("ok", 0.55),
 }
 
 DARK_TOKENS: dict[str, tuple[str, float]] = {
-    "bg":         ("neutral",                       0.18),
-    "surface":    ("neutral",                       0.22),
-    "surface2":   ("neutral-variant",               0.28),
-    "fg":         ("neutral-complement",            0.95),
-    "fgSoft":     ("neutral-complement",            0.78),
-    "muted":      ("neutral-variant-complement",    0.62),
-    "divider":    ("neutral-variant-complement",    0.35),
-    "accent":     ("primary",                       0.72),
-    "accentSoft": ("secondary",                     0.72),
-    "danger":     ("error",                         0.72),
-    "warn":       ("warn",                          0.78),
-    "ok":         ("ok",                            0.70),
+    "bg": ("neutral", 0.18),
+    "surface": ("neutral", 0.22),
+    "surface2": ("neutral-variant", 0.28),
+    "fg": ("neutral-complement", 0.95),
+    "fgSoft": ("neutral-complement", 0.78),
+    "muted": ("neutral-variant-complement", 0.62),
+    "divider": ("neutral-variant-complement", 0.35),
+    "accent": ("primary", 0.72),
+    "accentSoft": ("secondary", 0.72),
+    "danger": ("error", 0.72),
+    "warn": ("warn", 0.78),
+    "ok": ("ok", 0.70),
 }
 
 # Midtone — bg sits at L≈0.72 with substantial chroma so the panel's dither
@@ -1685,40 +1705,40 @@ DARK_TOKENS: dict[str, tuple[str, float]] = {
 # coral / slate. Without this, light themes with bg L≈0.97 collapse to white
 # on Spectra 6's 6-ink gamut. Stored as a light-mode theme since fg < bg.
 MIDTONE_TOKENS: dict[str, tuple[str, float]] = {
-    "bg":         ("neutral",                       0.72),
-    "surface":    ("neutral",                       0.80),
-    "surface2":   ("neutral-variant",               0.62),
-    "fg":         ("neutral-complement",            0.18),
-    "fgSoft":     ("neutral-complement",            0.35),
-    "muted":      ("neutral-variant-complement",    0.45),
-    "divider":    ("neutral-variant-complement",    0.50),
-    "accent":     ("primary",                       0.45),
-    "accentSoft": ("secondary",                     0.45),
-    "danger":     ("error",                         0.48),
-    "warn":       ("warn",                          0.55),
-    "ok":         ("ok",                            0.48),
+    "bg": ("neutral", 0.72),
+    "surface": ("neutral", 0.80),
+    "surface2": ("neutral-variant", 0.62),
+    "fg": ("neutral-complement", 0.18),
+    "fgSoft": ("neutral-complement", 0.35),
+    "muted": ("neutral-variant-complement", 0.45),
+    "divider": ("neutral-variant-complement", 0.50),
+    "accent": ("primary", 0.45),
+    "accentSoft": ("secondary", 0.45),
+    "danger": ("error", 0.48),
+    "warn": ("warn", 0.55),
+    "ok": ("ok", 0.48),
 }
 
 # Per-palette anchor chromas. Lower = more muted. These were tuned by eye
 # against the OKLCH gamut: too-high chroma at extreme lightness gets clipped
 # and produces the same hex regardless of hue.
 _PALETTE_CHROMA: dict[str, float] = {
-    "primary":         0.16,
-    "secondary":       0.10,
-    "tertiary":        0.13,
-    "neutral":         0.005,
+    "primary": 0.16,
+    "secondary": 0.10,
+    "tertiary": 0.13,
+    "neutral": 0.005,
     "neutral-variant": 0.022,
-    "error":           0.18,
-    "warn":            0.16,
-    "ok":              0.16,
+    "error": 0.18,
+    "warn": 0.16,
+    "ok": 0.16,
 }
 
 # Hue anchors (OKLCH) for the semantic palettes — these are pinned to the
 # hue family the role demands, regardless of the user's seed.
 _SEMANTIC_HUES: dict[str, float] = {
-    "error": 28.0,    # red
-    "warn":  75.0,    # orange-yellow
-    "ok":    145.0,   # green
+    "error": 28.0,  # red
+    "warn": 75.0,  # orange-yellow
+    "ok": 145.0,  # green
 }
 
 HARMONIES = ("complement", "split", "triad", "square", "analogous", "mono")
@@ -1814,9 +1834,7 @@ def _enforce_contrast(
             continue
         candidates = [c for c in pool if _contrast(c["hex"], bg_hex) >= target_ratio]
         if not candidates:
-            warnings.append(
-                f"{fg_token}: no candidate hits {target_ratio}:1 vs bg"
-            )
+            warnings.append(f"{fg_token}: no candidate hits {target_ratio}:1 vs bg")
             continue
         best = min(candidates, key=lambda c: _oklab_distance(c["oklab"], extreme_oklab))
         palette[fg_token] = best["hex"]
@@ -1927,4 +1945,3 @@ def _generate_theme_palette(
         "harmony": harmony,
         "contrast_warnings": warnings,
     }
-

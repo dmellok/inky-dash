@@ -114,9 +114,7 @@ def fetch(
     sunset_arr = daily.get("sunset") or []
     today_stats = {
         "uv_index_max": (daily.get("uv_index_max") or [None])[0],
-        "precipitation_probability_max": (
-            daily.get("precipitation_probability_max") or [None]
-        )[0],
+        "precipitation_probability_max": (daily.get("precipitation_probability_max") or [None])[0],
         "sunrise": _hour_label(sunrise_arr[0]) if sunrise_arr else "",
         "sunset": _hour_label(sunset_arr[0]) if sunset_arr else "",
     }

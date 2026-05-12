@@ -104,9 +104,7 @@ def fetch(
         else None
     )
     # ``2`` = "original" colour ramp; ``1_1`` = smooth on, snow on.
-    radar_template = (
-        f"{radar_host}{radar_path}/256/{{z}}/{{x}}/{{y}}/2/1_1.png"
-    )
+    radar_template = f"{radar_host}{radar_path}/256/{{z}}/{{x}}/{{y}}/2/1_1.png"
 
     return {
         "label": label,
@@ -118,7 +116,5 @@ def fetch(
         "basemap_template": basemap_template,
         "radar_template": radar_template,
         "radar_ts": radar_ts,
-        "radar_iso": datetime.fromtimestamp(radar_ts, tz=UTC).isoformat()
-        if radar_ts
-        else None,
+        "radar_iso": datetime.fromtimestamp(radar_ts, tz=UTC).isoformat() if radar_ts else None,
     }

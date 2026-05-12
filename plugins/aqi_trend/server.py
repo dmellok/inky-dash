@@ -70,9 +70,7 @@ def fetch(
             label = ts.strftime("%H")
         except ValueError:
             label = ""
-        points.append(
-            {"ts": t, "label": label, "aqi": aqis[i] if i < len(aqis) else None}
-        )
+        points.append({"ts": t, "label": label, "aqi": aqis[i] if i < len(aqis) else None})
 
     current = payload.get("current", {})
     aqi_now = current.get("european_aqi")

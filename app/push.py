@@ -133,9 +133,7 @@ class PushManager:
     def _busy_duplicate(self, opts: PushOptions) -> PushResult:
         return PushResult(
             status="busy",
-            error=(
-                f"identical push fired in the last {self._debounce_seconds:.0f}s — ignored"
-            ),
+            error=(f"identical push fired in the last {self._debounce_seconds:.0f}s — ignored"),
             options=asdict(opts),
         )
 

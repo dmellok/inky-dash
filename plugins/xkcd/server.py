@@ -1,6 +1,6 @@
 """xkcd widget. xkcd's official JSON endpoints:
-  - https://xkcd.com/info.0.json           — latest
-  - https://xkcd.com/<num>/info.0.json     — specific number
+- https://xkcd.com/info.0.json           — latest
+- https://xkcd.com/<num>/info.0.json     — specific number
 """
 
 from __future__ import annotations
@@ -46,7 +46,8 @@ def fetch(
             latest = _fetch("https://xkcd.com/info.0.json")
             picked = random.randint(1, max(1, int(latest.get("num", 1))))
             entry = (
-                latest if picked == latest.get("num")
+                latest
+                if picked == latest.get("num")
                 else _fetch(f"https://xkcd.com/{picked}/info.0.json")
             )
         else:

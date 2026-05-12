@@ -161,9 +161,7 @@ PREVIEW_DRAFT = {
     "id": "_demo",
     "name": "DRAFTED",
     "panel": {"w": 800, "h": 600},
-    "cells": [
-        {"id": "c1", "x": 0, "y": 0, "w": 800, "h": 600, "plugin": "clock", "options": {}}
-    ],
+    "cells": [{"id": "c1", "x": 0, "y": 0, "w": 800, "h": 600, "plugin": "clock", "options": {}}],
 }
 
 

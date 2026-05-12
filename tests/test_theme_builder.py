@@ -23,10 +23,10 @@ GOOD_PALETTE = {
 }
 
 
-def _theme_body(theme_id: str = "twilight") -> dict:
+def _theme_body(theme_id: str = "user-test") -> dict:
     return {
         "id": theme_id,
-        "name": "Twilight",
+        "name": "User Test",
         "mode": "dark",
         "palette": dict(GOOD_PALETTE),
     }
@@ -36,13 +36,13 @@ def test_create_user_theme_appears_in_listing(client: FlaskClient) -> None:
     res = client.post("/api/themes", json=_theme_body())
     assert res.status_code == 200
     body = res.get_json()
-    assert body["id"] == "twilight"
+    assert body["id"] == "user-test"
     assert body["is_user"] is True
 
     listing = client.get("/api/themes").get_json()
-    twilight = next((t for t in listing if t["id"] == "twilight"), None)
-    assert twilight is not None
-    assert twilight["is_user"] is True
+    found = next((t for t in listing if t["id"] == "user-test"), None)
+    assert found is not None
+    assert found["is_user"] is True
 
 
 def test_create_user_theme_persists_to_user_json(client: FlaskClient, tmp_path: Path) -> None:

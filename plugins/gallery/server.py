@@ -269,10 +269,7 @@ def fetch(
     folder = _folder_path(folder_name, data_dir)
     images = _list_images(folder)
     if not images:
-        msg = (
-            f"No images in '{folder_name or ROOT_FOLDER_VALUE}'. "
-            f"Add some via /plugins/gallery/."
-        )
+        msg = f"No images in '{folder_name or ROOT_FOLDER_VALUE}'. Add some via /plugins/gallery/."
         return {"error": msg, "url": None}
 
     folder_segment = folder_name if folder_name else ROOT_FOLDER_VALUE
@@ -281,10 +278,7 @@ def fetch(
         images = _filter_by_orientation(images, folder_segment, orientation, data_dir)
         if not images:
             return {
-                "error": (
-                    f"No {orientation} images in "
-                    f"'{folder_name or ROOT_FOLDER_VALUE}'."
-                ),
+                "error": (f"No {orientation} images in '{folder_name or ROOT_FOLDER_VALUE}'."),
                 "url": None,
             }
 

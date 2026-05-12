@@ -219,9 +219,7 @@ def test_push_inline_requires_page(client: FlaskClient) -> None:
 
 
 def test_push_inline_invalid_dither(client: FlaskClient) -> None:
-    res = client.post(
-        "/api/pages/push-inline", json={"page": DRAFT_PAGE, "dither": "ugly"}
-    )
+    res = client.post("/api/pages/push-inline", json={"page": DRAFT_PAGE, "dither": "ugly"})
     assert res.status_code == 400
 
 

@@ -41,10 +41,7 @@ def fetch(
         except (json.JSONDecodeError, OSError):
             pass
 
-    url = (
-        "https://github-contributions-api.jogruber.de/v4/"
-        f"{urllib.parse.quote(username)}?y=last"
-    )
+    url = f"https://github-contributions-api.jogruber.de/v4/{urllib.parse.quote(username)}?y=last"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "inky-dash/1.0"})
         with urllib.request.urlopen(req, timeout=15) as resp:
@@ -61,17 +58,13 @@ def fetch(
     return _slice(payload, days, range_opt, username)
 
 
-def _slice(
-    payload: dict[str, Any], days: int, range_opt: str, username: str
-) -> dict[str, Any]:
+def _slice(payload: dict[str, Any], days: int, range_opt: str, username: str) -> dict[str, Any]:
     """Return only the last ``days`` of contributions plus derived stats:
     current streak, longest streak, busiest day, active-day count, average."""
     raw = payload.get("contributions") or []
     cutoff = datetime.now(UTC).date() - timedelta(days=days)
     sliced = [
-        c
-        for c in raw
-        if isinstance(c, dict) and c.get("date") and c["date"] >= cutoff.isoformat()
+        c for c in raw if isinstance(c, dict) and c.get("date") and c["date"] >= cutoff.isoformat()
     ]
     total = sum(int(c.get("count", 0) or 0) for c in sliced)
     return {
@@ -137,11 +130,7 @@ def _compute_stats(contribs: list[dict[str, Any]]) -> dict[str, Any]:
 
     # Busiest day.
     max_idx = max(range(len(counts)), key=lambda i: counts[i])
-    best_day = (
-        {"date": dates[max_idx], "count": counts[max_idx]}
-        if counts[max_idx] > 0
-        else None
-    )
+    best_day = {"date": dates[max_idx], "count": counts[max_idx]} if counts[max_idx] > 0 else None
 
     active_days = sum(1 for c in counts if c > 0)
     avg = sum(counts) / len(counts) if counts else 0.0

@@ -22,9 +22,7 @@ def test_list_empty(client: FlaskClient) -> None:
 
 
 def test_create_folder_and_list(client: FlaskClient, tmp_path: Path) -> None:
-    res = client.post(
-        "/plugins/gallery/api/folders", json={"name": "vacation"}
-    )
+    res = client.post("/plugins/gallery/api/folders", json={"name": "vacation"})
     assert res.status_code == 200
     listing = client.get("/plugins/gallery/api/folders").get_json()
     names = [f["name"] for f in listing]
@@ -40,9 +38,7 @@ def test_create_rejects_bad_name(client: FlaskClient) -> None:
     # The server lowercases input — "Vacation" becomes "vacation". So we
     # only test characters the regex actively rejects.
     for bad in ["with spaces", "with/slash", "..parent", "", "_leading_underscore"]:
-        res = client.post(
-            "/plugins/gallery/api/folders", json={"name": bad}
-        )
+        res = client.post("/plugins/gallery/api/folders", json={"name": bad})
         assert res.status_code == 400, f"expected 400 for {bad!r}"
 
 
@@ -206,9 +202,7 @@ def test_external_folder_rejects_image_delete(client: FlaskClient, tmp_path: Pat
     assert (ext / "keep.png").exists()
 
 
-def test_delete_external_folder_does_not_touch_files(
-    client: FlaskClient, tmp_path: Path
-) -> None:
+def test_delete_external_folder_does_not_touch_files(client: FlaskClient, tmp_path: Path) -> None:
     ext = tmp_path / "external_keep"
     ext.mkdir()
     (ext / "important.png").write_bytes(_png_bytes("green"))
@@ -256,9 +250,7 @@ def test_thumbnail_url_is_in_listing(client: FlaskClient) -> None:
     assert img["url"].endswith("/a.png")
 
 
-def test_thumbnail_endpoint_returns_jpeg_and_caches(
-    client: FlaskClient, tmp_path: Path
-) -> None:
+def test_thumbnail_endpoint_returns_jpeg_and_caches(client: FlaskClient, tmp_path: Path) -> None:
     client.post("/plugins/gallery/api/folders", json={"name": "tcache"})
     client.post(
         "/plugins/gallery/api/folders/tcache/images",

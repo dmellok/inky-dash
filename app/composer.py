@@ -164,9 +164,7 @@ def _hydrate_page(page_dict: dict[str, Any], *, preview: bool = False) -> dict[s
         cell_font_family = cell_font.name if cell_font else page_font_family
         resolved_options = _resolved_options(cell["plugin"], cell.get("options", {}))
         plugin = registry.get(cell["plugin"])
-        full_bleed = bool(
-            plugin and plugin.manifest.get("render", {}).get("full_bleed")
-        )
+        full_bleed = bool(plugin and plugin.manifest.get("render", {}).get("full_bleed"))
         # Pick the inset for each side based on whether that side is on the
         # panel boundary or facing another cell.
         left_pad = outer_pad if cell["x"] == 0 else inner_pad

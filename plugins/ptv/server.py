@@ -56,9 +56,11 @@ def _signed_url(path_with_query: str, devid: str, api_key: str) -> str:
     params. We always append ``devid`` ourselves."""
     sep = "&" if "?" in path_with_query else "?"
     signed_path = f"{path_with_query}{sep}devid={urllib.parse.quote(devid)}"
-    signature = hmac.new(
-        api_key.encode("utf-8"), signed_path.encode("utf-8"), hashlib.sha1
-    ).hexdigest().upper()
+    signature = (
+        hmac.new(api_key.encode("utf-8"), signed_path.encode("utf-8"), hashlib.sha1)
+        .hexdigest()
+        .upper()
+    )
     return f"{PTV_BASE}{signed_path}&signature={signature}"
 
 
@@ -134,11 +136,7 @@ def fetch(
         route_info = routes.get(str(d.get("route_id"))) or {}
         run_info = runs.get(str(d.get("run_ref"))) or runs.get(d.get("run_ref")) or {}
         direction_info = directions.get(str(d.get("direction_id"))) or {}
-        destination = (
-            run_info.get("destination_name")
-            or direction_info.get("direction_name")
-            or ""
-        )
+        destination = run_info.get("destination_name") or direction_info.get("direction_name") or ""
         departures.append(
             {
                 "route_name": route_info.get("route_name", ""),
@@ -326,9 +324,7 @@ def blueprint() -> Blueprint:
                 "id": st.get("stop_id"),
                 "name": st.get("stop_name"),
                 "suburb": st.get("stop_suburb"),
-                "route_type_label": ROUTE_TYPE_LABELS.get(
-                    st.get("route_type", -1), "?"
-                ),
+                "route_type_label": ROUTE_TYPE_LABELS.get(st.get("route_type", -1), "?"),
             }
             for st in (payload.get("stops") or [])[:30]
         ]

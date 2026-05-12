@@ -25,10 +25,7 @@ LOOKBACK_DAYS = 5  # in case today's feed isn't published yet
 
 
 def _api_request(when: date) -> dict[str, Any]:
-    url = (
-        f"https://api.wikimedia.org/feed/v1/wikipedia/en/featured/"
-        f"{when.year}/{when:%m}/{when:%d}"
-    )
+    url = f"https://api.wikimedia.org/feed/v1/wikipedia/en/featured/{when.year}/{when:%m}/{when:%d}"
     req = urllib.request.Request(url, headers={"User-Agent": "inky-dash/1.0"})
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read().decode("utf-8"))

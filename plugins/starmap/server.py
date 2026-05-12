@@ -26,7 +26,6 @@ import math
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Bright-star catalog. Format: (name, RA_hours, Dec_degrees, magnitude).
 # Pulled from BSC5 / SIMBAD; selection biased toward stars that anchor
@@ -185,28 +184,16 @@ def _julian_date(ut: datetime) -> float:
         m += 12
     a = y // 100
     b = 2 - a + a // 4
-    return (
-        math.floor(365.25 * (y + 4716))
-        + math.floor(30.6001 * (m + 1))
-        + d
-        + b
-        - 1524.5
-    )
+    return math.floor(365.25 * (y + 4716)) + math.floor(30.6001 * (m + 1)) + d + b - 1524.5
 
 
 def _gmst_deg(jd: float) -> float:
     t = (jd - 2451545.0) / 36525
-    gmst = (
-        280.46061837
-        + 360.98564736629 * (jd - 2451545.0)
-        + t * t * (0.000387933 - t / 38710000)
-    )
+    gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0) + t * t * (0.000387933 - t / 38710000)
     return gmst % 360
 
 
-def _alt_az(
-    ra_h: float, dec_d: float, lat_d: float, lst_h: float
-) -> tuple[float, float]:
+def _alt_az(ra_h: float, dec_d: float, lat_d: float, lst_h: float) -> tuple[float, float]:
     """Return (alt_deg, az_deg). az is measured from north going east."""
     ha = math.radians((lst_h - ra_h) * 15)
     dec = math.radians(dec_d)
@@ -225,21 +212,21 @@ def _moon_radec(jd: float) -> tuple[float, float]:
     """Low-precision Moon position (Meeus ch. 47, truncated). Returns
     (RA_hours, Dec_degrees). Good enough for charting (~0.5°)."""
     t = (jd - 2451545.0) / 36525
-    # Mean longitude
-    l = 218.3164477 + 481267.88123421 * t
+    # Mean longitude (degrees). Variable names follow Meeus convention but
+    # spelled out so they don't trip ruff's E741 (ambiguous-name) rule.
+    mean_lon = 218.3164477 + 481267.88123421 * t
     # Mean elongation, mean anomaly, etc.
     d = 297.8501921 + 445267.1114034 * t
     m = 357.5291092 + 35999.0502909 * t
     mp = 134.9633964 + 477198.8675055 * t
     f = 93.2720950 + 483202.0175233 * t
 
-    lr = math.radians(l)
     dr = math.radians(d)
     mr = math.radians(m)
     mpr = math.radians(mp)
     fr = math.radians(f)
 
-    lon = l
+    lon = mean_lon
     lon += 6.289 * math.sin(mpr)
     lon += -1.274 * math.sin(mpr - 2 * dr)
     lon += 0.658 * math.sin(2 * dr)
@@ -260,8 +247,7 @@ def _moon_radec(jd: float) -> tuple[float, float]:
     cos_ra = math.cos(lon_rad)
     ra = math.atan2(sin_ra, cos_ra)
     dec = math.asin(
-        math.sin(lat_rad) * math.cos(eps)
-        + math.cos(lat_rad) * math.sin(eps) * math.sin(lon_rad)
+        math.sin(lat_rad) * math.cos(eps) + math.cos(lat_rad) * math.sin(eps) * math.sin(lon_rad)
     )
     return (math.degrees(ra) / 15) % 24, math.degrees(dec)
 
@@ -313,7 +299,7 @@ def fetch(
 
     lines: list[dict[str, Any]] = []
     if show_constellations:
-        for cname, segments in CONSTELLATIONS.items():
+        for _cname, segments in CONSTELLATIONS.items():
             for a, b in segments:
                 ap = stars_proj.get(a)
                 bp = stars_proj.get(b)
@@ -321,9 +307,7 @@ def fetch(
                     continue
                 if not ap.get("visible") or not bp.get("visible"):
                     continue
-                lines.append(
-                    {"x1": ap["x"], "y1": ap["y"], "x2": bp["x"], "y2": bp["y"]}
-                )
+                lines.append({"x1": ap["x"], "y1": ap["y"], "x2": bp["x"], "y2": bp["y"]})
 
     # Moon
     moon = None

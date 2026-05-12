@@ -172,15 +172,11 @@ def test_put_panel_partial_update_preserves_model(client: FlaskClient, tmp_path:
 
 
 def test_put_panel_rejects_unknown_orientation(client: FlaskClient) -> None:
-    res = client.put(
-        "/api/app/settings", json={"panel": {"orientation": "diagonal"}}
-    )
+    res = client.put("/api/app/settings", json={"panel": {"orientation": "diagonal"}})
     assert res.status_code == 400
 
 
-def test_panel_model_change_resizes_existing_pages(
-    client: FlaskClient, app: object
-) -> None:
+def test_panel_model_change_resizes_existing_pages(client: FlaskClient, app: object) -> None:
     """Switching panel model rescales every dashboard so it matches the
     new resolution — cells stay in the same proportional spots."""
     # Start: default 13.3" landscape (1600×1200). Demo seeded at full bleed.
@@ -203,9 +199,7 @@ def test_panel_model_change_resizes_existing_pages(
     assert full_bleed["w"] == 800 and full_bleed["h"] == 480
 
 
-def test_panel_orientation_and_model_change_in_one_call(
-    client: FlaskClient, app: object
-) -> None:
+def test_panel_orientation_and_model_change_in_one_call(client: FlaskClient, app: object) -> None:
     """Combined orientation flip + model swap: rotate, then rescale."""
     client.put(
         "/api/app/settings",

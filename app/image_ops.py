@@ -32,10 +32,11 @@ def blurred_fit(
 
     Returns: PNG byte string at exactly ``target_w × target_h``.
     """
-    with Image.open(io.BytesIO(source_bytes)) as src:
-        src = ImageOps.exif_transpose(src)
-        if src.mode != "RGB":
-            src = src.convert("RGB")
+    with Image.open(io.BytesIO(source_bytes)) as opened:
+        # EXIF transpose returns a fresh Image so phone-camera images land
+        # right-side-up; converting up front locks us to RGB for the blur.
+        oriented = ImageOps.exif_transpose(opened)
+        src = oriented.convert("RGB") if oriented.mode != "RGB" else oriented
         src_w, src_h = src.size
 
         # Background: cover-fit. Scale source so its shorter axis matches the
@@ -44,7 +45,7 @@ def blurred_fit(
         bg_scale = max(target_w / src_w, target_h / src_h)
         bg = src.resize(
             (max(1, round(src_w * bg_scale)), max(1, round(src_h * bg_scale))),
-            Image.LANCZOS,
+            Image.Resampling.LANCZOS,
         )
         bx = max(0, (bg.width - target_w) // 2)
         by = max(0, (bg.height - target_h) // 2)
@@ -56,7 +57,7 @@ def blurred_fit(
         fg_scale = min(target_w / src_w, target_h / src_h)
         fg = src.resize(
             (max(1, round(src_w * fg_scale)), max(1, round(src_h * fg_scale))),
-            Image.LANCZOS,
+            Image.Resampling.LANCZOS,
         )
 
         canvas = bg.copy()

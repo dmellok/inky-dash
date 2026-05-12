@@ -115,15 +115,11 @@ def _save_lists(data_dir: Path, lists: list[dict[str, Any]]) -> None:
     tmp.replace(path)
 
 
-def _find_list(
-    lists: list[dict[str, Any]], list_id: str
-) -> dict[str, Any] | None:
-    return next((l for l in lists if l["id"] == list_id), None)
+def _find_list(lists: list[dict[str, Any]], list_id: str) -> dict[str, Any] | None:
+    return next((lst for lst in lists if lst["id"] == list_id), None)
 
 
-def _resolve_list(
-    lists: list[dict[str, Any]], list_id: str | None
-) -> dict[str, Any]:
+def _resolve_list(lists: list[dict[str, Any]], list_id: str | None) -> dict[str, Any]:
     """Return the requested list, or the first list as a fallback. Lists are
     never empty (we guarantee at least the default) so this always returns
     something."""
@@ -140,8 +136,7 @@ def _prune_expired(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
         item
         for item in items
-        if not item.get("completed_at")
-        or now - float(item["completed_at"]) < _COMPLETED_TTL
+        if not item.get("completed_at") or now - float(item["completed_at"]) < _COMPLETED_TTL
     ]
 
 

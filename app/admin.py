@@ -274,8 +274,6 @@ def _align_pages_to_panel(store: PageStore, panel: PanelSettings) -> int:
     return migrated
 
 
-
-
 @bp.post("/api/pages/<page_id>/rotate")
 def api_rotate_page(page_id: str) -> tuple[Response, int] | Response:
     """Manual page rotation. Body (optional): ``{"direction": "cw" | "ccw"}``."""
@@ -631,9 +629,7 @@ def api_push_page_inline() -> tuple[Response, int] | Response:
     store = _store()
     store.upsert(page)
     try:
-        result = _push_manager().push(
-            transient_id, options=options, dither=cast_dither(dither_arg)
-        )
+        result = _push_manager().push(transient_id, options=options, dither=cast_dither(dither_arg))
     finally:
         store.delete(transient_id)
 
@@ -802,9 +798,7 @@ def _apply_blurred_fit(
     panel = _app_settings_store().load().panel
     target_w, target_h = panel.render_dimensions()
     try:
-        composed = blurred_fit(
-            image_bytes, target_w=target_w, target_h=target_h
-        )
+        composed = blurred_fit(image_bytes, target_w=target_w, target_h=target_h)
     except Exception as err:  # noqa: BLE001 — Pillow surfaces a few flavours
         return image_bytes, scale, f"blurred composite: {err}"
     return composed, "fit", None
