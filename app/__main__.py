@@ -160,6 +160,27 @@ if __name__ == "__main__":
         # scheduler, or MQTT client.
         _evict_stale_instances()
 
+        import glob as _glob
+
         from flask import Flask
 
-        Flask("inky-dash-reloader").run(host="0.0.0.0", port=PORT, debug=True)
+        # The stub doesn't import our package, so Werkzeug's auto-detection
+        # only sees Flask's own files — file changes under app/ would
+        # silently fail to trigger a worker restart. Hand it every Python
+        # source file we care about explicitly. Templates + JSON catalogs
+        # are watched too so manifest tweaks pick up without a hard restart.
+        watched: list[str] = []
+        for pattern in (
+            "app/**/*.py",
+            "plugins/**/plugin.json",
+            "templates/**/*.html",
+            "schema/*.json",
+        ):
+            watched.extend(_glob.glob(pattern, recursive=True))
+
+        Flask("inky-dash-reloader").run(
+            host="0.0.0.0",
+            port=PORT,
+            debug=True,
+            extra_files=watched,
+        )
