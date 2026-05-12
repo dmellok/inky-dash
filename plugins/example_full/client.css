@@ -1,0 +1,55 @@
+/* Chrome (.widget, .head, .head-*, .stat, .stat-ico, .stat-text,
+   .stat-label, .stat-value, .pill, .state-error) comes from
+   /static/style/widget-base.css. Local rules below only add example-
+   specific bits — subtitle paragraph, tone-row alignment, tile grid,
+   and the debug pre. */
+
+.example {
+  grid-template-rows: auto auto auto 1fr;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: min(2.8cqw, 4.2cqh);
+  color: var(--theme-fgSoft);
+  line-height: 1.35;
+}
+
+.tone-row {
+  display: flex;
+  gap: 1cqw;
+  flex-wrap: wrap;
+}
+
+/* Auto-fit grid: tiles size to ~140px minimum, collapsing to fewer
+   columns on narrower cells without any container-query overrides. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5cqmin;
+  align-content: start;
+}
+
+/* Compact mode swaps the tile padding tighter and uses a smaller value
+   font so the same items pack into a half-cell. */
+.example.is-compact .tiles { gap: 1cqmin; }
+.example.is-compact .stat { padding: 1cqmin 1.4cqmin; }
+.example.is-compact .stat-value { font-size: min(3cqw, 4.6cqh); }
+
+.debug {
+  margin: 0;
+  padding: 1.2cqmin 1.6cqmin;
+  background: var(--theme-surface);
+  border-radius: max(4px, 1cqmin);
+  font: 600 min(1.8cqw, 2.6cqh) ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--theme-fgSoft);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+/* Very narrow cells: drop the time chip + collapse to one column. */
+@container (max-width: 360px) {
+  .head-time { display: none; }
+  .tiles { grid-template-columns: 1fr; }
+}

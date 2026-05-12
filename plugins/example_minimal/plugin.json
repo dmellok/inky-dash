@@ -1,0 +1,10 @@
+{
+  "manifest_version": 1,
+  "id": "example_minimal",
+  "name": "Minimal example",
+  "version": "1.0.0",
+  "kind": "widget",
+  "description": "The smallest possible widget — six required fields in plugin.json plus a 5-line client.js. Renders 'Hello, <size>!' centred on the cell. See docs/wiki/writing-a-plugin.md for the tutorial.",
+  "icon": "ph-sparkle",
+  "supports": { "sizes": ["xs", "sm", "md", "lg"] }
+}

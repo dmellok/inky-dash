@@ -1,0 +1,88 @@
+{
+  "manifest_version": 1,
+  "id": "example_full",
+  "name": "Full example",
+  "version": "1.0.0",
+  "kind": "widget",
+  "description": "Reference widget — exercises every plugin contract feature: all six cell_option types, a static dropdown, a dynamic (choices_from) dropdown, plugin-level settings with a secret, server-side fetch + choices + admin blueprint, theme-aware CSS via widget-base.css, and a smoke test.",
+  "icon": "ph-puzzle-piece",
+  "supports": {
+    "sizes": ["xs", "sm", "md", "lg"]
+  },
+  "cell_options": [
+    {
+      "name": "title",
+      "type": "string",
+      "label": "Title",
+      "default": "EXAMPLE"
+    },
+    {
+      "name": "subtitle",
+      "type": "textarea",
+      "label": "Subtitle (multiline)",
+      "default": "Demonstrates every cell_option type."
+    },
+    {
+      "name": "count",
+      "type": "number",
+      "label": "Item count (1–12)",
+      "default": 4
+    },
+    {
+      "name": "compact",
+      "type": "boolean",
+      "label": "Compact layout",
+      "default": false
+    },
+    {
+      "name": "tone",
+      "type": "select",
+      "label": "Tone (static choices)",
+      "default": "info",
+      "choices": [
+        { "value": "info", "label": "Info" },
+        { "value": "ok", "label": "OK" },
+        { "value": "warn", "label": "Warn" },
+        { "value": "danger", "label": "Danger" }
+      ]
+    },
+    {
+      "name": "category",
+      "type": "select",
+      "label": "Category (dynamic choices)",
+      "default": "",
+      "choices_from": "categories"
+    },
+    {
+      "name": "tint",
+      "type": "color",
+      "label": "Accent override",
+      "default": ""
+    }
+  ],
+  "settings": [
+    {
+      "name": "base_url",
+      "type": "string",
+      "label": "Source URL",
+      "default": "https://example.com"
+    },
+    {
+      "name": "api_key",
+      "type": "string",
+      "label": "API key",
+      "secret": true
+    },
+    {
+      "name": "show_debug",
+      "type": "boolean",
+      "label": "Surface debug info in widget",
+      "default": false
+    }
+  ],
+  "render": {
+    "dither": "none",
+    "needs_network": false,
+    "full_bleed": false
+  }
+}
