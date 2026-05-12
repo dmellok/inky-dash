@@ -684,7 +684,7 @@ class SettingsPage extends LitElement {
                 .value=${String(underscan)}
                 @input=${(e) =>
                   this._setApp("panel.underscan", Number(e.target.value))}
-                style="flex: 1;"
+                style="flex: 1; accent-color: var(--id-accent);"
               />
               <span
                 style="min-width: 48px; text-align: right; font-variant-numeric: tabular-nums;"
