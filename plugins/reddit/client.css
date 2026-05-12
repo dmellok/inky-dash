@@ -1,0 +1,99 @@
+/* Chrome (.widget, .head, .head-*, .state-empty, .state-error) comes from
+   /static/style/widget-base.css. Reddit-specific card layout below —
+   same three-column shape as hn / news so feed widgets read as one system. */
+
+.reddit {
+  grid-template-rows: auto 1fr;
+  gap: 1.5cqh;
+}
+
+.cards {
+  display: grid;
+  gap: 1.5cqh;
+  align-content: start;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2cqw;
+  align-items: center;
+  padding: 2cqmin 2.5cqmin;
+  background: var(--theme-surface);
+  border-radius: max(8px, 1.6cqmin);
+  min-width: 0;
+}
+
+.rank {
+  font-size: min(7cqw, 11cqh);
+  font-weight: 800;
+  color: var(--theme-accent);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  min-width: 1.4em;
+  line-height: 1;
+}
+
+.card-body {
+  display: grid;
+  gap: 0.5cqh;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: min(3.2cqw, 5cqh);
+  font-weight: 700;
+  color: var(--theme-fg);
+  line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-meta {
+  font-size: min(2.2cqw, 3.4cqh);
+  font-weight: 600;
+  color: var(--theme-fgSoft);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  background: var(--theme-surface2, var(--theme-bg));
+  color: var(--theme-accent);
+  font-weight: 700;
+  font-size: min(2.6cqw, 4cqh);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.score-pill .ph { font-size: 1em; }
+
+/* Stale-cache / partial-error indicator. */
+.reddit-note {
+  font-size: min(2.2cqw, 3.4cqh);
+  color: var(--theme-warn, var(--theme-accent));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.reddit-note .ph { color: var(--theme-warn, var(--theme-accent)); }
+
+@container (max-width: 360px) {
+  .head { display: none; }
+  .card { gap: 1.5cqw; padding: 1.6cqmin 2cqmin; }
+  .rank { font-size: min(8cqw, 12cqh); }
+  .score-pill { padding: 0.3em 0.7em; }
+}

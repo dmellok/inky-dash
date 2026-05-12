@@ -1,0 +1,71 @@
+{
+  "manifest_version": 1,
+  "id": "reddit",
+  "name": "Reddit",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Top / hot / new posts from any subreddit. Uses Reddit's public JSON endpoint (no auth, no API key); cached on disk to stay polite with the rate limiter. Card layout mirrors the HN / news widgets.",
+  "icon": "ph-reddit-logo",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "subreddit",
+      "type": "string",
+      "label": "Subreddit (without r/)",
+      "default": "popular"
+    },
+    {
+      "name": "sort",
+      "type": "select",
+      "label": "Sort",
+      "default": "hot",
+      "choices": [
+        { "value": "hot", "label": "Hot" },
+        { "value": "new", "label": "New" },
+        { "value": "top", "label": "Top" },
+        { "value": "rising", "label": "Rising" }
+      ]
+    },
+    {
+      "name": "time_filter",
+      "type": "select",
+      "label": "Time filter (for Top sort)",
+      "default": "day",
+      "choices": [
+        { "value": "hour", "label": "Past hour" },
+        { "value": "day", "label": "Past 24 hours" },
+        { "value": "week", "label": "Past week" },
+        { "value": "month", "label": "Past month" },
+        { "value": "year", "label": "Past year" },
+        { "value": "all", "label": "All time" }
+      ]
+    },
+    {
+      "name": "limit",
+      "type": "number",
+      "label": "Number of posts",
+      "default": 5
+    },
+    {
+      "name": "hide_nsfw",
+      "type": "boolean",
+      "label": "Hide NSFW posts",
+      "default": true
+    }
+  ],
+  "settings": [
+    {
+      "name": "user_agent",
+      "type": "string",
+      "label": "User-Agent (Reddit prefers a descriptive UA)",
+      "default": "inky-dash/1.0 (Reddit widget)"
+    },
+    {
+      "name": "cache_ttl_minutes",
+      "type": "number",
+      "label": "Cache TTL (minutes)",
+      "default": 10
+    }
+  ],
+  "render": { "dither": "none", "needs_network": true }
+}
