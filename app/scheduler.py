@@ -29,15 +29,23 @@ from app.state.schedule_store import ScheduleStore
 logger = logging.getLogger(__name__)
 
 
+def _local(now: datetime) -> datetime:
+    """Convert a UTC-aware ``datetime`` to the server's local clock so that
+    weekday + HH:MM comparisons match what the user typed in the editor.
+    The editor's time pickers don't carry a timezone; we treat them as
+    local-wall-clock for the host running the companion."""
+    return now.astimezone()
+
+
 def _matches_dow(schedule: Schedule, now: datetime) -> bool:
     # Python weekday: Monday = 0 ... Sunday = 6 — same as our schedule mask.
-    return now.weekday() in schedule.days_of_week
+    return _local(now).weekday() in schedule.days_of_week
 
 
 def _matches_window(schedule: Schedule, now: datetime) -> bool:
     if schedule.time_of_day_start is None and schedule.time_of_day_end is None:
         return True
-    current = now.time()
+    current = _local(now).time()
     start = _parse_hhmm(schedule.time_of_day_start) if schedule.time_of_day_start else time(0, 0)
     end = _parse_hhmm(schedule.time_of_day_end) if schedule.time_of_day_end else time(23, 59, 59)
     if start <= end:
@@ -124,13 +132,18 @@ class Scheduler:
             elif s.type == "oneshot":
                 if s.fires_at is None:
                     continue
-                # Today's "fires_at" — only the time-of-day matters.
-                target = now.replace(
+                # Today's "fires_at" — only the time-of-day matters, and it
+                # was typed by the user in local-wall-clock terms (no tz in
+                # the picker), so build the target in local time before
+                # comparing.
+                local_now = _local(now)
+                target_local = local_now.replace(
                     hour=s.fires_at.hour,
                     minute=s.fires_at.minute,
                     second=0,
                     microsecond=0,
                 )
+                target = target_local.astimezone(UTC)
                 if now < target:
                     continue
                 with self._lock:
@@ -144,8 +157,8 @@ class Scheduler:
                     continue
                 if last is not None:
                     last_dt = datetime.fromtimestamp(last, tz=UTC)
-                    if last_dt.date() == now.date():
-                        continue  # already fired today
+                    if last_dt.astimezone().date() == local_now.date():
+                        continue  # already fired today (in local terms)
                 candidates.append(s)
         candidates.sort(key=lambda s: (-s.priority, s.id))
         return candidates

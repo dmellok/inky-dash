@@ -3,13 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 from app.push import PushResult
 from app.scheduler import Scheduler
 from app.state import Schedule, ScheduleStore
+
+# Schedule HH:MM windows + oneshot fires_at are interpreted in the server's
+# local timezone (so users entering "09:00" in the editor mean local 09:00,
+# not UTC). Tests build their "now" inputs against this same local tz so
+# they're host-independent.
+LOCAL_TZ = datetime.now().astimezone().tzinfo or UTC
+
+
+def _local_dt(year: int, month: int, day: int, hour: int = 0, minute: int = 0) -> datetime:
+    """Build a tz-aware datetime in the host's local timezone."""
+    return datetime(year, month, day, hour, minute, tzinfo=LOCAL_TZ)
 
 
 @dataclass
@@ -97,18 +108,18 @@ def test_dow_mask_blocks_other_days(tmp_path: Path) -> None:
 def test_time_of_day_window(tmp_path: Path) -> None:
     sched, store, _ = _scheduler(tmp_path)
     store.upsert(_interval_schedule(time_of_day_start="09:00", time_of_day_end="17:00"))
-    assert sched.find_due(datetime(2026, 5, 8, 8, 30, tzinfo=UTC)) == []
-    assert len(sched.find_due(datetime(2026, 5, 8, 12, 0, tzinfo=UTC))) == 1
-    assert sched.find_due(datetime(2026, 5, 8, 18, 0, tzinfo=UTC)) == []
+    assert sched.find_due(_local_dt(2026, 5, 8, 8, 30)) == []
+    assert len(sched.find_due(_local_dt(2026, 5, 8, 12, 0))) == 1
+    assert sched.find_due(_local_dt(2026, 5, 8, 18, 0)) == []
 
 
 def test_wrap_around_window(tmp_path: Path) -> None:
     """22:00–06:00 covers 23:00 and 03:00 but not 12:00."""
     sched, store, _ = _scheduler(tmp_path)
     store.upsert(_interval_schedule(time_of_day_start="22:00", time_of_day_end="06:00"))
-    assert len(sched.find_due(datetime(2026, 5, 8, 23, 0, tzinfo=UTC))) == 1
-    assert len(sched.find_due(datetime(2026, 5, 8, 3, 0, tzinfo=UTC))) == 1
-    assert sched.find_due(datetime(2026, 5, 8, 12, 0, tzinfo=UTC)) == []
+    assert len(sched.find_due(_local_dt(2026, 5, 8, 23, 0))) == 1
+    assert len(sched.find_due(_local_dt(2026, 5, 8, 3, 0))) == 1
+    assert sched.find_due(_local_dt(2026, 5, 8, 12, 0)) == []
 
 
 def test_oneshot_fires_daily_at_time_of_day(tmp_path: Path) -> None:
@@ -116,7 +127,7 @@ def test_oneshot_fires_daily_at_time_of_day(tmp_path: Path) -> None:
     ignored; the schedule fires once per day after its time-of-day passes
     and won't re-fire on the same day."""
     sched, store, pusher = _scheduler(tmp_path)
-    fires = datetime(2026, 5, 8, 12, 0, tzinfo=UTC)
+    fires = _local_dt(2026, 5, 8, 12, 0)
     store.upsert(_oneshot_schedule(fires))
     # Before today's HH:MM: not due
     assert sched.find_due(fires - timedelta(seconds=1)) == []
