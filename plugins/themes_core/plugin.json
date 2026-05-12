@@ -2,9 +2,9 @@
   "manifest_version": 1,
   "id": "themes_core",
   "name": "Core themes",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "kind": "theme",
-  "description": "36 hand-curated themes: a clean white 'Paper' default plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
+  "description": "42 hand-curated themes: a clean white 'Paper' default, 6 bold-accent white-bg themes (Cobalt, Flame, Magenta, Kelly, Royal, Cherry), plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
   "supports": {
     "sizes": [
       "xs",
@@ -31,6 +31,120 @@
         "danger": "#c97c70",
         "warn": "#d4a957",
         "ok": "#7da670"
+      }
+    },
+    {
+      "id": "cobalt",
+      "name": "Cobalt",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#1c4eef",
+        "accentSoft": "#143ab3"
+      }
+    },
+    {
+      "id": "flame",
+      "name": "Flame",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#ec5a16",
+        "accentSoft": "#b8430a"
+      }
+    },
+    {
+      "id": "magenta",
+      "name": "Magenta",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#d11a8a",
+        "accentSoft": "#a01369"
+      }
+    },
+    {
+      "id": "kelly",
+      "name": "Kelly",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#1d8f4a",
+        "accentSoft": "#15693a"
+      }
+    },
+    {
+      "id": "royal",
+      "name": "Royal",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#6f33d1",
+        "accentSoft": "#4f24a0"
+      }
+    },
+    {
+      "id": "cherry",
+      "name": "Cherry",
+      "mode": "light",
+      "palette": {
+        "bg": "#ffffff",
+        "surface": "#f6f6f5",
+        "surface2": "#ededec",
+        "fg": "#0d0d0d",
+        "fgSoft": "#5a5a5a",
+        "muted": "#9a9a9a",
+        "divider": "#dadada",
+        "danger": "#c4292c",
+        "warn": "#c8941a",
+        "ok": "#2e8848",
+        "accent": "#d4193a",
+        "accentSoft": "#a4112c"
       }
     },
     {
