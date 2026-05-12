@@ -106,32 +106,46 @@ function detectLayout(cells, panel) {
   return null;
 }
 
-// Group themes into Light / Medium / Dark buckets based on their bg
-// lightness. Uses Rec.709 luminance, with thresholds picked so the
-// existing 36 core themes split roughly evenly into the three groups.
-// Falls back to the theme's declared `mode` field for legacy themes that
-// don't have a usable bg colour.
+// Group themes into White / Light / Medium / Dark buckets based on
+// their bg lightness. Uses Rec.709 luminance. "White" is reserved for
+// themes with a pure-white bg AND neutral-grayscale surfaces (the
+// stark-white-plus-bold-accent family). Themes with a white bg but
+// cream/parchment tinted surfaces (like Paper) stay in "Light".
+// Falls back to the theme's declared `mode` for legacy themes without
+// a usable bg.
+function _parseHex(hex) {
+  const m = /^#?([0-9a-f]{6})/i.exec(hex || "");
+  if (!m) return null;
+  return [
+    parseInt(m[1].slice(0, 2), 16),
+    parseInt(m[1].slice(2, 4), 16),
+    parseInt(m[1].slice(4, 6), 16),
+  ];
+}
+function _isNeutral(rgb, tolerance = 4) {
+  if (!rgb) return false;
+  return Math.max(...rgb) - Math.min(...rgb) <= tolerance;
+}
 function themeBucket(theme) {
-  const hex = theme?.palette?.bg || "";
-  const m = /^#?([0-9a-f]{6})/i.exec(hex);
-  if (!m) return theme?.mode === "dark" ? "dark" : "light";
-  const r = parseInt(m[1].slice(0, 2), 16) / 255;
-  const g = parseInt(m[1].slice(2, 4), 16) / 255;
-  const b = parseInt(m[1].slice(4, 6), 16) / 255;
-  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const bg = _parseHex(theme?.palette?.bg);
+  if (!bg) return theme?.mode === "dark" ? "dark" : "light";
+  const L = (0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2]) / 255;
+  const surface = _parseHex(theme?.palette?.surface);
+  if (L >= 0.985 && _isNeutral(bg) && _isNeutral(surface)) return "white";
   if (L >= 0.78) return "light";
   if (L <= 0.32) return "dark";
   return "medium";
 }
 
 const THEME_SECTIONS = [
+  { key: "white", label: "White" },
   { key: "light", label: "Light" },
   { key: "medium", label: "Medium" },
   { key: "dark", label: "Dark" },
 ];
 
 function groupThemes(themes) {
-  const groups = { light: [], medium: [], dark: [] };
+  const groups = { white: [], light: [], medium: [], dark: [] };
   for (const t of themes || []) groups[themeBucket(t)].push(t);
   for (const g of Object.values(groups)) {
     g.sort((a, b) => a.name.localeCompare(b.name));

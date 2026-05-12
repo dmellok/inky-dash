@@ -40,23 +40,38 @@ function slugify(name) {
     .slice(0, 32);
 }
 
-// Bucket themes into Light / Medium / Dark by bg luminance (Rec.709).
-// Thresholds chosen so the 36 core themes split into three populated
-// groups; legacy themes without a usable bg fall back to declared `mode`.
+// Bucket themes into White / Light / Medium / Dark by bg luminance
+// (Rec.709). "White" is reserved for themes whose bg is pure white AND
+// whose surfaces are neutral grayscale (no warm/cool tint) — the
+// stark-white-plus-bold-accent family. Cream / paper / parchment
+// themes have an #ffffff bg too but tinted surfaces, so they stay in
+// "Light". Legacy themes without a usable bg fall back to `mode`.
+function _parseHex(hex) {
+  const m = /^#?([0-9a-f]{6})/i.exec(hex || "");
+  if (!m) return null;
+  return [
+    parseInt(m[1].slice(0, 2), 16),
+    parseInt(m[1].slice(2, 4), 16),
+    parseInt(m[1].slice(4, 6), 16),
+  ];
+}
+function _isNeutral(rgb, tolerance = 4) {
+  if (!rgb) return false;
+  return Math.max(...rgb) - Math.min(...rgb) <= tolerance;
+}
 function themeBucket(theme) {
-  const hex = theme?.palette?.bg || "";
-  const m = /^#?([0-9a-f]{6})/i.exec(hex);
-  if (!m) return theme?.mode === "dark" ? "dark" : "light";
-  const r = parseInt(m[1].slice(0, 2), 16) / 255;
-  const g = parseInt(m[1].slice(2, 4), 16) / 255;
-  const b = parseInt(m[1].slice(4, 6), 16) / 255;
-  const L = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  const bg = _parseHex(theme?.palette?.bg);
+  if (!bg) return theme?.mode === "dark" ? "dark" : "light";
+  const L = (0.2126 * bg[0] + 0.7152 * bg[1] + 0.0722 * bg[2]) / 255;
+  const surface = _parseHex(theme?.palette?.surface);
+  if (L >= 0.985 && _isNeutral(bg) && _isNeutral(surface)) return "white";
   if (L >= 0.78) return "light";
   if (L <= 0.32) return "dark";
   return "medium";
 }
 
 const THEME_SECTIONS = [
+  { key: "white", label: "White" },
   { key: "light", label: "Light" },
   { key: "medium", label: "Medium" },
   { key: "dark", label: "Dark" },
@@ -934,7 +949,7 @@ class ThemesPage extends LitElement {
                 : null}
             </div>
             ${(() => {
-              const groups = { light: [], medium: [], dark: [] };
+              const groups = { white: [], light: [], medium: [], dark: [] };
               for (const t of this.themes) groups[themeBucket(t)].push(t);
               for (const arr of Object.values(groups)) {
                 arr.sort((a, b) => a.name.localeCompare(b.name));
