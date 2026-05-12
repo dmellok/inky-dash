@@ -2,9 +2,9 @@
   "manifest_version": 1,
   "id": "themes_core",
   "name": "Core themes",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "kind": "theme",
-  "description": "42 hand-curated themes: a clean white 'Paper' default, 6 bold-accent white-bg themes (Cobalt, Flame, Magenta, Kelly, Royal, Cherry), plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
+  "description": "46 hand-curated themes: a clean white 'Paper' default, 6 bold-accent white-bg themes (Cobalt, Flame, Magenta, Kelly, Royal, Cherry), 4 vibrant-fg themes that render typography in saturated ink rather than neutral grey (Ink: navy on cream; Burgundy: wine on parchment; Embers: orange on deep brown; Cyber: electric green on near-black), plus 15 monochromatic (5 light/mid/dark each), 15 duotone with complementary fg/bg hues, and 5 neon themes (Hotwire/Plasma/Matrix/Synthwave/Toxic) with vivid pink/purple/green accents on near-black bgs. The midtone palette deliberately uses tinted-paper bgs around L=0.70 so Spectra 6 dithers actual coloured ink rather than collapsing to white.",
   "supports": {
     "sizes": [
       "xs",
@@ -810,6 +810,82 @@
         "danger": "#ff5060",
         "warn": "#ffaa30",
         "ok": "#50ff50"
+      }
+    },
+    {
+      "id": "ink",
+      "name": "Ink",
+      "mode": "light",
+      "palette": {
+        "bg": "#f6f4ee",
+        "surface": "#e6e2d6",
+        "surface2": "#d4cebd",
+        "fg": "#0a2463",
+        "fgSoft": "#34487a",
+        "muted": "#6a7d9e",
+        "divider": "#9aa6c0",
+        "danger": "#b21c2d",
+        "warn": "#b87913",
+        "ok": "#2a6b3a",
+        "accent": "#1c4eef",
+        "accentSoft": "#143ab3"
+      }
+    },
+    {
+      "id": "burgundy",
+      "name": "Burgundy",
+      "mode": "light",
+      "palette": {
+        "bg": "#f5ead7",
+        "surface": "#ebdcc1",
+        "surface2": "#d9c39e",
+        "fg": "#5a0f1e",
+        "fgSoft": "#7e3949",
+        "muted": "#a47780",
+        "divider": "#b09a8c",
+        "danger": "#b21c2d",
+        "warn": "#b87913",
+        "ok": "#336b3a",
+        "accent": "#9a1c39",
+        "accentSoft": "#6f0f24"
+      }
+    },
+    {
+      "id": "embers",
+      "name": "Embers",
+      "mode": "dark",
+      "palette": {
+        "bg": "#1a0d05",
+        "surface": "#2a1808",
+        "surface2": "#3d240e",
+        "fg": "#f0a060",
+        "fgSoft": "#c9824a",
+        "muted": "#886042",
+        "divider": "#5a3f28",
+        "danger": "#ff6b6b",
+        "warn": "#ffcc44",
+        "ok": "#88c060",
+        "accent": "#ff7733",
+        "accentSoft": "#d05a1a"
+      }
+    },
+    {
+      "id": "cyber",
+      "name": "Cyber",
+      "mode": "dark",
+      "palette": {
+        "bg": "#050a08",
+        "surface": "#0e1812",
+        "surface2": "#1a2820",
+        "fg": "#00ff88",
+        "fgSoft": "#4ad9a4",
+        "muted": "#5a9a7a",
+        "divider": "#1f3d2e",
+        "danger": "#ff3366",
+        "warn": "#ffcc00",
+        "ok": "#00ff88",
+        "accent": "#ff00aa",
+        "accentSoft": "#c00080"
       }
     }
   ]
