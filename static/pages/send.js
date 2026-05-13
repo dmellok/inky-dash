@@ -370,121 +370,126 @@ class SendPage extends LitElement {
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 10px;
     }
+    /* List view — one row per push attempt. The thumb is a fixed 80×80
+       square so the rows align cleanly regardless of panel orientation.
+       Image is center-cropped (object-fit: cover) plus the underscan
+       zoom so the white border falls outside the square. */
     .history-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
     .history-card {
       background: var(--id-surface, #ffffff);
       border: 1px solid var(--id-divider, #c8b89b);
       border-radius: 10px;
-      overflow: hidden;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px 10px 10px;
+      transition: border-color 100ms ease;
     }
+    .history-card:hover { border-color: var(--id-accent, #d97757); }
     .history-thumb {
       /* The grid sets --panel-w / --panel-h (unitless ints) + --underscan-px
          (unitless int, default 0). --underscan-zoom is the scale factor
          needed to crop the white underscan border out of the visible
-         window: ratio of the full panel to the inner content area.
-         Underscan is symmetric on all four edges so a single uniform
-         scale works for both portrait and landscape. */
+         window: ratio of the full panel to the inner content area. */
       --underscan-zoom: calc(
         var(--panel-w) / (var(--panel-w) - 2 * var(--underscan-px, 0))
       );
-      aspect-ratio: var(--panel-w, 1600) / var(--panel-h, 1200);
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
       background: var(--id-surface2, #f5e8d8);
+      border-radius: 8px;
       cursor: zoom-in;
+      overflow: hidden;
       display: grid;
       place-items: center;
       position: relative;
-      overflow: hidden;
     }
     .history-thumb img {
       width: 100%;
       height: 100%;
-      /* contain so wonky-aspect file uploads aren't silently cropped,
-         then scale up just enough to hide the underscan border. */
-      object-fit: contain;
+      /* Square thumb + cover = centered crop. Same treatment for landscape
+         and portrait panels; portrait just chains a 90° rotation onto
+         the same transform to restore the composed orientation. */
+      object-fit: cover;
       display: block;
       transform: scale(var(--underscan-zoom, 1));
       transition: transform 200ms ease;
     }
     .history-thumb:hover img {
-      transform: scale(calc(var(--underscan-zoom, 1) * 1.03));
-    }
-
-    /* Portrait panels: stored PNGs are pre-rotated landscape (for the
-       panel's pixel grid); rotate them back so the user sees the dashboard
-       in its composed orientation. container-type:size lets us address
-       the image at the container's swapped dimensions so it fills exactly.
-       The underscan zoom chains onto the rotation. */
-    .history-thumb.portrait {
-      container-type: size;
+      transform: scale(calc(var(--underscan-zoom, 1) * 1.06));
     }
     .history-thumb.portrait img {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 100cqh;
-      height: 100cqw;
-      object-fit: cover;
-      transform: translate(-50%, -50%) rotate(90deg)
-        scale(var(--underscan-zoom, 1));
+      transform: rotate(90deg) scale(var(--underscan-zoom, 1));
     }
     .history-thumb.portrait:hover img {
-      transform: translate(-50%, -50%) rotate(90deg)
-        scale(calc(var(--underscan-zoom, 1) * 1.03));
+      transform: rotate(90deg) scale(calc(var(--underscan-zoom, 1) * 1.06));
     }
     .history-thumb-missing {
-      font-size: 12px;
+      font-size: 10px;
       color: var(--id-fg-soft, #5a4f44);
-      padding: 12px;
       text-align: center;
+      padding: 6px;
     }
     .history-thumb-missing .ph {
       display: block;
-      font-size: 32px;
-      margin-bottom: 4px;
+      font-size: 22px;
+      margin-bottom: 2px;
     }
     .history-body {
-      padding: 10px 12px 4px;
       display: grid;
-      gap: 4px;
+      gap: 3px;
+      min-width: 0;
     }
     .history-line1 {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      font-size: 13px;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .history-line2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      min-width: 0;
     }
     .history-page {
       font-weight: 600;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      flex: 1;
+      min-width: 0;
     }
     .history-age {
-      font-size: 11px;
+      font-size: 12px;
       color: var(--id-fg-soft, #5a4f44);
       flex-shrink: 0;
     }
+    .history-duration {
+      color: var(--id-fg-soft, #5a4f44);
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
     .history-error {
-      font-size: 11px;
       color: var(--id-danger, #c97c70);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
+      flex: 1;
     }
     .history-actions {
       display: flex;
       gap: 6px;
-      padding: 8px 12px 12px;
       align-items: center;
     }
-    .history-actions .spacer { flex: 1; }
     .history-btn {
       background: transparent;
       border: 1px solid var(--id-divider, #c8b89b);
@@ -1261,13 +1266,15 @@ class SendPage extends LitElement {
             <span class="history-page" title=${h.page_id}>${h.page_id}</span>
             <span class="history-age">${this._fmtAge(h.ts)}</span>
           </div>
-          <div class="history-line1">
+          <div class="history-line2">
             <span class="pill ${h.status}">${h.status}</span>
             ${h.duration_s
-              ? html`<span class="history-age">${h.duration_s}s</span>`
+              ? html`<span class="history-duration">${h.duration_s}s</span>`
+              : null}
+            ${h.error
+              ? html`<span class="history-error" title=${h.error}>${h.error}</span>`
               : null}
           </div>
-          ${h.error ? html`<div class="history-error" title=${h.error}>${h.error}</div>` : null}
         </div>
         <div class="history-actions">
           <button
@@ -1279,7 +1286,6 @@ class SendPage extends LitElement {
             <i class="ph ph-paper-plane-tilt"></i>
             ${isPending ? "…" : "Resend"}
           </button>
-          <span class="spacer"></span>
           <button
             class="history-btn danger"
             ?disabled=${isPending}
