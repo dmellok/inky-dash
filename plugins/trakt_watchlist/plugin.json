@@ -1,0 +1,57 @@
+{
+  "manifest_version": 1,
+  "id": "trakt_watchlist",
+  "name": "Trakt Watchlist",
+  "version": "0.1.0",
+  "kind": "widget",
+  "description": "Random poster from your Trakt watchlist on every push. Needs a Trakt client_id (https://trakt.tv/oauth/applications), a TMDB API key (https://www.themoviedb.org/settings/api), and your public Trakt username. Posters come from TMDB; Trakt is the source of truth for the list itself.",
+  "icon": "ph-film-slate",
+  "supports": { "sizes": ["sm", "md", "lg"] },
+  "cell_options": [
+    {
+      "name": "media_type",
+      "type": "select",
+      "label": "Media type",
+      "default": "movies",
+      "choices": [
+        { "value": "movies", "label": "Movies only" },
+        { "value": "shows", "label": "TV shows only" },
+        { "value": "all", "label": "Movies + shows" }
+      ]
+    },
+    {
+      "name": "scale",
+      "type": "select",
+      "label": "Scale",
+      "default": "fill",
+      "choices": [
+        { "value": "fill", "label": "Fill (crop to cover)" },
+        { "value": "fit", "label": "Fit (letterbox)" },
+        { "value": "blurred", "label": "Fit with blurred background" }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "name": "trakt_client_id",
+      "type": "string",
+      "label": "Trakt client_id",
+      "secret": true,
+      "default": ""
+    },
+    {
+      "name": "tmdb_api_key",
+      "type": "string",
+      "label": "TMDB API key",
+      "secret": true,
+      "default": ""
+    },
+    {
+      "name": "trakt_username",
+      "type": "string",
+      "label": "Trakt username (watchlist owner)",
+      "default": ""
+    }
+  ],
+  "render": { "dither": "floyd-steinberg", "needs_network": true, "full_bleed": true }
+}
