@@ -15,7 +15,6 @@ class SendPage extends LitElement {
     url: { state: true },
     file: { state: true },
     fileObjectUrl: { state: true },
-    dither: { state: true },
     scale: { state: true },
     sending: { state: true },
     result: { state: true },
@@ -323,8 +322,35 @@ class SendPage extends LitElement {
     .preview-frame img {
       width: 100%;
       height: 100%;
-      object-fit: contain;
       display: block;
+      transform: scale(var(--underscan-zoom, 1));
+    }
+    /* Fit modes for file + URL image previews. These mirror the server-
+       side scale options on /api/send/{file,url} so what the user sees
+       matches what the panel will get (sans dither). */
+    .preview-frame.fit-fit img { object-fit: contain; }
+    .preview-frame.fit-fill img { object-fit: cover; }
+    .preview-frame.fit-stretch img { object-fit: fill; }
+    .preview-frame.fit-center img {
+      object-fit: none;
+      object-position: center;
+    }
+    /* Blurred: a cover-cropped blurred copy underneath a contain'd
+       foreground, same trick as the APOD widget. */
+    .preview-frame.fit-blurred .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(24px);
+      transform: scale(calc(var(--underscan-zoom, 1) * 1.1));
+    }
+    .preview-frame.fit-blurred .fg {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
       transform: scale(var(--underscan-zoom, 1));
     }
     /* Live iframe preview — renders the source (saved dashboard or
@@ -623,7 +649,6 @@ class SendPage extends LitElement {
     this.url = "";
     this.file = null;
     this.fileObjectUrl = null;
-    this.dither = "floyd-steinberg";
     this.scale = "fit";
     this.sending = false;
     this.result = null;
@@ -847,29 +872,24 @@ class SendPage extends LitElement {
         res = await fetch("/api/send/page", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ page_id: this.pageId, dither: this.dither }),
+          body: JSON.stringify({ page_id: this.pageId }),
         });
       } else if (this.source === "url") {
         res = await fetch("/api/send/url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: this.url,
-            dither: this.dither,
-            scale: this.scale,
-          }),
+          body: JSON.stringify({ url: this.url, scale: this.scale }),
         });
       } else if (this.source === "webpage") {
         res = await fetch("/api/send/webpage", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: this.url, dither: this.dither }),
+          body: JSON.stringify({ url: this.url }),
         });
       } else {
         if (!this.file) throw new Error("No file chosen");
         const form = new FormData();
         form.append("file", this.file);
-        form.append("dither", this.dither);
         form.append("scale", this.scale);
         res = await fetch("/api/send/file", { method: "POST", body: form });
       }
@@ -1050,13 +1070,19 @@ class SendPage extends LitElement {
 
   _renderPreview() {
     const dims = this._panelDisplayDims();
+    // Fit class only matters for file + URL sources; the dashboard and
+    // webpage iframes render at their own intrinsic dims, no scale mode.
+    const fitClass =
+      this.source === "file" || this.source === "url"
+        ? `fit-${this.scale}`
+        : "";
     return html`
       <div class="preview-card">
         <div class="preview-head">
           <h3><i class="ph ph-monitor"></i> Live preview</h3>
         </div>
         <div
-          class="preview-frame"
+          class="preview-frame ${fitClass}"
           style="--panel-w: ${dims.w}; --panel-h: ${dims.h}; --underscan-px: ${this.appPanel?.underscan || 0};"
         >
           ${this._renderPreviewBody()}
@@ -1069,7 +1095,7 @@ class SendPage extends LitElement {
   // dashboards + webpages), an <img> (for image URLs + uploaded files),
   // or an empty-state hint. Nothing is fetched server-side; the iframe /
   // img sources straight from the user's input. The dither + final
-  // quantisation only happens at push time.
+  // quantisation happen at push time on the panel listener side.
   _renderPreviewBody() {
     if (this.previewError) {
       return html`<div class="preview-error">${this.previewError}</div>`;
@@ -1092,12 +1118,7 @@ class SendPage extends LitElement {
       if (!this.url) {
         return html`<div class="preview-empty">Enter an image URL above.</div>`;
       }
-      return html`<img
-        src=${this.url}
-        alt="Source image preview"
-        @error=${() =>
-          (this.previewError = "Image failed to load — check the URL.")}
-      />`;
+      return this._renderImagePreview(this.url, "Source image preview");
     }
     if (this.source === "webpage") {
       if (!this.url) {
@@ -1117,7 +1138,24 @@ class SendPage extends LitElement {
     if (!this.fileObjectUrl) {
       return html`<div class="preview-empty">Drop or pick a file above.</div>`;
     }
-    return html`<img src=${this.fileObjectUrl} alt="Picked file preview" />`;
+    return this._renderImagePreview(this.fileObjectUrl, "Picked file preview");
+  }
+
+  // Image preview shared by the "file" and "url" sources. The "blurred"
+  // fit needs two img elements (background blur + foreground contain),
+  // every other fit is just one. The fit class on .preview-frame above
+  // picks the right object-fit.
+  _renderImagePreview(src, alt) {
+    const onError = () => {
+      this.previewError = "Image failed to load — check the source.";
+    };
+    if (this.scale === "blurred") {
+      return html`
+        <img class="bg" src=${src} alt="" aria-hidden="true" @error=${onError} />
+        <img class="fg" src=${src} alt=${alt} @error=${onError} />
+      `;
+    }
+    return html`<img src=${src} alt=${alt} @error=${onError} />`;
   }
 
   render() {
@@ -1190,13 +1228,6 @@ class SendPage extends LitElement {
       <div class="layout">
         <div class="form">
           ${this._renderSourceForm()}
-          <div class="form-row">
-            <label class="field">Dither</label>
-            <select @change=${(e) => { this.dither = e.target.value; this._clearPreview(); }}>
-              <option value="floyd-steinberg" ?selected=${this.dither === "floyd-steinberg"}>Floyd–Steinberg</option>
-              <option value="none" ?selected=${this.dither === "none"}>None (nearest)</option>
-            </select>
-          </div>
           ${this.source === "file" || this.source === "url"
             ? html`
                 <div class="form-row">
