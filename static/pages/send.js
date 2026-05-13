@@ -310,18 +310,24 @@ class SendPage extends LitElement {
     .preview-head button:hover { color: var(--id-accent, #d97757); }
     .preview-frame {
       /* Aspect comes from app panel settings + orientation, fed via inline
-         CSS variables (defaults match the 13.3" Spectra 6 landscape native). */
+         CSS variables (defaults match the 13.3" Spectra 6 landscape native).
+         --underscan-zoom matches the history grid — see the comment there. */
+      --underscan-zoom: calc(
+        var(--panel-w) / (var(--panel-w) - 2 * var(--underscan-px, 0))
+      );
       aspect-ratio: var(--panel-w, 1600) / var(--panel-h, 1200);
       background: var(--id-surface2, #f5e8d8);
       display: grid;
       place-items: center;
       position: relative;
+      overflow: hidden;
     }
     .preview-frame img {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
+      transform: scale(var(--underscan-zoom, 1));
     }
     .preview-empty,
     .preview-error,
@@ -378,6 +384,15 @@ class SendPage extends LitElement {
       grid-template-rows: auto 1fr auto;
     }
     .history-thumb {
+      /* The grid sets --panel-w / --panel-h (unitless ints) + --underscan-px
+         (unitless int, default 0). --underscan-zoom is the scale factor
+         needed to crop the white underscan border out of the visible
+         window: ratio of the full panel to the inner content area.
+         Underscan is symmetric on all four edges so a single uniform
+         scale works for both portrait and landscape. */
+      --underscan-zoom: calc(
+        var(--panel-w) / (var(--panel-w) - 2 * var(--underscan-px, 0))
+      );
       aspect-ratio: var(--panel-w, 1600) / var(--panel-h, 1200);
       background: var(--id-surface2, #f5e8d8);
       cursor: zoom-in;
@@ -389,16 +404,22 @@ class SendPage extends LitElement {
     .history-thumb img {
       width: 100%;
       height: 100%;
+      /* contain so wonky-aspect file uploads aren't silently cropped,
+         then scale up just enough to hide the underscan border. */
       object-fit: contain;
       display: block;
+      transform: scale(var(--underscan-zoom, 1));
       transition: transform 200ms ease;
     }
-    .history-thumb:hover img { transform: scale(1.03); }
+    .history-thumb:hover img {
+      transform: scale(calc(var(--underscan-zoom, 1) * 1.03));
+    }
 
     /* Portrait panels: stored PNGs are pre-rotated landscape (for the
        panel's pixel grid); rotate them back so the user sees the dashboard
        in its composed orientation. container-type:size lets us address
-       the image at the container's swapped dimensions so it fills exactly. */
+       the image at the container's swapped dimensions so it fills exactly.
+       The underscan zoom chains onto the rotation. */
     .history-thumb.portrait {
       container-type: size;
     }
@@ -409,10 +430,12 @@ class SendPage extends LitElement {
       width: 100cqh;
       height: 100cqw;
       object-fit: cover;
-      transform: translate(-50%, -50%) rotate(90deg);
+      transform: translate(-50%, -50%) rotate(90deg)
+        scale(var(--underscan-zoom, 1));
     }
     .history-thumb.portrait:hover img {
-      transform: translate(-50%, -50%) rotate(90deg) scale(1.03);
+      transform: translate(-50%, -50%) rotate(90deg)
+        scale(calc(var(--underscan-zoom, 1) * 1.03));
     }
     .history-thumb-missing {
       font-size: 12px;
@@ -630,6 +653,7 @@ class SendPage extends LitElement {
             orientation: app.panel.orientation,
             width: spec.width,
             height: spec.height,
+            underscan: Number(app.panel.underscan) || 0,
           };
         }
       } catch {
@@ -1038,7 +1062,7 @@ class SendPage extends LitElement {
         </div>
         <div
           class="preview-frame"
-          style="--panel-w: ${dims.w}; --panel-h: ${dims.h};"
+          style="--panel-w: ${dims.w}; --panel-h: ${dims.h}; --underscan-px: ${this.appPanel?.underscan || 0};"
         >
           ${this.previewLoading
             ? html`
@@ -1206,7 +1230,7 @@ class SendPage extends LitElement {
           : html`
               <div
                 class="history-grid"
-                style="--panel-w: ${dims.w}; --panel-h: ${dims.h};"
+                style="--panel-w: ${dims.w}; --panel-h: ${dims.h}; --underscan-px: ${this.appPanel?.underscan || 0};"
               >
                 ${this.history.map((h) => this._renderHistoryCard(h, isPortrait))}
               </div>
