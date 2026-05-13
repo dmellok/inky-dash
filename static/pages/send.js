@@ -20,8 +20,6 @@ class SendPage extends LitElement {
     sending: { state: true },
     result: { state: true },
     error: { state: true },
-    previewUrl: { state: true },
-    previewLoading: { state: true },
     previewError: { state: true },
     dragOver: { state: true },
     appPanel: { state: true },
@@ -329,6 +327,22 @@ class SendPage extends LitElement {
       display: block;
       transform: scale(var(--underscan-zoom, 1));
     }
+    /* Live iframe preview — renders the source (saved dashboard or
+       webpage URL) at panel resolution then scales down to fit the
+       container via a transform we set from JS (mirrors the editor's
+       live preview). pointer-events:none so clicks fall through to
+       the lightbox trigger instead of the iframe. */
+    .preview-frame iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: calc(var(--panel-w, 1600) * 1px);
+      height: calc(var(--panel-h, 1200) * 1px);
+      border: 0;
+      transform-origin: top left;
+      pointer-events: none;
+      background: var(--id-surface, #ffffff);
+    }
     .preview-empty,
     .preview-error,
     .preview-spinner {
@@ -614,8 +628,6 @@ class SendPage extends LitElement {
     this.sending = false;
     this.result = null;
     this.error = null;
-    this.previewUrl = null;
-    this.previewLoading = false;
     this.previewError = null;
     this.dragOver = false;
     this.appPanel = null; // { width, height, orientation }
@@ -697,7 +709,7 @@ class SendPage extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     if (this.fileObjectUrl) URL.revokeObjectURL(this.fileObjectUrl);
-    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
+    this._previewResizeObserver?.disconnect();
     window.removeEventListener("keydown", this._onKeydown);
     this._unsubPushState?.();
   }
@@ -720,7 +732,6 @@ class SendPage extends LitElement {
       this.fileObjectUrl = null;
     }
     this._clearPreview();
-    if (file) this._loadPreview();
   }
 
   _onFileInput(event) {
@@ -761,68 +772,52 @@ class SendPage extends LitElement {
       window.history.replaceState({}, "", target);
     }
     if (id === "history") this._loadHistory();
-    // Auto-render whenever the new source already has enough info to preview.
-    else if (id === "page" && this.pageId) this._loadPreview();
-    else if (id === "file" && this.file) this._loadPreview();
   }
 
+  // The preview is now LIVE — an iframe or <img> reflecting the source
+  // directly, no server round-trip. _clearPreview just resets any error
+  // overlay; the live element re-mounts on input change via Lit's normal
+  // render cycle.
   _clearPreview() {
-    if (this.previewUrl) URL.revokeObjectURL(this.previewUrl);
-    this.previewUrl = null;
     this.previewError = null;
   }
 
-  async _loadPreview() {
-    this._clearPreview();
-    this.previewLoading = true;
-    try {
-      let res;
-      if (this.source === "page") {
-        if (!this.pageId) throw new Error("Pick a dashboard");
-        res = await fetch("/api/send/preview/page", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ page_id: this.pageId, dither: this.dither }),
-        });
-      } else if (this.source === "url") {
-        if (!this.url) throw new Error("Enter an image URL");
-        res = await fetch("/api/send/preview/url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: this.url,
-            dither: this.dither,
-            scale: this.scale,
-          }),
-        });
-      } else if (this.source === "webpage") {
-        if (!this.url) throw new Error("Enter a webpage URL");
-        res = await fetch("/api/send/preview/webpage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: this.url, dither: this.dither }),
-        });
-      } else {
-        if (!this.file) throw new Error("Pick a file");
-        const form = new FormData();
-        form.append("file", this.file);
-        form.append("dither", this.dither);
-        form.append("scale", this.scale);
-        res = await fetch("/api/send/preview/file", {
-          method: "POST",
-          body: form,
-        });
-      }
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({ error: res.statusText }));
-        throw new Error(body.error || `HTTP ${res.status}`);
-      }
-      const blob = await res.blob();
-      this.previewUrl = URL.createObjectURL(blob);
-    } catch (err) {
-      this.previewError = err.message;
-    } finally {
-      this.previewLoading = false;
+  // Live iframes render at the panel's native pixel dimensions; we
+  // scale them down with a CSS transform so they fit the preview pane.
+  // Composite scale = container_width / inner_panel_width, where
+  // inner_panel_width = panel_w - 2*underscan. A translate(-u, -u) in
+  // iframe coordinates aligns the inner area's top-left with the
+  // container's top-left so the mat-occluded ring falls outside the
+  // overflow:hidden box.
+  _scaleLiveIframes() {
+    const wrap = this.shadowRoot?.querySelector(".preview-frame");
+    if (!wrap) return;
+    const iframe = wrap.querySelector(".live-iframe");
+    if (!iframe) return;
+    const w = this._panelDisplayDims().w;
+    const u = this.appPanel?.underscan || 0;
+    const inner = Math.max(1, w - 2 * u);
+    const scale = wrap.clientWidth / inner;
+    iframe.style.transform = `scale(${scale}) translate(${-u}px, ${-u}px)`;
+  }
+
+  firstUpdated() {
+    this._previewResizeObserver = new ResizeObserver(() =>
+      this._scaleLiveIframes()
+    );
+    const wrap = this.shadowRoot?.querySelector(".preview-frame");
+    if (wrap) this._previewResizeObserver.observe(wrap);
+    this._scaleLiveIframes();
+  }
+
+  updated() {
+    // The .preview-frame element survives across source switches, but
+    // a freshly-mounted iframe inside it needs the transform set right
+    // after Lit's update lands.
+    this._scaleLiveIframes();
+    const wrap = this.shadowRoot?.querySelector(".preview-frame");
+    if (wrap && this._previewResizeObserver) {
+      this._previewResizeObserver.observe(wrap);
     }
   }
 
@@ -1018,7 +1013,6 @@ class SendPage extends LitElement {
             @change=${(e) => {
               this.pageId = e.target.value;
               this._clearPreview();
-              if (this.pageId) this._loadPreview();
             }}
           >
             ${this.pages.map(
@@ -1059,35 +1053,71 @@ class SendPage extends LitElement {
     return html`
       <div class="preview-card">
         <div class="preview-head">
-          <h3><i class="ph ph-monitor"></i> Panel preview</h3>
-          <button @click=${() => this._loadPreview()} ?disabled=${this.previewLoading}>
-            <i class="ph ph-arrows-clockwise"></i>
-            ${this.previewLoading ? "Rendering…" : this.previewUrl ? "Refresh" : "Render preview"}
-          </button>
+          <h3><i class="ph ph-monitor"></i> Live preview</h3>
         </div>
         <div
           class="preview-frame"
           style="--panel-w: ${dims.w}; --panel-h: ${dims.h}; --underscan-px: ${this.appPanel?.underscan || 0};"
         >
-          ${this.previewLoading
-            ? html`
-                <div class="preview-spinner">
-                  <div class="preview-spinner-icon"></div>
-                  Rendering at panel resolution + quantizing to Spectra 6…
-                </div>
-              `
-            : this.previewError
-              ? html`<div class="preview-error">${this.previewError}</div>`
-              : this.previewUrl
-                ? html`<img src=${this.previewUrl} alt="quantized panel preview" />`
-                : html`
-                    <div class="preview-empty">
-                      Click <strong>Render preview</strong> to see what the panel will paint.
-                    </div>
-                  `}
+          ${this._renderPreviewBody()}
         </div>
       </div>
     `;
+  }
+
+  // Live preview content per source. Returns either a live iframe (for
+  // dashboards + webpages), an <img> (for image URLs + uploaded files),
+  // or an empty-state hint. Nothing is fetched server-side; the iframe /
+  // img sources straight from the user's input. The dither + final
+  // quantisation only happens at push time.
+  _renderPreviewBody() {
+    if (this.previewError) {
+      return html`<div class="preview-error">${this.previewError}</div>`;
+    }
+    if (this.source === "page") {
+      if (!this.pageId) {
+        return html`<div class="preview-empty">Pick a dashboard above.</div>`;
+      }
+      const src = `/compose/${encodeURIComponent(this.pageId)}?for_push=1&preview=1`;
+      // class hook for the resize-observer that scales the iframe to fit
+      // the container, accounting for underscan.
+      return html`<iframe
+        class="live-iframe"
+        src=${src}
+        title="Dashboard preview"
+        loading="lazy"
+      ></iframe>`;
+    }
+    if (this.source === "url") {
+      if (!this.url) {
+        return html`<div class="preview-empty">Enter an image URL above.</div>`;
+      }
+      return html`<img
+        src=${this.url}
+        alt="Source image preview"
+        @error=${() =>
+          (this.previewError = "Image failed to load — check the URL.")}
+      />`;
+    }
+    if (this.source === "webpage") {
+      if (!this.url) {
+        return html`<div class="preview-empty">Enter a webpage URL above.</div>`;
+      }
+      // Some sites set X-Frame-Options: DENY and won't embed. Browsers
+      // render a blank/error state in that case; we can't detect it
+      // reliably cross-origin, so we just let the iframe try.
+      return html`<iframe
+        class="live-iframe"
+        src=${this.url}
+        title="Webpage preview"
+        loading="lazy"
+      ></iframe>`;
+    }
+    // file
+    if (!this.fileObjectUrl) {
+      return html`<div class="preview-empty">Drop or pick a file above.</div>`;
+    }
+    return html`<img src=${this.fileObjectUrl} alt="Picked file preview" />`;
   }
 
   render() {
