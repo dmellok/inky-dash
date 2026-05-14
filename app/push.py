@@ -26,7 +26,7 @@ from typing import Literal
 
 from app.mqtt_bridge import MqttBridge
 from app.quantizer import DitherMode, apply_underscan, rotate_png
-from app.renderer import RenderRequest, render_to_png
+from app.renderer import RenderRequest, render_to_png, to_loopback_url
 from app.state.history import HistoryStore
 from app.state.page_store import PageStore
 
@@ -219,7 +219,11 @@ class PushManager:
                 options=asdict(opts),
             )
 
-        compose_url = f"{self._base_url}/compose/{page_id}?for_push=1"
+        # Always hit the compose route via loopback so the auth gate's
+        # /compose bypass matches — base_url may be a LAN IP for HA's
+        # image entity, but the renderer is always in-process. See
+        # renderer.to_loopback_url for the full reasoning.
+        compose_url = to_loopback_url(f"{self._base_url}/compose/{page_id}?for_push=1")
         try:
             raw = render_to_png(
                 RenderRequest(

@@ -19,7 +19,7 @@ from app.mqtt_bridge import MqttBridge, NullBridge
 from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
 from app.quantizer import DitherMode, apply_underscan, quantize_to_png
-from app.renderer import RenderRequest, render_to_png
+from app.renderer import RenderRequest, render_to_png, to_loopback_url
 from app.scheduler import Scheduler
 from app.state import (
     PANEL_MODELS,
@@ -485,7 +485,12 @@ def _render_page_png(page_id: str) -> tuple[bytes, int, int]:
     page = _store().get(page_id)
     if page is None:
         abort(404)
-    compose_url = url_for("composer.compose", page_id=page_id, for_push=1, _external=True)
+    # _external=True builds the URL from the request host, which may be
+    # the LAN IP. Force loopback so the auth gate's /compose bypass
+    # matches — see renderer.to_loopback_url.
+    compose_url = to_loopback_url(
+        url_for("composer.compose", page_id=page_id, for_push=1, _external=True)
+    )
     raw = render_to_png(
         RenderRequest(
             url=compose_url,
@@ -873,7 +878,11 @@ def api_preview_page() -> tuple[Response, int] | Response:
     if page is None:
         return ("", 404)  # type: ignore[return-value]
     dither_arg = body.get("dither", "floyd-steinberg")
-    compose_url = url_for("composer.compose", page_id=page_id, for_push=1, _external=True)
+    # Loopback so the auth gate's /compose bypass matches (the renderer
+    # is in-process); see renderer.to_loopback_url for the rationale.
+    compose_url = to_loopback_url(
+        url_for("composer.compose", page_id=page_id, for_push=1, _external=True)
+    )
     try:
         raw = render_to_png(
             RenderRequest(url=compose_url, viewport_w=page.panel.w, viewport_h=page.panel.h)

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Final, Literal
+from urllib.parse import urlsplit, urlunsplit
 
 from playwright.sync_api import sync_playwright
 
@@ -22,6 +23,35 @@ DEFAULT_PANEL_W: Final[int] = 1600
 DEFAULT_PANEL_H: Final[int] = 1200
 
 WaitUntil = Literal["load", "domcontentloaded", "networkidle", "commit"]
+
+
+def to_loopback_url(url: str) -> str:
+    """Rewrite the host portion of ``url`` to ``127.0.0.1`` while
+    preserving the port + path + query.
+
+    The renderer always runs in-process with Flask, so internal compose
+    URLs (``/compose/<id>``, ``/api/.../preview.png``, …) should always
+    resolve via loopback regardless of what the user set ``base_url``
+    to. Two reasons:
+
+    1. **Auth gate.** The single-password gate has a loopback bypass for
+       ``/compose/<id>`` so the renderer can fetch dashboards without
+       juggling a session cookie. If we send Playwright at the LAN-IP
+       base_url, ``request.remote_addr`` is the host's LAN address and
+       the bypass doesn't match — Playwright gets the login page and
+       screenshots that instead of the dashboard.
+    2. **Routing.** A LAN-IP round-trip leaves the loopback interface
+       on some OS/network configs, adding latency for no gain.
+
+    ``base_url`` is still used as-is for OUTBOUND URLs (HA image entity,
+    public render links). This helper is for the IN-process renderer
+    only.
+    """
+    parts = urlsplit(url)
+    netloc = "127.0.0.1"
+    if parts.port:
+        netloc = f"127.0.0.1:{parts.port}"
+    return urlunsplit((parts.scheme, netloc, parts.path, parts.query, parts.fragment))
 
 
 @dataclass(frozen=True)
