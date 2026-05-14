@@ -19,23 +19,55 @@ If those trade-offs are fine for your use case (a panel on your wall, on your ho
 
 ## Quick start
 
+Clone the repo, run the install script for your OS, then start the server. Python 3.11+ is required; the script provisions everything else (venv, Playwright + Chromium, JS bundle, a seeded `settings.json`).
+
+### macOS / Linux
+
 ```bash
-# Python side
+git clone https://github.com/dmellok/inky-dash && cd inky-dash
+./scripts/install.sh
+./scripts/run.sh
+```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/dmellok/inky-dash; cd inky-dash
+.\scripts\install.ps1
+.\scripts\run.ps1
+```
+
+Then open <http://localhost:5555>.
+
+Optionally pre-seed broker config so `settings.json` lands ready to push to a real panel:
+
+```bash
+# macOS / Linux
+MQTT_HOST=192.168.1.50 \
+COMPANION_BASE_URL=http://192.168.1.10:5555 \
+./scripts/install.sh
+
+# Windows
+$env:MQTT_HOST = "192.168.1.50"
+$env:COMPANION_BASE_URL = "http://192.168.1.10:5555"
+.\scripts\install.ps1
+```
+
+You'll also need an MQTT broker the companion + the Pi-side listener both connect to (Mosquitto is the typical pick) and the Pi-side [`inky-dash-listener`](https://github.com/dmellok/inky-dash-listener) flashed onto your Pimoroni Inky. The install script prints those next-step pointers when it finishes.
+
+### Manual install
+
+If you'd rather not run the script, the equivalent commands are:
+
+```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 python -m playwright install chromium
-
-# JS side (Bun in CI; npm works locally too)
 bun install && bun run build      # or: npm install && npm run build
-
-# Configure MQTT before launching if you want to push to a real panel:
-#   export MQTT_HOST=192.168.1.50              # broker the Pi listener subscribes to
-#   export COMPANION_BASE_URL=http://192.168.1.10:5555  # how the Pi reaches us
 python -m app
-# http://localhost:5555/
 ```
 
-Python 3.11+ required. Pre-flight checks:
+### Pre-flight checks (for contributors)
 
 ```bash
 ruff check . && ruff format --check . && mypy && pytest
