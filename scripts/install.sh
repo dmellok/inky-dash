@@ -162,5 +162,6 @@ echo "  4. ${BOLD}Run${RESET}:"
 echo "       ./scripts/run.sh"
 echo "     Open ${BOLD}http://localhost:5555${RESET} in a browser."
 echo
-echo "${DIM}Heads up — this is a hobby project, no auth on the admin UI. Run on a"
-echo "private network only. See the README for the full caveats.${RESET}"
+echo "${DIM}Heads up — this is a hobby project. On first visit, /setup will"
+echo "ask you to pick an admin password. The gate is a fence for a home"
+echo "LAN, not internet-grade security — run on a private network only.${RESET}"

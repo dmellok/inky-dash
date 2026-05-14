@@ -17,16 +17,16 @@
 
 $ErrorActionPreference = "Stop"
 
-function Step($msg) { Write-Host "`n→ $msg" -ForegroundColor Cyan }
-function Ok($msg)   { Write-Host "  ✓ $msg" -ForegroundColor Green }
+function Step($msg) { Write-Host "`n>> $msg" -ForegroundColor Cyan }
+function Ok($msg)   { Write-Host "  [OK] $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "  ! $msg" -ForegroundColor Yellow }
 function Fail($msg) {
-  Write-Host "✗ $msg" -ForegroundColor Red
+  Write-Host "ERROR: $msg" -ForegroundColor Red
   exit 1
 }
 
 # Resolve repo root from this script's location so the user can run it
-# from anywhere — not just the repo root.
+# from anywhere -- not just the repo root.
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent $ScriptDir
 Set-Location $Root
@@ -81,14 +81,14 @@ if (-not $PyExe) {
 
 Step "Setting up Python virtualenv at .venv"
 if (Test-Path .venv) {
-  Ok ".venv already present — reusing"
+  Ok ".venv already present -- reusing"
 } else {
   & $PyExe @PyArgs -m venv .venv
   Ok ".venv created"
 }
 $VenvPy = Join-Path $Root ".venv\Scripts\python.exe"
 if (-not (Test-Path $VenvPy)) {
-  Fail ".venv created but .venv\Scripts\python.exe missing — venv setup failed"
+  Fail ".venv created but .venv\Scripts\python.exe missing -- venv setup failed"
 }
 
 # --- Python deps ----------------------------------------------------
@@ -102,7 +102,7 @@ Ok "deps installed"
 
 Step "Installing Playwright Chromium (~200MB, one-time)"
 & $VenvPy -m playwright install chromium
-if ($LASTEXITCODE -eq 0) { Ok "Chromium ready" } else { Warn "Playwright install reported errors — check the output above" }
+if ($LASTEXITCODE -eq 0) { Ok "Chromium ready" } else { Warn "Playwright install reported errors -- check the output above" }
 
 # --- JS deps + bundle -----------------------------------------------
 
@@ -131,7 +131,7 @@ $dataDir = Join-Path $Root "data\core"
 New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
 $settingsPath = Join-Path $dataDir "settings.json"
 if (Test-Path $settingsPath) {
-  Ok "$settingsPath already exists — leaving it alone"
+  Ok "$settingsPath already exists -- leaving it alone"
 } else {
   $mqttHost = if ($env:MQTT_HOST) { $env:MQTT_HOST } else { "" }
   $mqttUser = if ($env:MQTT_USERNAME) { $env:MQTT_USERNAME } else { "" }
@@ -165,19 +165,20 @@ Write-Host ""
 Write-Host "Install complete." -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
-Write-Host "  1. MQTT broker — Inky Dash pushes to topic inky/update."
+Write-Host "  1. MQTT broker -- Inky Dash pushes to topic inky/update."
 Write-Host "     If you don't already run one, install Mosquitto for Windows:"
 Write-Host "       https://mosquitto.org/download/"
 Write-Host ""
-Write-Host "  2. Configure — edit data\core\settings.json (MQTT host, base URL),"
+Write-Host "  2. Configure -- edit data\core\settings.json (MQTT host, base URL),"
 Write-Host "     or rerun this script with `$env:MQTT_HOST + `$env:COMPANION_BASE_URL set."
 Write-Host ""
-Write-Host "  3. Pi-side listener — clone dmellok/inky-dash-listener onto your"
+Write-Host "  3. Pi-side listener -- clone dmellok/inky-dash-listener onto your"
 Write-Host "     Pi and point it at the same broker."
 Write-Host ""
 Write-Host "  4. Run:"
 Write-Host "       .\scripts\run.ps1"
 Write-Host "     Open http://localhost:5555 in a browser."
 Write-Host ""
-Write-Host "Heads up — this is a hobby project, no auth on the admin UI. Run on a" -ForegroundColor DarkGray
-Write-Host "private network only. See the README for the full caveats." -ForegroundColor DarkGray
+Write-Host "Heads up -- this is a hobby project. On first visit, /setup will" -ForegroundColor DarkGray
+Write-Host "ask you to pick an admin password. The gate is a fence for a home" -ForegroundColor DarkGray
+Write-Host "LAN, not internet-grade security -- run on a private network only." -ForegroundColor DarkGray
