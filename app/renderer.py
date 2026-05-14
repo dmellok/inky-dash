@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 DEFAULT_PANEL_W: Final[int] = 1600
@@ -80,7 +81,20 @@ def render_to_png(request: RenderRequest) -> bytes:
             )
             page = context.new_page()
             page.set_default_timeout(request.timeout_ms)
-            page.goto(request.url, wait_until=request.wait_until)
+            # Best-effort ``networkidle``: a single widget that keeps a
+            # connection open (long-poll, slow upstream API) shouldn't
+            # take down the whole render. If ``networkidle`` doesn't fire
+            # by ``timeout_ms`` we fall back to ``load`` — the DOM is
+            # already laid out, and the font-wait below gives a second
+            # settle point before screenshotting. Other ``wait_until``
+            # values are honoured strictly (callers asked for them).
+            if request.wait_until == "networkidle":
+                try:
+                    page.goto(request.url, wait_until="networkidle")
+                except PlaywrightTimeoutError:
+                    page.wait_for_load_state("load", timeout=request.timeout_ms)
+            else:
+                page.goto(request.url, wait_until=request.wait_until)
             # Block screenshot until every cell's font is actually loaded.
             # document.fonts.ready only awaits fonts already in the pending set;
             # explicit document.fonts.load() triggers the request and waits.
