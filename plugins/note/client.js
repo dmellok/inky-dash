@@ -16,17 +16,25 @@ function escapeHtml(s) {
   }[c]));
 }
 
-function fitWrapping(bodyEl, availW, availH) {
-  if (!bodyEl || availW <= 0 || availH <= 0) return;
+function fitWrapping(bodyEl, availH) {
+  if (!bodyEl || availH <= 0) return;
+  // Width-fit happens for free: the body has ``width: 100%`` of its
+  // padded grid cell, and ``word-break: break-word`` means even
+  // unbreakable strings wrap at that width. So bodyEl.scrollWidth
+  // collapses to bodyEl.clientWidth at every font size — there's no
+  // useful width comparison to make. Earlier versions of this function
+  // computed an availW from cell.clientWidth - hand-rolled pad, came
+  // out tighter than the body's actual CSS-imposed width, and the
+  // ``scrollWidth <= availW`` check failed at every size → the binary
+  // search silently fell back to MIN_PX and the body rendered at ~8px.
+  // Just fit by height.
   let lo = MIN_PX;
   let hi = MAX_PX;
   let best = MIN_PX;
   for (let i = 0; i < 14; i++) {
     const mid = (lo + hi) / 2;
     bodyEl.style.fontSize = `${mid}px`;
-    const w = bodyEl.scrollWidth;
-    const h = bodyEl.scrollHeight;
-    if (w <= availW && h <= availH) {
+    if (bodyEl.scrollHeight <= availH) {
       best = mid;
       lo = mid;
     } else {
@@ -62,16 +70,22 @@ export default function render(host, ctx) {
   const headEl = host.querySelector(".head");
 
   function refit() {
-    const cellW = cell.clientWidth;
-    const cellH = cell.clientHeight;
-    if (cellW === 0 || cellH === 0) return;
-    const pad = Math.min(cellW, cellH) * 0.06;
-    // Subtract the header's actual rendered height (if visible) from the
-    // body's available area so the auto-fit doesn't over-allocate.
-    const headH = headEl && getComputedStyle(headEl).display !== "none"
-      ? headEl.offsetHeight + pad * 0.3
-      : 0;
-    fitWrapping(bodyEl, cellW - pad * 2, cellH - pad * 2 - headH);
+    if (cell.clientWidth === 0 || cell.clientHeight === 0) return;
+    // Read the actual CSS padding + row gap off ``.note`` so we don't
+    // double-count them. The body's available height is whatever's left
+    // of the note's content box after the head row + the row gap.
+    const noteEl = bodyEl.parentElement;
+    if (!noteEl) return;
+    const cs = getComputedStyle(noteEl);
+    const padT = parseFloat(cs.paddingTop) || 0;
+    const padB = parseFloat(cs.paddingBottom) || 0;
+    const gap = parseFloat(cs.rowGap || cs.gap) || 0;
+    const headVisible =
+      headEl && getComputedStyle(headEl).display !== "none";
+    const headH = headVisible ? headEl.offsetHeight : 0;
+    const availH =
+      cell.clientHeight - padT - padB - headH - (headVisible ? gap : 0);
+    fitWrapping(bodyEl, availH);
   }
 
   refit();

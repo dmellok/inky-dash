@@ -44,7 +44,7 @@ ruff check . && ruff format --check . && mypy && pytest
 ## What's in the box
 
 - **Dashboard editor** — split the panel into cells from a layout picker, click a cell to configure its widget + theme + font in the sidebar, live preview rendered in an iframe. Saved pages live in [`data/core/pages.json`](data/core/pages.json).
-- **29 widget plugins** — clock, flip clock, weather, calendar, todo (multi-list), world clock, year-progress, sun & moon, AQI trend, HN, Reddit, news (RSS), gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, QR code (URL / WiFi / text), countdown, note, xkcd, webpage screenshot, calibration, frame aligner.
+- **29 widget plugins** — clock, flip clock, weather, calendar, todo (multi-list), world clock, year-progress, sun & moon, AQI trend, HN, Reddit, news (RSS), Trakt watchlist posters, gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, QR code (URL / WiFi / text), countdown, note, xkcd, webpage screenshot, calibration, frame aligner. (Two reference plugins — `example_minimal`, `example_full` — ship as the canonical "how to write one" docs.)
 - **49 hand-curated themes** — bucketed into **White** (6 bold-accent stark-white themes), **Light** (Paper / Linen / Mist / Ink / Burgundy / …), **Medium**, and **Dark** (Cyber / Embers / Reef / Flamingo / Peach + 15 monochrome + 5 neon). 7 of them put the typography itself in saturated ink rather than neutral grey. Build your own at `/themes`.
 - **Schedules** — one-shot daily-at-HH:MM or every-N-minutes, with day-of-week + time-of-day-window guards. Backfill-safe (won't replay a day's worth of fires when re-enabled mid-day).
 - **Send page** — push any image, saved dashboard, image URL, or arbitrary webpage to the panel right now. Includes fit modes (fit / fill / stretch / center / blurred-bg) for one-off images, plus a history tab with thumbnails, resend, delete, and a click-to-zoom lightbox.
@@ -99,9 +99,13 @@ Every widget shares a baseline of design tokens defined in [`static/style/widget
 |---|---|---|
 | ![Countdown widget](docs/screenshots/widget-countdown.png) | ![Note widget](docs/screenshots/widget-note.png) | ![Clock widget](docs/screenshots/widget-clock.png) |
 
-| Star map | Frame aligner | |
+| Star map | Calendar | QR code |
 |---|---|---|
-| ![Star map widget](docs/screenshots/widget-starmap.png) | ![Frame aligner widget](docs/screenshots/widget-aligner.png) | |
+| ![Star map widget](docs/screenshots/widget-starmap.png) | ![Calendar widget](docs/screenshots/widget-calendar.png) | ![QR code widget](docs/screenshots/widget-qr.png) |
+
+| Reddit | | |
+|---|---|---|
+| ![Reddit widget](docs/screenshots/widget-reddit.png) | | |
 
 ### Visual widgets
 
