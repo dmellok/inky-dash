@@ -44,7 +44,7 @@ ruff check . && ruff format --check . && mypy && pytest
 ## What's in the box
 
 - **Dashboard editor** — split the panel into cells from a layout picker, click a cell to configure its widget + theme + font in the sidebar, live preview rendered in an iframe. Saved pages live in [`data/core/pages.json`](data/core/pages.json).
-- **30 widget plugins** — clock, flip clock, weather, calendar, todo (multi-list), world clock, year-progress, sun & moon, AQI, AQI trend, HN, Reddit, news (RSS), gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, QR code (URL / WiFi / text), countdown, note, xkcd, webpage screenshot, calibration, frame aligner.
+- **29 widget plugins** — clock, flip clock, weather, calendar, todo (multi-list), world clock, year-progress, sun & moon, AQI trend, HN, Reddit, news (RSS), gallery, APOD, Unsplash, Wikimedia Picture of the Day, GitHub contributions heatmap, weather radar, star map, generative art, Home Assistant tile, Melbourne PTV departures, QR code (URL / WiFi / text), countdown, note, xkcd, webpage screenshot, calibration, frame aligner.
 - **49 hand-curated themes** — bucketed into **White** (6 bold-accent stark-white themes), **Light** (Paper / Linen / Mist / Ink / Burgundy / …), **Medium**, and **Dark** (Cyber / Embers / Reef / Flamingo / Peach + 15 monochrome + 5 neon). 7 of them put the typography itself in saturated ink rather than neutral grey. Build your own at `/themes`.
 - **Schedules** — one-shot daily-at-HH:MM or every-N-minutes, with day-of-week + time-of-day-window guards. Backfill-safe (won't replay a day's worth of fires when re-enabled mid-day).
 - **Send page** — push any image, saved dashboard, image URL, or arbitrary webpage to the panel right now. Includes fit modes (fit / fill / stretch / center / blurred-bg) for one-off images, plus a history tab with thumbnails, resend, delete, and a click-to-zoom lightbox.
@@ -91,17 +91,17 @@ Every widget shares a baseline of design tokens defined in [`static/style/widget
 |---|---|---|
 | ![Todo widget](docs/screenshots/widget-todo.png) | ![Year progress widget](docs/screenshots/widget-year_progress.png) | ![World clock widget](docs/screenshots/widget-world_clock.png) |
 
-| Sun & moon | Air-quality trend | Air quality |
+| Sun & moon | Air-quality trend | GitHub contributions |
 |---|---|---|
-| ![Sun & moon widget](docs/screenshots/widget-sun_moon.png) | ![AQI trend widget](docs/screenshots/widget-aqi_trend.png) | ![Air quality widget](docs/screenshots/widget-air_quality.png) |
+| ![Sun & moon widget](docs/screenshots/widget-sun_moon.png) | ![AQI trend widget](docs/screenshots/widget-aqi_trend.png) | ![GitHub heatmap widget](docs/screenshots/widget-github_heatmap.png) |
 
-| GitHub contributions | Countdown | Note |
+| Countdown | Note | Clock |
 |---|---|---|
-| ![GitHub heatmap widget](docs/screenshots/widget-github_heatmap.png) | ![Countdown widget](docs/screenshots/widget-countdown.png) | ![Note widget](docs/screenshots/widget-note.png) |
+| ![Countdown widget](docs/screenshots/widget-countdown.png) | ![Note widget](docs/screenshots/widget-note.png) | ![Clock widget](docs/screenshots/widget-clock.png) |
 
-| Clock | Star map | Frame aligner |
+| Star map | Frame aligner | |
 |---|---|---|
-| ![Clock widget](docs/screenshots/widget-clock.png) | ![Star map widget](docs/screenshots/widget-starmap.png) | ![Frame aligner widget](docs/screenshots/widget-aligner.png) |
+| ![Star map widget](docs/screenshots/widget-starmap.png) | ![Frame aligner widget](docs/screenshots/widget-aligner.png) | |
 
 ### Visual widgets
 
