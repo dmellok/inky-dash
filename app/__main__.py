@@ -14,12 +14,17 @@ This module deliberately does TWO things that the naive
 2. **Orphan protection.** A previous instance can leak past restarts
    (``kill -9`` on the parent leaves the child orphaned and adopted by
    PID 1). Two guards:
-     - Before binding port 5555, scan for another ``python -m app``
+     - Before binding our port, scan for another ``python -m app``
        holding it and SIGTERM it. Saves the user from "port already in
        use" + invisible double-fires.
      - In the worker, a small daemon thread polls ``os.kill(ppid, 0)``;
        if the parent is gone, the worker exits cleanly instead of
        lingering forever as an orphan.
+
+Port resolution order: ``INKY_DASH_PORT`` env var → ``data/core/.port``
+sidecar (written by the installer) → 5555. The sidecar exists so
+``./scripts/run.sh`` doesn't need to know what port the user picked at
+install time.
 """
 
 from __future__ import annotations
@@ -31,8 +36,31 @@ import subprocess
 import sys
 import threading
 import time
+from pathlib import Path
 
-PORT = 5555
+DEFAULT_PORT = 5555
+_PORT_FILE = Path(__file__).resolve().parent.parent / "data" / "core" / ".port"
+
+
+def _resolve_port() -> int:
+    """``INKY_DASH_PORT`` env var → sidecar file → DEFAULT_PORT."""
+    env = os.environ.get("INKY_DASH_PORT", "").strip()
+    if env.isdigit():
+        n = int(env)
+        if 1 <= n <= 65535:
+            return n
+    try:
+        text = _PORT_FILE.read_text().strip()
+    except OSError:
+        return DEFAULT_PORT
+    if text.isdigit():
+        n = int(text)
+        if 1 <= n <= 65535:
+            return n
+    return DEFAULT_PORT
+
+
+PORT = _resolve_port()
 
 
 def _lsof_pids(port: int) -> list[int]:

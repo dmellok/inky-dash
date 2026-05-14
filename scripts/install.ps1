@@ -10,10 +10,13 @@
 # Usage (from the repo root):
 #   powershell.exe -ExecutionPolicy Bypass -File scripts\install.ps1
 #
-# Optionally pre-seed broker config:
+# Optionally pre-seed config:
 #   $env:MQTT_HOST = "192.168.1.50"
 #   $env:COMPANION_BASE_URL = "http://192.168.1.10:5555"
+#   $env:INKY_DASH_PORT = "5556"
 #   .\scripts\install.ps1
+#
+# Skip interactive prompts by setting $env:NONINTERACTIVE = "1".
 
 $ErrorActionPreference = "Stop"
 
@@ -124,11 +127,43 @@ if ($bun) {
        Or install Node from https://nodejs.org for npm."
 }
 
+# --- Pick listen port -----------------------------------------------
+
+Step "Choosing the HTTP port"
+$dataDir = Join-Path $Root "data\core"
+New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+$portFile = Join-Path $dataDir ".port"
+
+# Precedence: env var > existing sidecar > prompt (default 5555).
+$portDefault = $null
+if ($env:INKY_DASH_PORT) {
+  $portDefault = $env:INKY_DASH_PORT
+} elseif (Test-Path $portFile) {
+  $portDefault = (Get-Content $portFile -Raw).Trim()
+}
+if (-not $portDefault) { $portDefault = "5555" }
+
+$portValue = $null
+if ($env:INKY_DASH_PORT -or $env:NONINTERACTIVE -eq "1" -or [Console]::IsInputRedirected) {
+  $portValue = $portDefault
+} else {
+  while (-not $portValue) {
+    $entered = Read-Host "  Listen on port [$portDefault]"
+    if (-not $entered) { $entered = $portDefault }
+    $parsed = 0
+    if ([int]::TryParse($entered, [ref]$parsed) -and $parsed -ge 1 -and $parsed -le 65535) {
+      $portValue = "$parsed"
+    } else {
+      Warn "must be an integer between 1 and 65535"
+    }
+  }
+}
+Set-Content -Path $portFile -Value $portValue -Encoding ascii -NoNewline
+Ok "port $portValue (written to $portFile)"
+
 # --- Seed settings.json ---------------------------------------------
 
 Step "Seeding data\core\settings.json"
-$dataDir = Join-Path $Root "data\core"
-New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
 $settingsPath = Join-Path $dataDir "settings.json"
 if (Test-Path $settingsPath) {
   Ok "$settingsPath already exists -- leaving it alone"
@@ -137,7 +172,7 @@ if (Test-Path $settingsPath) {
   $mqttUser = if ($env:MQTT_USERNAME) { $env:MQTT_USERNAME } else { "" }
   $mqttPass = if ($env:MQTT_PASSWORD) { $env:MQTT_PASSWORD } else { "" }
   $mqttPort = if ($env:MQTT_PORT) { $env:MQTT_PORT } else { "1883" }
-  $baseUrl  = if ($env:COMPANION_BASE_URL) { $env:COMPANION_BASE_URL } else { "http://localhost:5555" }
+  $baseUrl  = if ($env:COMPANION_BASE_URL) { $env:COMPANION_BASE_URL } else { "http://localhost:$portValue" }
   $settings = @"
 {
   "appearance": {"accent": "", "theme": "auto"},
@@ -177,7 +212,7 @@ Write-Host "     Pi and point it at the same broker."
 Write-Host ""
 Write-Host "  4. Run:"
 Write-Host "       .\scripts\run.ps1"
-Write-Host "     Open http://localhost:5555 in a browser."
+Write-Host "     Open http://localhost:$portValue in a browser."
 Write-Host ""
 Write-Host "Heads up -- this is a hobby project. On first visit, /setup will" -ForegroundColor DarkGray
 Write-Host "ask you to pick an admin password. The gate is a fence for a home" -ForegroundColor DarkGray

@@ -11,9 +11,11 @@
 # Usage (from the repo root):
 #   ./scripts/install.sh
 #
-# Optionally pre-seed broker config so settings.json lands ready to run:
+# Optionally pre-seed config so settings.json lands ready to run:
 #   MQTT_HOST=192.168.1.50 COMPANION_BASE_URL=http://192.168.1.10:5555 \
-#     ./scripts/install.sh
+#     INKY_DASH_PORT=5556 ./scripts/install.sh
+#
+# Skip interactive prompts by setting ``NONINTERACTIVE=1``.
 
 set -euo pipefail
 
@@ -113,18 +115,47 @@ else
        Or install Node from https://nodejs.org for npm."
 fi
 
+# --- Pick listen port -----------------------------------------------
+
+step "Choosing the HTTP port"
+mkdir -p data/core
+PORT_FILE=data/core/.port
+
+# Precedence: env var > existing sidecar > prompt (default 5555).
+PORT_DEFAULT="${INKY_DASH_PORT:-}"
+if [ -z "$PORT_DEFAULT" ] && [ -f "$PORT_FILE" ]; then
+  PORT_DEFAULT=$(tr -d '[:space:]' < "$PORT_FILE" || true)
+fi
+PORT_DEFAULT="${PORT_DEFAULT:-5555}"
+
+PORT_VALUE=""
+if [ -n "${INKY_DASH_PORT:-}" ] || [ "${NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+  PORT_VALUE="$PORT_DEFAULT"
+else
+  while true; do
+    read -r -p "  Listen on port [${PORT_DEFAULT}]: " PORT_VALUE
+    PORT_VALUE="${PORT_VALUE:-$PORT_DEFAULT}"
+    if [[ "$PORT_VALUE" =~ ^[0-9]+$ ]] && [ "$PORT_VALUE" -ge 1 ] && [ "$PORT_VALUE" -le 65535 ]; then
+      break
+    fi
+    warn "must be an integer between 1 and 65535"
+  done
+fi
+echo "$PORT_VALUE" > "$PORT_FILE"
+ok "port $PORT_VALUE (written to $PORT_FILE)"
+
 # --- Seed settings.json ---------------------------------------------
 
 step "Seeding data/core/settings.json"
-mkdir -p data/core
 SETTINGS=data/core/settings.json
+DEFAULT_BASE_URL="http://localhost:${PORT_VALUE}"
 if [ -f "$SETTINGS" ]; then
   ok "$SETTINGS already exists — leaving it alone"
 else
   cat > "$SETTINGS" <<EOF
 {
   "appearance": {"accent": "", "theme": "auto"},
-  "base_url": "${COMPANION_BASE_URL:-http://localhost:5555}",
+  "base_url": "${COMPANION_BASE_URL:-$DEFAULT_BASE_URL}",
   "ha": {"enabled": false},
   "mqtt": {
     "client_id": "inky-dash-companion",
@@ -160,7 +191,7 @@ echo "     your Pi and point it at the same broker."
 echo
 echo "  4. ${BOLD}Run${RESET}:"
 echo "       ./scripts/run.sh"
-echo "     Open ${BOLD}http://localhost:5555${RESET} in a browser."
+echo "     Open ${BOLD}http://localhost:${PORT_VALUE}${RESET} in a browser."
 echo
 echo "${DIM}Heads up — this is a hobby project. On first visit, /setup will"
 echo "ask you to pick an admin password. The gate is a fence for a home"
