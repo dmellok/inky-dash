@@ -1096,10 +1096,21 @@ def _app_settings_store() -> AppSettingsStore:
 
 
 def _mask_password(settings: AppSettings) -> dict[str, Any]:
-    """Serialize app settings with the password masked if it's set."""
+    """Serialize app settings with secrets masked.
+
+    Two secrets cross this wire:
+    * ``mqtt.password`` — replaced with the SECRET_PLACEHOLDER so the
+      editor can show a "set" marker without learning the value.
+    * ``auth.password_hash`` — never sent at all; the response shape
+      becomes ``auth: {password_set: bool}`` so the Settings page can
+      tell whether a re-key form vs an initial set is appropriate.
+    """
     dumped = settings.model_dump(mode="json")
     if dumped.get("mqtt", {}).get("password"):
         dumped["mqtt"]["password"] = _SECRET_PLACEHOLDER
+    auth_block = dumped.get("auth")
+    if isinstance(auth_block, dict):
+        dumped["auth"] = {"password_set": bool(auth_block.get("password_hash"))}
     return dumped
 
 
@@ -1159,6 +1170,14 @@ def api_save_app_settings() -> tuple[Response, int] | Response:
     appearance_in = body.get("appearance")
     if isinstance(appearance_in, dict):
         body["appearance"] = {**existing.appearance.model_dump(), **appearance_in}
+
+    # The masked GET response shape for `auth` is ``{password_set: bool}``
+    # which is intentionally NOT a valid AuthSettings payload — if the
+    # editor round-trips it through PUT we'd wipe the password. Always
+    # drop the incoming auth block and re-attach the stored hash; password
+    # changes go through /api/auth/change-password instead.
+    body.pop("auth", None)
+    body["auth"] = existing.auth.model_dump()
 
     merged = {**existing.model_dump(), **body}
 

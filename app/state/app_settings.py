@@ -131,6 +131,24 @@ class MqttSettings(BaseModel):
     client_id: str = "inky-dash-companion"
 
 
+class AuthSettings(BaseModel):
+    """Single-shared-password gate on the admin UI + API.
+
+    ``password_hash`` is a PBKDF2-HMAC-SHA256 hash of the password,
+    stored as ``"pbkdf2_sha256$<iterations>$<salt_hex>$<hash_hex>"`` so
+    we can change iterations later without invalidating old hashes.
+    Empty string means "no password set yet" — first boot lands on
+    /setup to pick one.
+
+    ``api_get_app_settings`` masks this field over the wire so it can't
+    leak to the browser; the real value stays server-side.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    password_hash: str = ""
+
+
 class HomeAssistantSettings(BaseModel):
     """Home Assistant MQTT autodiscovery integration toggle.
 
@@ -154,6 +172,7 @@ class AppSettings(BaseModel):
     panel: PanelSettings = Field(default_factory=PanelSettings)
     appearance: AppearanceSettings = Field(default_factory=AppearanceSettings)
     ha: HomeAssistantSettings = Field(default_factory=HomeAssistantSettings)
+    auth: AuthSettings = Field(default_factory=AuthSettings)
 
 
 def initial_from_env() -> AppSettings:

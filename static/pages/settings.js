@@ -11,6 +11,12 @@ class SettingsPage extends LitElement {
     appSettings: { state: true },
     appDraft: { state: true },
     panelCatalog: { state: true },
+    authCurrent: { state: true },
+    authNew: { state: true },
+    authConfirm: { state: true },
+    authSaving: { state: true },
+    authSaved: { state: true },
+    authError: { state: true },
   };
 
   static styles = css`
@@ -326,6 +332,12 @@ class SettingsPage extends LitElement {
     this.appSettings = null;
     this.appDraft = null;
     this.panelCatalog = [];
+    this.authCurrent = "";
+    this.authNew = "";
+    this.authConfirm = "";
+    this.authSaving = false;
+    this.authSaved = false;
+    this.authError = null;
   }
 
   async connectedCallback() {
@@ -827,6 +839,116 @@ class SettingsPage extends LitElement {
     `;
   }
 
+  _renderAuthCard() {
+    const passwordSet = this.appDraft?.auth?.password_set;
+    // If the password isn't set somehow, /setup will catch us — but
+    // hide the card rather than offer a "change" form that won't work.
+    if (!passwordSet) return null;
+    return html`
+      <id-card heading="Authentication" subheading="Change your admin password">
+        <div class="form-row">
+          <label class="field" for="auth-current">Current password</label>
+          <input
+            id="auth-current"
+            type="password"
+            autocomplete="current-password"
+            .value=${this.authCurrent || ""}
+            @input=${(e) => (this.authCurrent = e.target.value)}
+          />
+        </div>
+        <div class="form-row">
+          <label class="field" for="auth-new">New password</label>
+          <input
+            id="auth-new"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            .value=${this.authNew || ""}
+            @input=${(e) => (this.authNew = e.target.value)}
+          />
+        </div>
+        <div class="form-row">
+          <label class="field" for="auth-confirm">Confirm new</label>
+          <input
+            id="auth-confirm"
+            type="password"
+            autocomplete="new-password"
+            minlength="6"
+            .value=${this.authConfirm || ""}
+            @input=${(e) => (this.authConfirm = e.target.value)}
+          />
+        </div>
+        <div class="actions">
+          <id-button
+            variant="primary"
+            ?disabled=${this.authSaving}
+            @click=${() => this._changePassword()}
+          >
+            <i class="ph ph-lock-key"></i>
+            ${this.authSaving ? "Saving…" : "Update password"}
+          </id-button>
+          <id-button @click=${() => this._logout()}>
+            <i class="ph ph-sign-out"></i> Log out
+          </id-button>
+          ${this.authError
+            ? html`<span class="save-status error">${this.authError}</span>`
+            : this.authSaved
+              ? html`<span class="save-status ok"><i class="ph ph-check-circle"></i> updated</span>`
+              : null}
+        </div>
+      </id-card>
+    `;
+  }
+
+  async _changePassword() {
+    this.authError = null;
+    this.authSaved = false;
+    if (!this.authNew || this.authNew !== this.authConfirm) {
+      this.authError = "New passwords don't match.";
+      return;
+    }
+    this.authSaving = true;
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current: this.authCurrent,
+          new: this.authNew,
+          confirm: this.authConfirm,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        this.authError = body.error || `HTTP ${res.status}`;
+        return;
+      }
+      this.authCurrent = "";
+      this.authNew = "";
+      this.authConfirm = "";
+      this.authSaved = true;
+      setTimeout(() => {
+        this.authSaved = false;
+        this.requestUpdate();
+      }, 2500);
+    } catch (err) {
+      this.authError = err.message;
+    } finally {
+      this.authSaving = false;
+    }
+  }
+
+  _logout() {
+    // Use a real POST form so the browser submits and follows the 302
+    // back to /login. fetch() doesn't follow redirects across origins
+    // cleanly and we want the cookie cleared client-side too.
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/logout";
+    document.body.appendChild(form);
+    form.submit();
+  }
+
   _renderAppSettings() {
     if (!this.appDraft) return null;
     const draft = this.appDraft;
@@ -967,6 +1089,7 @@ class SettingsPage extends LitElement {
       ${this._renderPanelCard()}
       ${this._renderAppSettings()}
       ${this._renderHomeAssistantCard()}
+      ${this._renderAuthCard()}
       <h2 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--id-fg-soft); margin: 24px 0 12px;">
         Plugins
       </h2>

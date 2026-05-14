@@ -10,7 +10,7 @@ This is **v4**. Architecture overview in [`docs/architecture.md`](docs/architect
 
 Inky Dash is built and maintained as a personal project, aimed at people who're comfortable installing Python, running an MQTT broker, and tinkering with their own Pi. It's not a polished consumer product, and a few rough edges come with the territory:
 
-- **No authentication on the admin UI.** Anyone who can reach port 5555 gets full access — including your MQTT credentials, API keys, and any WiFi passwords stored in QR widgets. **Run it on a private network only.** Don't port-forward it to the internet; if you need remote access, use a VPN / Tailscale.
+- **Single-password gate on the admin UI.** Pick a password on first boot at `/setup`; everyone in your house shares it. There's no concept of accounts or per-user permissions, no rate limiting, no 2FA — it's a fence for your home network, not internet-grade security. **Still run it on a private network only.** Don't port-forward it; use a VPN / Tailscale if you need remote access.
 - **Single-user, single-host.** There's no concept of accounts or multi-tenancy. Whoever opens the UI is the admin.
 - **Schema migrations are best-effort.** Plugin manifests and settings are versioned, but breaking changes between releases may need a manual nudge. Back up `data/` before upgrading if you've customised heavily.
 - **Maintained as time allows.** Issues + PRs are welcome and read, but response times will be variable. The bus factor is one.

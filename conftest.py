@@ -22,6 +22,11 @@ def live_server_url(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
     data_root = tmp_path_factory.mktemp("live-data")
     app = create_app(data_root=data_root, start_scheduler=False)
     app.config["TESTING"] = True
+    # Smoke-test fixture: Playwright drives a real browser against this
+    # server, so cookie-juggling for the auth gate adds friction without
+    # adding signal. tests/test_auth.py exercises the gate directly with
+    # the normal Flask test client and leaves this flag off.
+    app.config["AUTH_BYPASS_FOR_TESTS"] = True
     # threaded=True so handlers that internally call back into the same
     # server (e.g. /api/pages/<id>/preview.png → Playwright → /compose/<id>)
     # don't deadlock on a single-threaded WSGI loop.

@@ -42,14 +42,23 @@ def test_corrupt_file_returns_defaults(tmp_path: Path) -> None:
     assert store.load().mqtt.host == ""
 
 
-def test_get_app_settings_masks_password(client: FlaskClient, tmp_path: Path) -> None:
-    # Seed a stored settings file with a password
+def _seed_settings_keeping_auth(tmp_path: Path, **kwargs: object) -> AppSettingsStore:
+    """Helper: write app-settings while preserving the auth block the
+    test fixture seeded (so the auth gate stays satisfied). Used by the
+    handful of tests below that round-trip MQTT/base_url and would
+    otherwise overwrite the password hash to "" and bounce to /setup."""
     store = AppSettingsStore(tmp_path / "data" / "core" / "settings.json")
-    store.save(
-        AppSettings(
-            mqtt=MqttSettings(host="broker", password="hunter2"),
-            base_url="http://x",
-        )
+    existing = store.load()
+    settings = AppSettings(auth=existing.auth, **kwargs)  # type: ignore[arg-type]
+    store.save(settings)
+    return store
+
+
+def test_get_app_settings_masks_password(client: FlaskClient, tmp_path: Path) -> None:
+    _seed_settings_keeping_auth(
+        tmp_path,
+        mqtt=MqttSettings(host="broker", password="hunter2"),
+        base_url="http://x",
     )
     body = client.get("/api/app/settings").get_json()
     assert body["mqtt"]["host"] == "broker"
@@ -59,8 +68,7 @@ def test_get_app_settings_masks_password(client: FlaskClient, tmp_path: Path) ->
 def test_put_app_settings_keeps_password_when_placeholder_sent(
     client: FlaskClient, tmp_path: Path
 ) -> None:
-    store = AppSettingsStore(tmp_path / "data" / "core" / "settings.json")
-    store.save(AppSettings(mqtt=MqttSettings(host="b1", password="hunter2")))
+    _seed_settings_keeping_auth(tmp_path, mqtt=MqttSettings(host="b1", password="hunter2"))
 
     res = client.put(
         "/api/app/settings",
@@ -76,8 +84,7 @@ def test_put_app_settings_keeps_password_when_placeholder_sent(
 def test_put_app_settings_changes_password_when_provided(
     client: FlaskClient, tmp_path: Path
 ) -> None:
-    store = AppSettingsStore(tmp_path / "data" / "core" / "settings.json")
-    store.save(AppSettings(mqtt=MqttSettings(host="b1", password="old")))
+    _seed_settings_keeping_auth(tmp_path, mqtt=MqttSettings(host="b1", password="old"))
 
     client.put("/api/app/settings", json={"mqtt": {"password": "new"}})
     saved = json.loads((tmp_path / "data" / "core" / "settings.json").read_text())
@@ -162,8 +169,10 @@ def test_put_panel_orientation_updates_push_manager(client: FlaskClient, app: ob
 
 def test_put_panel_partial_update_preserves_model(client: FlaskClient, tmp_path: Path) -> None:
     """Sending just orientation must not reset the panel model to default."""
-    store = AppSettingsStore(tmp_path / "data" / "core" / "settings.json")
-    store.save(AppSettings(panel=PanelSettings(model="impression_7_3", orientation="portrait")))
+    _seed_settings_keeping_auth(
+        tmp_path,
+        panel=PanelSettings(model="impression_7_3", orientation="portrait"),
+    )
 
     client.put("/api/app/settings", json={"panel": {"orientation": "landscape"}})
     saved = json.loads((tmp_path / "data" / "core" / "settings.json").read_text())

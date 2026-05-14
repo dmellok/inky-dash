@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First-run setup · Inky Dash</title>
+  {% include "_appearance.html" %}
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--id-bg, #faf6ef);
+      color: var(--id-fg, #1a1612);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    .card {
+      width: min(440px, 92vw);
+      background: var(--id-surface, #ffffff);
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 12px;
+      padding: 24px 28px 28px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--id-accent, #b06750);
+      margin-bottom: 6px;
+    }
+    .brand .ph { font-size: 20px; }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      letter-spacing: -0.01em;
+    }
+    p.lede {
+      margin: 0 0 18px;
+      color: var(--id-fg-soft, #5a4f44);
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--id-fg-soft, #5a4f44);
+      margin: 14px 0 4px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: 15px;
+      border: 1px solid var(--id-divider, #c8b89b);
+      border-radius: 8px;
+      background: var(--id-bg, #faf6ef);
+      color: inherit;
+      box-sizing: border-box;
+    }
+    input[type="password"]:focus {
+      outline: 2px solid var(--id-accent, #b06750);
+      outline-offset: 1px;
+      border-color: var(--id-accent, #b06750);
+    }
+    button[type="submit"] {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--id-accent-fg, #ffffff);
+      background: var(--id-accent, #b06750);
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover { background: var(--id-accent-soft, #9a583f); }
+    .error {
+      margin-top: 14px;
+      padding: 10px 12px;
+      background: rgba(201, 124, 112, 0.12);
+      color: var(--id-danger, #c97c70);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+    .note {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: rgba(176, 103, 80, 0.08);
+      border-left: 3px solid var(--id-accent, #b06750);
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--id-fg-soft, #5a4f44);
+    }
+    .note strong { color: var(--id-fg, #1a1612); }
+  </style>
+</head>
+<body>
+  <form class="card" method="post" action="{{ url_for('auth.setup_submit') }}">
+    <div class="brand"><i class="ph ph-airplay"></i> INKY DASH</div>
+    <h1>Set up access</h1>
+    <p class="lede">Pick a password to protect the admin UI. You can change it later in Settings.</p>
+    <label for="password">Password (min {{ min_length }} characters)</label>
+    <input id="password" type="password" name="password" autocomplete="new-password" autofocus required minlength="{{ min_length }}">
+    <label for="confirm">Confirm password</label>
+    <input id="confirm" type="password" name="confirm" autocomplete="new-password" required minlength="{{ min_length }}">
+    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+    <button type="submit">Set password &amp; continue</button>
+    <div class="note">
+      <strong>Heads up.</strong> This is a single shared password — no
+      usernames. Anyone with the password gets full admin. The Inky Dash
+      auth gate is a fence for your home network, not internet-grade
+      security. Run on a private LAN only.
+    </div>
+  </form>
+</body>
+</html>

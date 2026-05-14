@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from pathlib import Path
 
 from flask import Flask, abort, render_template, send_from_directory
 from werkzeug.wrappers import Response
 
-from app import admin, composer, plugin_loader
+from app import admin, auth, composer, plugin_loader
 from app.ha_discovery import HomeAssistantDiscovery
 from app.mqtt_bridge import MqttBridge, NullBridge, PahoBridge
 from app.push import PushManager
@@ -85,6 +86,21 @@ def create_app(
     app.config["PLUGINS_DIR"] = plugins_path
     app.config["DATA_ROOT"] = data_path
 
+    # SECRET_KEY for Flask's signed-cookie session. Generated once per
+    # install and persisted to data/core/.secret_key so sessions survive
+    # restarts. See app.auth.load_or_create_secret_key for the file
+    # format + perms (0600 best-effort).
+    app.secret_key = auth.load_or_create_secret_key(data_path / "core")
+    # Session cookie defaults: long-lived (sessions are a hobbyist
+    # convenience, not a security boundary against in-browser theft),
+    # http-only, lax samesite. Skip Secure since most home installs
+    # are http-on-LAN.
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+    )
+
     registry = plugin_loader.discover(
         plugins_path,
         schema_path=PLUGIN_SCHEMA_PATH,
@@ -105,6 +121,12 @@ def create_app(
     app_settings_store = AppSettingsStore(data_path / "core" / "settings.json")
     app_settings = app_settings_store.load_or_initialize()
     app.config["APP_SETTINGS_STORE"] = app_settings_store
+
+    # Install the single-shared-password auth gate. Public exceptions
+    # (login / setup / static / /healthz / /renders/, plus loopback-only
+    # access to /compose/<id>) live in app/auth.py. First boot lands on
+    # /setup to pick a password.
+    auth.install_gate(app, app_settings_store)
 
     # Source of truth: the panel settings (model + orientation) drive every
     # page's resolution. Sweep on boot so existing dashboards auto-align if
