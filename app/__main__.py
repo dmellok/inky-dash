@@ -134,9 +134,15 @@ if __name__ == "__main__":
 
     if is_worker or no_reload:
         # Worker process (or non-reloading run). Build the full app +
-        # background services here. The parent-PID watchdog only matters
-        # when we actually have a separate parent (i.e. is_worker).
-        if is_worker:
+        # background services here.
+        #
+        # The parent-PID watchdog is Unix-only. On Windows, os.kill(pid, 0)
+        # calls TerminateProcess instead of being a does-pid-exist probe
+        # — running the watchdog would actively kill the parent we're
+        # trying to monitor. Windows also has no ``kill -9`` that
+        # silently spares a child, so the orphan-worker scenario the
+        # watchdog defends against is much rarer there.
+        if is_worker and os.name != "nt":
             threading.Thread(
                 target=_watch_parent,
                 args=(os.getppid(),),
@@ -146,11 +152,20 @@ if __name__ == "__main__":
 
         from app import create_app
 
+        # ``use_debugger=False`` keeps Werkzeug from wrapping the WSGI
+        # app in ``DebuggedApplication``. On Windows that wrap's
+        # initialiser re-wraps stderr with colorama, and the worker's
+        # stderr was already colorama-wrapped by the reloader parent —
+        # the double-wrap probes a handle that's no longer a real Win32
+        # console and crashes. ``debug=True`` still sets ``app.debug``
+        # so route tracebacks print to the console; we just lose the
+        # in-browser interactive 500 page.
         create_app().run(
             host="0.0.0.0",
             port=PORT,
             debug=True,
             use_reloader=False,  # the parent runs the reloader; we just serve
+            use_debugger=False,
         )
     else:
         # Reloader parent. Kill any stale ``python -m app`` holding our
