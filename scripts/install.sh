@@ -154,18 +154,59 @@ fi
 echo "$PORT_VALUE" > "$PORT_FILE"
 ok "port $PORT_VALUE (written to $PORT_FILE)"
 
+# --- Pick base URL --------------------------------------------------
+#
+# base_url is what the Pi listener fetches PNGs from + what HA image
+# entities point at — it has to be a host the Pi can reach, NOT
+# localhost. Detect the host's LAN IP and offer it as the default.
+
+step "Choosing the companion base URL"
+# Open a UDP socket to a non-routable destination and read back the
+# local socket address — no packet is actually sent, but the kernel
+# picks the interface the default route would use. Cross-platform,
+# works without parsing ifconfig/ip output.
+LAN_IP=$(python -c "
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    s.connect(('10.255.255.255', 1))
+    print(s.getsockname()[0])
+except OSError:
+    pass
+finally:
+    s.close()
+" 2>/dev/null || true)
+
+if [ -n "${COMPANION_BASE_URL:-}" ]; then
+  BASE_URL="$COMPANION_BASE_URL"
+  ok "base URL $BASE_URL (from COMPANION_BASE_URL)"
+else
+  if [ -n "$LAN_IP" ]; then
+    BASE_URL_DEFAULT="http://${LAN_IP}:${PORT_VALUE}"
+  else
+    BASE_URL_DEFAULT="http://localhost:${PORT_VALUE}"
+    warn "couldn't auto-detect LAN IP — defaulting to localhost"
+  fi
+  if [ "${NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+    BASE_URL="$BASE_URL_DEFAULT"
+  else
+    read -r -p "  Base URL the Pi/HA will reach this host on [${BASE_URL_DEFAULT}]: " BASE_URL
+    BASE_URL="${BASE_URL:-$BASE_URL_DEFAULT}"
+  fi
+  ok "base URL $BASE_URL"
+fi
+
 # --- Seed settings.json ---------------------------------------------
 
 step "Seeding data/core/settings.json"
 SETTINGS=data/core/settings.json
-DEFAULT_BASE_URL="http://localhost:${PORT_VALUE}"
 if [ -f "$SETTINGS" ]; then
   ok "$SETTINGS already exists — leaving it alone"
 else
   cat > "$SETTINGS" <<EOF
 {
   "appearance": {"accent": "", "theme": "auto"},
-  "base_url": "${COMPANION_BASE_URL:-$DEFAULT_BASE_URL}",
+  "base_url": "${BASE_URL}",
   "ha": {"enabled": false},
   "mqtt": {
     "client_id": "inky-dash-companion",

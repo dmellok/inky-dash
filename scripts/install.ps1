@@ -161,6 +161,50 @@ if ($env:INKY_DASH_PORT -or $env:NONINTERACTIVE -eq "1" -or [Console]::IsInputRe
 Set-Content -Path $portFile -Value $portValue -Encoding ascii -NoNewline
 Ok "port $portValue (written to $portFile)"
 
+# --- Pick base URL --------------------------------------------------
+#
+# base_url is what the Pi listener fetches PNGs from + what HA image
+# entities point at -- has to be a host the Pi can reach, NOT localhost.
+
+Step "Choosing the companion base URL"
+# UDP-socket-to-non-routable trick: kernel picks the interface the
+# default route would use, no packet actually sent. Cross-platform.
+$lanIp = ""
+try {
+  $lanIp = & $VenvPy -c @"
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    s.connect(('10.255.255.255', 1))
+    print(s.getsockname()[0])
+except OSError:
+    pass
+finally:
+    s.close()
+"@ 2>$null
+  if ($lanIp) { $lanIp = $lanIp.Trim() }
+} catch { $lanIp = "" }
+
+if ($env:COMPANION_BASE_URL) {
+  $baseUrl = $env:COMPANION_BASE_URL
+  Ok "base URL $baseUrl (from COMPANION_BASE_URL)"
+} else {
+  if ($lanIp) {
+    $baseUrlDefault = "http://${lanIp}:${portValue}"
+  } else {
+    $baseUrlDefault = "http://localhost:$portValue"
+    Warn "couldn't auto-detect LAN IP -- defaulting to localhost"
+  }
+  if ($env:NONINTERACTIVE -eq "1" -or [Console]::IsInputRedirected) {
+    $baseUrl = $baseUrlDefault
+  } else {
+    $entered = Read-Host "  Base URL the Pi/HA will reach this host on [$baseUrlDefault]"
+    if (-not $entered) { $entered = $baseUrlDefault }
+    $baseUrl = $entered
+  }
+  Ok "base URL $baseUrl"
+}
+
 # --- Seed settings.json ---------------------------------------------
 
 Step "Seeding data\core\settings.json"
@@ -172,7 +216,6 @@ if (Test-Path $settingsPath) {
   $mqttUser = if ($env:MQTT_USERNAME) { $env:MQTT_USERNAME } else { "" }
   $mqttPass = if ($env:MQTT_PASSWORD) { $env:MQTT_PASSWORD } else { "" }
   $mqttPort = if ($env:MQTT_PORT) { $env:MQTT_PORT } else { "1883" }
-  $baseUrl  = if ($env:COMPANION_BASE_URL) { $env:COMPANION_BASE_URL } else { "http://localhost:$portValue" }
   $settings = @"
 {
   "appearance": {"accent": "", "theme": "auto"},
