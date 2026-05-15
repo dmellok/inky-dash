@@ -13,8 +13,9 @@ mypy --strict applies to this module — see pyproject.toml.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Any, Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -24,6 +25,14 @@ DEFAULT_PANEL_W: Final[int] = 1600
 DEFAULT_PANEL_H: Final[int] = 1200
 
 WaitUntil = Literal["load", "domcontentloaded", "networkidle", "commit"]
+
+
+def _chromium_launch_kwargs() -> dict[str, Any]:
+    """Honour ``INKY_DASH_CHROMIUM_PATH`` so distros without a Playwright
+    prebuilt (e.g. fresh Ubuntu + arm64) can point at the system
+    ``chromium``. Empty / unset → Playwright uses its bundled binary."""
+    path = os.environ.get("INKY_DASH_CHROMIUM_PATH", "").strip()
+    return {"executable_path": path} if path else {}
 
 
 def to_loopback_url(url: str) -> str:
@@ -72,7 +81,7 @@ def render_to_png(request: RenderRequest) -> bytes:
     quantizer projects to gamut).
     """
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch()
+        browser = playwright.chromium.launch(**_chromium_launch_kwargs())
         try:
             context = browser.new_context(
                 viewport={"width": request.viewport_w, "height": request.viewport_h},

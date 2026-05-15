@@ -90,12 +90,35 @@ ok "deps installed"
 # --- Playwright + Chromium ------------------------------------------
 
 step "Installing Playwright Chromium (~200MB, one-time)"
-if python -m playwright install chromium; then
+PLAYWRIGHT_LOG=$(mktemp)
+if python -m playwright install chromium 2>&1 | tee "$PLAYWRIGHT_LOG"; then
   ok "Chromium ready"
+elif grep -qE "does not support chromium|not.*available" "$PLAYWRIGHT_LOG"; then
+  # Playwright has no prebuilt for this OS+arch (fresh Ubuntu/arm64 is
+  # the usual culprit). Use the distro's chromium and point the renderer
+  # at it via INKY_DASH_CHROMIUM_PATH.
+  SYS_CHROMIUM=""
+  for candidate in chromium chromium-browser google-chrome-stable google-chrome; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      SYS_CHROMIUM="$(command -v "$candidate")"
+      break
+    fi
+  done
+  echo
+  warn "Playwright has no prebuilt Chromium for this OS+arch."
+  warn "Use the system Chromium instead. On Debian/Ubuntu:"
+  warn "  sudo apt install chromium"
+  warn "Then set INKY_DASH_CHROMIUM_PATH to its binary path before running."
+  if [ -n "$SYS_CHROMIUM" ]; then
+    ok "found existing $SYS_CHROMIUM"
+    warn "  export INKY_DASH_CHROMIUM_PATH=$SYS_CHROMIUM"
+    warn "(add it to your shell rc, or prefix ./scripts/run.sh with it)"
+  fi
 else
   warn "Chromium install reported errors — on Linux you may need system libs:"
   warn "  sudo python -m playwright install-deps chromium"
 fi
+rm -f "$PLAYWRIGHT_LOG"
 
 # --- JS deps + admin bundle -----------------------------------------
 
