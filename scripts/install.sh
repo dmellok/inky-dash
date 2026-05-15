@@ -88,35 +88,22 @@ python -m pip install --quiet -e ".[dev]"
 ok "deps installed"
 
 # --- Playwright + Chromium ------------------------------------------
+#
+# Failure modes are messy enough that we capture status here and do the
+# remediation (prompting, sudo apt, sidecar persistence) at the END of
+# the script. Buried-mid-output warnings get missed.
 
 step "Installing Playwright Chromium (~200MB, one-time)"
 PLAYWRIGHT_LOG=$(mktemp)
+CHROMIUM_STATUS="ok"  # ok | missing-prebuilt | other-error
 if python -m playwright install chromium 2>&1 | tee "$PLAYWRIGHT_LOG"; then
   ok "Chromium ready"
 elif grep -qE "does not support chromium|not.*available" "$PLAYWRIGHT_LOG"; then
-  # Playwright has no prebuilt for this OS+arch (fresh Ubuntu/arm64 is
-  # the usual culprit). Use the distro's chromium and point the renderer
-  # at it via INKY_DASH_CHROMIUM_PATH.
-  SYS_CHROMIUM=""
-  for candidate in chromium chromium-browser google-chrome-stable google-chrome; do
-    if command -v "$candidate" >/dev/null 2>&1; then
-      SYS_CHROMIUM="$(command -v "$candidate")"
-      break
-    fi
-  done
-  echo
-  warn "Playwright has no prebuilt Chromium for this OS+arch."
-  warn "Use the system Chromium instead. On Debian/Ubuntu:"
-  warn "  sudo apt install chromium"
-  warn "Then set INKY_DASH_CHROMIUM_PATH to its binary path before running."
-  if [ -n "$SYS_CHROMIUM" ]; then
-    ok "found existing $SYS_CHROMIUM"
-    warn "  export INKY_DASH_CHROMIUM_PATH=$SYS_CHROMIUM"
-    warn "(add it to your shell rc, or prefix ./scripts/run.sh with it)"
-  fi
+  CHROMIUM_STATUS="missing-prebuilt"
+  warn "no Playwright prebuilt for this OS+arch — will set up system Chromium at the end"
 else
-  warn "Chromium install reported errors — on Linux you may need system libs:"
-  warn "  sudo python -m playwright install-deps chromium"
+  CHROMIUM_STATUS="other-error"
+  warn "Chromium install reported errors — see Chromium fallback at the end"
 fi
 rm -f "$PLAYWRIGHT_LOG"
 
@@ -193,6 +180,74 @@ else
 }
 EOF
   ok "$SETTINGS seeded"
+fi
+
+# --- Chromium fallback (deferred from earlier) ----------------------
+#
+# Persists to data/core/.chromium so the path survives reboots without
+# touching the user's shell rc. The renderer reads this sidecar at
+# launch — see app/renderer.py:_chromium_launch_kwargs.
+
+find_system_chromium() {
+  for candidate in chromium chromium-browser google-chrome-stable google-chrome; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+if [ "$CHROMIUM_STATUS" = "missing-prebuilt" ]; then
+  step "Setting up system Chromium (Playwright has no prebuilt for this OS+arch)"
+
+  SYS_CHROMIUM="$(find_system_chromium || true)"
+
+  if [ -z "$SYS_CHROMIUM" ] && command -v apt-get >/dev/null 2>&1; then
+    NONINTERACTIVE_RUN=0
+    if [ "${NONINTERACTIVE:-}" = "1" ] || [ ! -t 0 ]; then
+      NONINTERACTIVE_RUN=1
+    fi
+    if [ "$NONINTERACTIVE_RUN" = "1" ]; then
+      warn "no system chromium found; non-interactive run, skipping apt install"
+    else
+      read -r -p "  Install chromium via 'sudo apt install -y chromium'? [Y/n] " yn
+      case "${yn:-Y}" in
+        [Nn]*)
+          warn "skipped — install manually then rerun this script"
+          ;;
+        *)
+          if sudo apt-get update && sudo apt-get install -y chromium 2>/dev/null \
+              || sudo apt-get install -y chromium-browser; then
+            ok "apt install succeeded"
+            SYS_CHROMIUM="$(find_system_chromium || true)"
+          else
+            warn "apt install failed — install chromium manually then rerun"
+          fi
+          ;;
+      esac
+    fi
+  fi
+
+  CHROMIUM_FILE=data/core/.chromium
+  if [ -n "$SYS_CHROMIUM" ] && [ -x "$SYS_CHROMIUM" ]; then
+    mkdir -p data/core
+    echo "$SYS_CHROMIUM" > "$CHROMIUM_FILE"
+    ok "using $SYS_CHROMIUM (path persisted to $CHROMIUM_FILE)"
+  else
+    echo
+    warn "${BOLD}Chromium still not configured.${RESET} Install it manually:"
+    warn "  Debian/Ubuntu:  sudo apt install chromium"
+    warn "  Arch:           sudo pacman -S chromium"
+    warn "  Fedora:         sudo dnf install chromium"
+    warn "Then either rerun this script, or write the binary path to:"
+    warn "  $ROOT/data/core/.chromium"
+  fi
+elif [ "$CHROMIUM_STATUS" = "other-error" ]; then
+  step "Chromium install reported errors"
+  warn "On Linux you may need system libs:"
+  warn "  sudo python -m playwright install-deps chromium"
+  warn "Then rerun ./scripts/install.sh."
 fi
 
 # --- Done -----------------------------------------------------------

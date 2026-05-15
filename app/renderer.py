@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
@@ -26,12 +27,22 @@ DEFAULT_PANEL_H: Final[int] = 1200
 
 WaitUntil = Literal["load", "domcontentloaded", "networkidle", "commit"]
 
+_CHROMIUM_SIDECAR: Final[Path] = (
+    Path(__file__).resolve().parent.parent / "data" / "core" / ".chromium"
+)
+
 
 def _chromium_launch_kwargs() -> dict[str, Any]:
-    """Honour ``INKY_DASH_CHROMIUM_PATH`` so distros without a Playwright
-    prebuilt (e.g. fresh Ubuntu + arm64) can point at the system
-    ``chromium``. Empty / unset → Playwright uses its bundled binary."""
+    """Resolve the Chromium binary in order: ``INKY_DASH_CHROMIUM_PATH``
+    env var → ``data/core/.chromium`` sidecar (written by install.sh
+    when Playwright has no prebuilt for the host's OS+arch) → empty
+    (Playwright uses its bundled binary)."""
     path = os.environ.get("INKY_DASH_CHROMIUM_PATH", "").strip()
+    if not path:
+        try:
+            path = _CHROMIUM_SIDECAR.read_text().strip()
+        except OSError:
+            path = ""
     return {"executable_path": path} if path else {}
 
 
