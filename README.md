@@ -67,6 +67,17 @@ bun install && bun run build      # or: npm install && npm run build
 python -m app
 ```
 
+### Run as a service (Linux)
+
+Once `install.sh` works and `run.sh` looks healthy, you can install Inky Dash as a systemd service so it survives reboots:
+
+```bash
+./scripts/install-service.sh              # writes /etc/systemd/system/inky-dash.service, enables + starts it
+./scripts/install-service.sh --uninstall  # stop + remove the unit file (repo + data/ untouched)
+```
+
+The unit runs as the user who invoked the script (override with `INKY_DASH_SERVICE_USER=<user>`) so the venv, Playwright browser cache, and `data/` permissions line up. View logs with `journalctl -u inky-dash -f`.
+
 ### Pre-flight checks (for contributors)
 
 ```bash
