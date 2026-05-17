@@ -82,6 +82,28 @@ def test_upload_then_list_includes_image(client: FlaskClient, tmp_path: Path) ->
     assert any(img["name"] == "fox.png" for img in folder["images"])
 
 
+def test_serve_thumbnail_handles_spaces_and_unicode(client: FlaskClient, tmp_path: Path) -> None:
+    """Regression: serve_thumbnail used secure_filename on the URL segment,
+    which rewrote `Holiday Snap.jpg` to `Holiday_Snap.jpg` and missed the
+    real disk file → 404. Files with spaces / parens / unicode in the name
+    must resolve to their actual on-disk path."""
+    client.post("/plugins/gallery/api/folders", json={"name": "weird"})
+    folder = tmp_path / "data" / "plugins" / "gallery" / "weird"
+    for name in ("Holiday Snap.jpg", "Photo (1).png", "café.jpg"):
+        (folder / name).write_bytes(_png_bytes())
+        url = f"/plugins/gallery/folders/weird/{name}/thumb"
+        res = client.get(url)
+        assert res.status_code == 200, f"expected 200 for {name!r}, got {res.status_code}"
+
+
+def test_serve_thumbnail_rejects_path_traversal(client: FlaskClient) -> None:
+    """safe_join must refuse ``../`` even when secure_filename's stripping
+    is no longer there to mask it."""
+    client.post("/plugins/gallery/api/folders", json={"name": "trav"})
+    res = client.get("/plugins/gallery/folders/trav/..%2F..%2Fetc%2Fpasswd/thumb")
+    assert res.status_code == 404
+
+
 def test_upload_skips_disallowed_extension(client: FlaskClient) -> None:
     client.post("/plugins/gallery/api/folders", json={"name": "skip"})
     res = client.post(

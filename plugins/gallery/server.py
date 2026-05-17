@@ -38,6 +38,7 @@ from flask import (
     send_from_directory,
 )
 from PIL import Image, ImageOps
+from werkzeug.security import safe_join
 from werkzeug.utils import secure_filename
 
 ALLOWED_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".webp", ".gif"})
@@ -406,17 +407,21 @@ def blueprint() -> Blueprint:
         target_dir = _folder_path(folder, data_dir)
         if target_dir is None or not target_dir.exists() or not target_dir.is_dir():
             abort(404)
-        safe = secure_filename(filename)
-        if not safe:
+        # safe_join defends against ../ traversal without rewriting spaces /
+        # parens / unicode the way secure_filename does. The file is
+        # already-trusted disk content we listed ourselves — we just need
+        # to reject paths that escape target_dir.
+        source_str = safe_join(str(target_dir), filename)
+        if source_str is None:
             abort(404)
-        source = target_dir / safe
+        source = Path(source_str)
         if not source.is_file() or source.suffix.lower() not in ALLOWED_SUFFIXES:
             abort(404)
-        thumb = _thumb_path(data_dir, folder, safe, source)
+        thumb = _thumb_path(data_dir, folder, filename, source)
         result = _ensure_thumbnail(source, thumb)
         if result is None:
             # Fallback: serve the original. Slower, but never breaks the UI.
-            return send_from_directory(target_dir, safe)
+            return send_from_directory(target_dir, filename)
         response = send_file(result, mimetype="image/jpeg", conditional=True)
         # Browser caches for a year — the URL embeds the source mtime, so a
         # re-upload busts the cache automatically.
