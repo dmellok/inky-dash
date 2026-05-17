@@ -15,6 +15,30 @@ import io
 from PIL import Image, ImageFilter, ImageOps
 
 
+def normalize_exif_orientation(image_bytes: bytes) -> bytes:
+    """Apply EXIF Orientation so phone-camera uploads land right-side-up.
+
+    Modern cameras store portrait shots as landscape pixel data + an EXIF
+    Orientation tag telling viewers to rotate. Pillow ignores the tag by
+    default — without this, every send-file scale mode other than
+    "blurred" (which already calls exif_transpose) publishes sideways.
+
+    No-op for images with no EXIF tag and for non-image bytes (so the
+    existing upload pipeline still surfaces the eventual decode error).
+    """
+    try:
+        with Image.open(io.BytesIO(image_bytes)) as opened:
+            oriented = ImageOps.exif_transpose(opened)
+            if oriented is opened:
+                return image_bytes
+            fmt = opened.format or "PNG"
+            out = io.BytesIO()
+            oriented.save(out, format=fmt)
+            return out.getvalue()
+    except Exception:
+        return image_bytes
+
+
 def blurred_fit(
     source_bytes: bytes,
     *,

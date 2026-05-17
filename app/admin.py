@@ -14,7 +14,7 @@ from flask import Blueprint, abort, current_app, jsonify, render_template, reque
 from pydantic import ValidationError
 from werkzeug.wrappers import Response
 
-from app.image_ops import blurred_fit
+from app.image_ops import blurred_fit, normalize_exif_orientation
 from app.mqtt_bridge import MqttBridge, NullBridge
 from app.plugin_loader import PluginRegistry
 from app.push import PushManager, PushOptions
@@ -944,6 +944,7 @@ def api_preview_file() -> tuple[Response, int] | Response:
     raw = upload.read()
     if not raw:
         return jsonify({"error": "file is empty"}), 400
+    raw = normalize_exif_orientation(raw)
     raw, _, blur_err = _apply_blurred_fit(raw, request.form.get("scale"))
     if blur_err is not None:
         return jsonify({"error": blur_err}), 400
@@ -1051,6 +1052,7 @@ def api_send_file() -> tuple[Response, int] | Response:
     image_bytes = upload.read()
     if not image_bytes:
         return jsonify({"error": "uploaded file is empty"}), 400
+    image_bytes = normalize_exif_orientation(image_bytes)
 
     # Build a dict from the same option keys ``_push_options_from_body`` uses,
     # casting numeric fields where present.

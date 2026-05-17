@@ -67,6 +67,42 @@ def test_send_file(client: FlaskClient, fake_bridge: FakeBridge) -> None:
     assert len(fake_bridge.published) == 1
 
 
+def _portrait_jpeg_with_exif_rotate_cw() -> bytes:
+    """A 40×10 (landscape pixels) JPEG tagged EXIF Orientation=6 — the encoding
+    a phone uses for a portrait shot. A correct pipeline applies the tag and
+    the published render lands at 10×40."""
+    img = Image.new("RGB", (40, 10), color="blue")
+    exif = img.getexif()
+    exif[0x0112] = 6  # Orientation: rotate 90° CW
+    out = io.BytesIO()
+    img.save(out, format="JPEG", exif=exif.tobytes())
+    return out.getvalue()
+
+
+def test_send_file_applies_exif_orientation(client: FlaskClient, fake_bridge: FakeBridge) -> None:
+    """Regression: phone uploads tagged EXIF Orientation=6 used to publish
+    sideways. Fixed by normalizing at the upload boundary so the rotated
+    pixels reach the panel right-side-up."""
+    res = client.post(
+        "/api/send/file",
+        data={
+            "file": (io.BytesIO(_portrait_jpeg_with_exif_rotate_cw()), "phone.jpg"),
+            "dither": "none",
+        },
+        content_type="multipart/form-data",
+    )
+    assert res.status_code == 200, res.data
+    body = res.get_json()
+    assert body["status"] == "sent"
+
+    # Fetch the actual bytes the panel will receive and assert the EXIF tag
+    # was applied (40×10 landscape pixels → 10×40 portrait).
+    render = client.get(body["url"])
+    assert render.status_code == 200
+    img = Image.open(io.BytesIO(render.data))
+    assert img.size == (10, 40)
+
+
 def test_send_file_no_part(client: FlaskClient) -> None:
     res = client.post("/api/send/file", data={"dither": "none"})
     assert res.status_code == 400
